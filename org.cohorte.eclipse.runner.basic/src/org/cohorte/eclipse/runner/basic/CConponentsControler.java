@@ -286,6 +286,8 @@ public class CConponentsControler implements ServiceListener {
 				}
 			}
 		}
+
+		logControlerState();
 	}
 
 	/**
@@ -312,6 +314,13 @@ public class CConponentsControler implements ServiceListener {
 			}
 		}
 		return true;
+	}
+
+	/**
+	 * 
+	 */
+	private void logControlerState() {
+		logControlerState(true);
 	}
 
 	/**
@@ -426,7 +435,7 @@ public class CConponentsControler implements ServiceListener {
 	private void logFactoryServiceRef(ServiceReference<Factory> wfactorySRef) {
 
 		pLogger.logInfo(this, "logFactoryServiceRef", "%s_%s", wfactorySRef
-				.getClass().getName(), wfactorySRef.hashCode());
+				.getClass().getSimpleName(), wfactorySRef.hashCode());
 		int wIdx = 0;
 		for (String wKey : wfactorySRef.getPropertyKeys()) {
 			String wStrValue = null;
@@ -458,7 +467,7 @@ public class CConponentsControler implements ServiceListener {
 					wStrValue = wStrValue.replace('\n', '§');
 				}
 			}
-			pLogger.logInfo(this, "logFactoryServiceRef", " # (%d) %40s=[%s]",
+			pLogger.logInfo(this, "logFactoryServiceRef", " | %2d) %40s=[%s]",
 					wIdx, wKey, wStrValue);
 			wIdx++;
 		}
@@ -488,9 +497,8 @@ public class CConponentsControler implements ServiceListener {
 		String wFilter = "(objectclass=" + Factory.class.getName() + ")";
 		pBundleContext.addServiceListener(this, wFilter);
 
-		pLogger.logSevere(this, "registerFactoryServiceListener",
+		pLogger.logInfo(this, "registerFactoryServiceListener",
 				"Registered=[%b] FactoryServiceListener=[%s]", true, this);
-
 	}
 
 	/*
@@ -505,16 +513,18 @@ public class CConponentsControler implements ServiceListener {
 
 		try {
 			@SuppressWarnings("unchecked")
-			ServiceReference<Factory> sr = (ServiceReference<Factory>) aServiceEvent
+			ServiceReference<Factory> wFactoryServiceRef = (ServiceReference<Factory>) aServiceEvent
 					.getServiceReference();
 
 			switch (aServiceEvent.getType()) {
 			case ServiceEvent.REGISTERED: {
-				updateFactoryServiceAvaibility(sr, ServiceEvent.REGISTERED);
+				setFactoryServiceRefAvaibility(wFactoryServiceRef,
+						ServiceEvent.REGISTERED);
 				break;
 			}
 			case ServiceEvent.UNREGISTERING: {
-				updateFactoryServiceAvaibility(sr, ServiceEvent.UNREGISTERING);
+				setFactoryServiceRefAvaibility(wFactoryServiceRef,
+						ServiceEvent.UNREGISTERING);
 				break;
 			}
 			}
@@ -529,21 +539,11 @@ public class CConponentsControler implements ServiceListener {
 	}
 
 	/**
-	 * 
-	 */
-	private void unregisterFactoryServiceListener() {
-
-		pBundleContext.removeServiceListener(this);
-		pLogger.logSevere(this, "unregisterFactoryServiceListener",
-				"UnRegistered=[%b] FactoryServiceListener=[%s]", true, this);
-	}
-
-	/**
 	 * @param wFactoryServiceRef
 	 * @param aServiceEvent
 	 * @throws Exception
 	 */
-	private void updateFactoryServiceAvaibility(
+	private void setFactoryServiceRefAvaibility(
 			final ServiceReference<Factory> wFactoryServiceRef,
 			final int aServiceEvent) throws Exception {
 
@@ -569,11 +569,11 @@ public class CConponentsControler implements ServiceListener {
 	 * 
 	 * @throws Exception
 	 */
-	private void updateFactoryServicesAvaibility() throws Exception {
+	private void setFactoryServiceRefsAvaibility() throws Exception {
 
 		for (ServiceReference<Factory> wFactoryServiceRef : getAllFactoryServiceRefs()) {
 
-			updateFactoryServiceAvaibility(wFactoryServiceRef,
+			setFactoryServiceRefAvaibility(wFactoryServiceRef,
 					ServiceEvent.REGISTERED);
 		}
 	}
@@ -581,9 +581,20 @@ public class CConponentsControler implements ServiceListener {
 	/**
 	 * 
 	 */
+	private void unregisterFactoryServiceListener() {
+
+		pBundleContext.removeServiceListener(this);
+		pLogger.logInfo(this, "unregisterFactoryServiceListener",
+				"UnRegistered=[%b] FactoryServiceListener=[%s]", true, this);
+	}
+
+	/**
+	 * 
+	 */
 	@Validate
 	public void validate() {
-		boolean wInAction = false;
+
+		boolean wMustControlComponent = false;
 
 		try {
 			// retreive the composition file
@@ -592,16 +603,30 @@ public class CConponentsControler implements ServiceListener {
 			// itialize the component info map
 			initMaps();
 
-			wInAction = (pComponentInfos.size() > 0);
+			wMustControlComponent = (pComponentInfos.size() > 0);
 
-			logFactoryServiceRefs();
-
-			updateFactoryServicesAvaibility();
-
-			if (!isAllFactoriesAvailable()) {
+			// if there's no component to control
+			if (!wMustControlComponent) {
+				logControlerState(wMustControlComponent);
+			} else
+			// else, if there is at least one component to control
+			{
+				// instal 'Factory' service listener
 				registerFactoryServiceListener();
-			} else {
-				instancaiateComponents();
+
+				// log existing 'Factory' services
+				logFactoryServiceRefs();
+
+				// update the availability of the waited 'Factory' services in
+				// the
+				// data model
+				setFactoryServiceRefsAvaibility();
+
+				// if all the waited 'Factory' services available,
+				// instanciates the wanted components
+				if (isAllFactoriesAvailable()) {
+					instancaiateComponents();
+				}
 			}
 
 		} catch (Exception e) {
@@ -612,8 +637,8 @@ public class CConponentsControler implements ServiceListener {
 				this,
 				"validate",
 				"validated. InAction=[%b] isFactoriesAvailable=[%b] CompositionFile=[%s]",
-				wInAction, isAllFactoriesAvailable(), pCompositionFile);
+				wMustControlComponent, isAllFactoriesAvailable(),
+				pCompositionFile);
 
-		logControlerState(wInAction);
 	}
 }

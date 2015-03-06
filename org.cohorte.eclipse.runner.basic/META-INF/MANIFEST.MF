@@ -42,14 +42,14 @@ iPOJO-Components: instance { $component="org.cohorte.eclipse.runner.ba
  turn="boolean" }method { $name="initMaps" }method { $name="instancaia
  teComponents" }method { $name="invalidate" }method { $name="isAllFact
  oriesAvailable" $return="boolean" }method { $name="logControlerState"
-  $arguments="{boolean}" $names="{aInAction}" }method { $name="logFact
- oryServiceRef" $arguments="{org.osgi.framework.ServiceReference}" $na
- mes="{wfactorySRef}" }method { $name="logFactoryServiceRefs" }method 
- { $name="registerFactoryServiceListener" }method { $name="serviceChan
- ged" $arguments="{org.osgi.framework.ServiceEvent}" $names="{aService
- Event}" }method { $name="unregisterFactoryServiceListener" }method { 
- $name="updateFactoryServiceAvaibility" $arguments="{org.osgi.framewor
- k.ServiceReference,int}" $names="{wFactoryServiceRef,aServiceEvent}" 
- }method { $name="updateFactoryServicesAvaibility" }method { $name="va
- lidate" }}}
+  }method { $name="logControlerState" $arguments="{boolean}" $names="{
+ aInAction}" }method { $name="logFactoryServiceRef" $arguments="{org.o
+ sgi.framework.ServiceReference}" $names="{wfactorySRef}" }method { $n
+ ame="logFactoryServiceRefs" }method { $name="registerFactoryServiceLi
+ stener" }method { $name="serviceChanged" $arguments="{org.osgi.framew
+ ork.ServiceEvent}" $names="{aServiceEvent}" }method { $name="setFacto
+ ryServiceRefAvaibility" $arguments="{org.osgi.framework.ServiceRefere
+ nce,int}" $names="{wFactoryServiceRef,aServiceEvent}" }method { $name
+ ="setFactoryServiceRefsAvaibility" }method { $name="unregisterFactory
+ ServiceListener" }method { $name="validate" }}}
 
