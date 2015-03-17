@@ -34,16 +34,16 @@ import org.psem2m.utilities.json.JSONObject;
 /**
  * This components simulates the node contôler, it instanciates all the
  * components defined in the composition file
- * 
+ *
  * <ul>
  * <li>it retrieves the file "base/conf/composition.js"</li>
  * <li>it retrieves the components factories class name listed in this file</li>
  * <li>it waits for the availability of all the factories</li>
  * <li>it instanciates all the compoenents defined in the composition file</li>
  * </ul>
- * 
+ *
  * sample
- * 
+ *
  * <pre>
  * {
  *     "name": "AgiliumServices",
@@ -60,9 +60,9 @@ import org.psem2m.utilities.json.JSONObject;
  *     }
  * }
  * </pre>
- * 
+ *
  * The available factories :
- * 
+ *
  * <pre>
  * g! factories
  * ...
@@ -72,9 +72,9 @@ import org.psem2m.utilities.json.JSONObject;
  * Factory fr.agilium.services.rest.server.CRestServer (VALID)
  * ...
  * </pre>
- * 
+ *
  * The details of the factory "CAsposeConverter"
- * 
+ *
  * <pre>
  * g! factory fr.agilium.services.converter.provider.CAsposeConverter
  * factory name="fr.agilium.services.converter.provider.CAsposeConverter" bundle="51" state="valid" implementation-class="fr.agilium.services.converter.provider.CAsposeConverter"
@@ -83,7 +83,7 @@ import org.psem2m.utilities.json.JSONObject;
  * 	provides specification="fr.agilium.services.converter.IConverter"
  * 	inherited interfaces="[fr.agilium.services.converter.IConverter]" superclasses="[]"
  * </pre>
- * 
+ *
  * @author ogattaz
  *
  */
@@ -112,7 +112,7 @@ public class CConponentsControler implements ServiceListener {
 	/**
 	 * @param aBundleContext
 	 */
-	public CConponentsControler(BundleContext aBundleContext) {
+	public CConponentsControler(final BundleContext aBundleContext) {
 		super();
 		pBundleContext = aBundleContext;
 	}
@@ -130,7 +130,7 @@ public class CConponentsControler implements ServiceListener {
 
 	/**
 	 * retreive the "components" json array in the composition definition.
-	 * 
+	 *
 	 * <pre>
 	 * {
 	 *     "name": "...",
@@ -145,8 +145,8 @@ public class CConponentsControler implements ServiceListener {
 	 *     }
 	 * }
 	 * </pre>
-	 * 
-	 * 
+	 *
+	 *
 	 * @param aCompositionDef
 	 * @return
 	 * @throws JSONException
@@ -160,7 +160,7 @@ public class CConponentsControler implements ServiceListener {
 	/**
 	 * Convert the content of the "base/conf/composituion.js" file in a json
 	 * object.
-	 * 
+	 *
 	 * @param aCompositionFile
 	 *            The "base/conf/composituion.js" file
 	 * @return A json object instance
@@ -176,7 +176,7 @@ public class CConponentsControler implements ServiceListener {
 	/**
 	 * @return an instance of CXFileUtf8 corresponding to the existing
 	 *         "base/conf/composituion.js" file
-	 * 
+	 *
 	 * @throws IOException
 	 */
 	private CXFileUtf8 getCompositionFile() throws IOException {
@@ -230,9 +230,9 @@ public class CConponentsControler implements ServiceListener {
 	/**
 	 * initialize the content of the "pFactoriesInfos" and "pComponentInfos"
 	 * maps.
-	 * 
-	 * 
-	 * 
+	 *
+	 *
+	 *
 	 * @throws JSONException
 	 * @throws IOException
 	 */
@@ -257,7 +257,7 @@ public class CConponentsControler implements ServiceListener {
 	 * @throws ConfigurationException
 	 * @throws MissingHandlerException
 	 * @throws UnacceptableConfiguration
-	 * 
+	 *
 	 */
 	private void instancaiateComponents() throws UnacceptableConfiguration,
 			MissingHandlerException, ConfigurationException {
@@ -265,24 +265,32 @@ public class CConponentsControler implements ServiceListener {
 		for (CComponentInfos wComponentInfos : pComponentInfos.values()) {
 
 			synchronized (wComponentInfos) {
+				// component is instantiated in this local isolate only if it
+				// has no isolate defined in composition.js file or if the
+				// defined isolate name match with this local isolate's name.
+				final String wCmpIsolateName = wComponentInfos.getIsolateName();
+				if (wCmpIsolateName == null
+						|| wCmpIsolateName.trim().equalsIgnoreCase("")
+						|| wCmpIsolateName.equalsIgnoreCase(pPlatformDirsSvc
+								.getIsolateName())) {
+					if (!wComponentInfos.isCreated()) {
 
-				if (!wComponentInfos.isCreated()) {
+						Properties wComponentProps = new Properties();
+						wComponentProps.put("instance.name",
+								wComponentInfos.getName());
 
-					Properties wComponentProps = new Properties();
-					wComponentProps.put("instance.name",
-							wComponentInfos.getName());
+						ComponentInstance wComponentInstance = wComponentInfos
+								.getFactoryInfos().getFactory()
+								.createComponentInstance(wComponentProps);
 
-					ComponentInstance wComponentInstance = wComponentInfos
-							.getFactoryInfos().getFactory()
-							.createComponentInstance(wComponentProps);
+						wComponentInfos.setCreated();
 
-					wComponentInfos.setCreated();
-
-					pLogger.logInfo(this, "instancaiateComponents",
-							"Name=[%s] TimeStamp=[%s] component=[%s]",
-							wComponentInfos.getName(),
-							wComponentInfos.getCreationTimeStamp(),
-							wComponentInstance);
+						pLogger.logInfo(this, "instancaiateComponents",
+								"Name=[%s] TimeStamp=[%s] component=[%s]",
+								wComponentInfos.getName(),
+								wComponentInfos.getCreationTimeStamp(),
+								wComponentInstance);
+					}
 				}
 			}
 		}
@@ -291,7 +299,7 @@ public class CConponentsControler implements ServiceListener {
 	}
 
 	/**
-	 * 
+	 *
 	 */
 	@Invalidate
 	public void invalidate() {
@@ -317,7 +325,7 @@ public class CConponentsControler implements ServiceListener {
 	}
 
 	/**
-	 * 
+	 *
 	 */
 	private void logControlerState() {
 		logControlerState(true);
@@ -333,7 +341,7 @@ public class CConponentsControler implements ServiceListener {
 	 * #
 	 * #################################################################################
 	 * </pre>
-	 * 
+	 *
 	 * <pre>
 	 * #################################################################################
 	 * #
@@ -362,7 +370,7 @@ public class CConponentsControler implements ServiceListener {
 	 * #
 	 * #################################################################################
 	 * </pre>
-	 * 
+	 *
 	 * @param aInAction
 	 */
 	private void logControlerState(final boolean aInAction) {
@@ -405,21 +413,21 @@ public class CConponentsControler implements ServiceListener {
 	}
 
 	/**
-	 * 
+	 *
 	 * <pre>
 	 *  org.apache.felix.framework.ServiceRegistrationImpl$ServiceReferenceImpl_481588007
 	 *   -                          component.class=[fr.agilium.services.converter.provider.CAsposeConverter]
-	 *   -                    component.description=[factory name="fr.agilium.services.converter.provider.CAsposeConverter" 
-	 *                                               bundle="51" 
-	 *                                               state="valid" 
+	 *   -                    component.description=[factory name="fr.agilium.services.converter.provider.CAsposeConverter"
+	 *                                               bundle="51"
+	 *                                               state="valid"
 	 *                                               implementation-class="fr.agilium.services.converter.provider.CAsposeConverter"
-	 *                                               requiredhandlers list="[org.apache.felix.ipojo:requires, 
-	 *                                                                       org.apache.felix.ipojo:callback, 
-	 *                                                                       org.apache.felix.ipojo:provides, 
+	 *                                               requiredhandlers list="[org.apache.felix.ipojo:requires,
+	 *                                                                       org.apache.felix.ipojo:callback,
+	 *                                                                       org.apache.felix.ipojo:provides,
 	 *                                                                       org.apache.felix.ipojo:architecture]"
 	 *                                               missinghandlers list="[]"
 	 *                                               provides specification="fr.agilium.services.converter.IConverter"
-	 *                                               inherited interfaces="[fr.agilium.services.converter.IConverter]" 
+	 *                                               inherited interfaces="[fr.agilium.services.converter.IConverter]"
 	 *                                               superclasses="[]"]
 	 *   -                     component.properties=[]
 	 *   -  component.providedServiceSpecifications=[fr.agilium.services.converter.IConverter]
@@ -429,10 +437,11 @@ public class CConponentsControler implements ServiceListener {
 	 *   -                               service.id=[192]
 	 *   -                              service.pid=[fr.agilium.services.converter.provider.CAsposeConverter]
 	 * </pre>
-	 * 
+	 *
 	 * @param wfactorySRef
 	 */
-	private void logFactoryServiceRef(ServiceReference<Factory> wfactorySRef) {
+	private void logFactoryServiceRef(
+			final ServiceReference<Factory> wfactorySRef) {
 
 		pLogger.logInfo(this, "logFactoryServiceRef", "%s_%s", wfactorySRef
 				.getClass().getSimpleName(), wfactorySRef.hashCode());
@@ -478,7 +487,7 @@ public class CConponentsControler implements ServiceListener {
 	 *   -    factory.name=[fr.agilium.services.converter.provider.CAsposeConverter]
 	 *   -   factory.state=[1]
 	 * </pre>
-	 * 
+	 *
 	 * @throws InvalidSyntaxException
 	 */
 	private void logFactoryServiceRefs() throws InvalidSyntaxException {
@@ -490,7 +499,7 @@ public class CConponentsControler implements ServiceListener {
 
 	/**
 	 * @throws InvalidSyntaxException
-	 * 
+	 *
 	 */
 	private void registerFactoryServiceListener() throws InvalidSyntaxException {
 
@@ -503,13 +512,13 @@ public class CConponentsControler implements ServiceListener {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see
 	 * org.osgi.framework.ServiceListener#serviceChanged(org.osgi.framework.
 	 * ServiceEvent)
 	 */
 	@Override
-	public void serviceChanged(ServiceEvent aServiceEvent) {
+	public void serviceChanged(final ServiceEvent aServiceEvent) {
 
 		try {
 			@SuppressWarnings("unchecked")
@@ -566,7 +575,7 @@ public class CConponentsControler implements ServiceListener {
 	/**
 	 * Update the data model of this component according the availability of the
 	 * Factory services.
-	 * 
+	 *
 	 * @throws Exception
 	 */
 	private void setFactoryServiceRefsAvaibility() throws Exception {
@@ -579,7 +588,7 @@ public class CConponentsControler implements ServiceListener {
 	}
 
 	/**
-	 * 
+	 *
 	 */
 	private void unregisterFactoryServiceListener() {
 
@@ -589,7 +598,7 @@ public class CConponentsControler implements ServiceListener {
 	}
 
 	/**
-	 * 
+	 *
 	 */
 	@Validate
 	public void validate() {
