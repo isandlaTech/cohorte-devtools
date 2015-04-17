@@ -231,25 +231,39 @@ public class CConponentsControler implements ServiceListener {
 	 * initialize the content of the "pFactoriesInfos" and "pComponentInfos"
 	 * maps.
 	 *
-	 *
+	 * MOD_OG_20150417 Manage explicitly the component flag "isInCurrentIsolate"
+	 * and the factory flag "isNeeded"
 	 *
 	 * @throws JSONException
 	 * @throws IOException
 	 */
 	private void initMaps() throws JSONException, IOException {
 
+		String wCurrentIsolateName = pPlatformDirsSvc.getIsolateName();
+
 		JSONArray wComponentDefArray = getComponentDefs(getCompositionDef(pCompositionFile));
+
 		for (int wIdx = 0; wIdx < wComponentDefArray.length(); wIdx++) {
+
 			JSONObject wDef = wComponentDefArray.getJSONObject(wIdx);
-			String wfactoryName = wDef.getString("factory");
+			String wfactoryName = wDef.getString(CComponentInfos.PROP_FACTORY);
 
 			CFactoryInfos wFactoryInfos = pFactoriesInfos.get(wfactoryName);
 			if (wFactoryInfos == null) {
 				wFactoryInfos = new CFactoryInfos(wfactoryName);
 				pFactoriesInfos.put(wfactoryName, wFactoryInfos);
 			}
-			pComponentInfos.put(wDef.getString("name"), new CComponentInfos(
-					wDef, wFactoryInfos));
+			CComponentInfos wComponentInfo = new CComponentInfos(wDef,
+					wFactoryInfos);
+
+			// MOD_OG_20150417
+			boolean wInCurrentIsolate = wComponentInfo
+					.initIsInCurrentIsolate(wCurrentIsolateName);
+
+			// MOD_OG_20150417
+			wFactoryInfos.setNeeded(wInCurrentIsolate);
+
+			pComponentInfos.put(wComponentInfo.getName(), wComponentInfo);
 		}
 	}
 
@@ -262,17 +276,19 @@ public class CConponentsControler implements ServiceListener {
 	private void instancaiateComponents() throws UnacceptableConfiguration,
 			MissingHandlerException, ConfigurationException {
 
+		String wCurrentIsolateName = pPlatformDirsSvc.getIsolateName();
+
+		pLogger.logInfo(this, "instancaiateComponents",
+				"CurrentIsolateName=[%s]", wCurrentIsolateName);
+
 		for (CComponentInfos wComponentInfos : pComponentInfos.values()) {
 
 			synchronized (wComponentInfos) {
 				// component is instantiated in this local isolate only if it
 				// has no isolate defined in composition.js file or if the
 				// defined isolate name match with this local isolate's name.
-				final String wCmpIsolateName = wComponentInfos.getIsolateName();
-				if (wCmpIsolateName == null
-						|| wCmpIsolateName.trim().equalsIgnoreCase("")
-						|| wCmpIsolateName.equalsIgnoreCase(pPlatformDirsSvc
-								.getIsolateName())) {
+				// MOD_OG_20150417 use the explicit flag
+				if (wComponentInfos.isInCurrentIsolate()) {
 					if (!wComponentInfos.isCreated()) {
 
 						Properties wComponentProps = new Properties();
@@ -291,6 +307,14 @@ public class CConponentsControler implements ServiceListener {
 								wComponentInfos.getCreationTimeStamp(),
 								wComponentInstance);
 					}
+				} else {
+
+					pLogger.logInfo(
+							this,
+							"instancaiateComponents",
+							"Component [%s] explicitly in another Isolate => [%s]",
+							wComponentInfos.getName(),
+							wComponentInfos.getIsolateName());
 				}
 			}
 		}
@@ -313,11 +337,14 @@ public class CConponentsControler implements ServiceListener {
 	}
 
 	/**
-	 * @return
+	 * MOD_OG_20150417 rename
+	 *
+	 * @return true if all the needed factory are available
 	 */
-	private boolean isAllFactoriesAvailable() {
+	private boolean isAllNeededFactoriesAvailable() {
+
 		for (CFactoryInfos wDef : pFactoriesInfos.values()) {
-			if (!wDef.hasFactoryServiceRef()) {
+			if (wDef.isNeeded() && !wDef.hasFactoryServiceRef()) {
 				return false;
 			}
 		}
@@ -387,20 +414,22 @@ public class CConponentsControler implements ServiceListener {
 					.format("\n# UNABLE TO INSTANCIATE THE COMPONENTS OF THE COMPOSITION [%s]",
 							pCompositionFile));
 		} else {
-			for (CComponentInfos wComponentDef : pComponentInfos.values()) {
-				CFactoryInfos wFactoryInfos = wComponentDef.getFactoryInfos();
+			for (CComponentInfos wComponentInfos : pComponentInfos.values()) {
+				CFactoryInfos wFactoryInfos = wComponentInfos.getFactoryInfos();
 
 				wSB.append(String.format("\n# ## Component=[%s]",
-						wComponentDef.getName()));
+						wComponentInfos.getName()));
+				wSB.append(String.format("\n#    -isInCurrentIsolate=[%5s]",
+						wComponentInfos.isInCurrentIsolate()));
 				wSB.append(String.format(
 						"\n#    -           Created:[%5s] TimeStamp=[%s]",
-						wComponentDef.isCreated(),
-						wComponentDef.getCreationTimeStamp()));
-				wSB.append(String.format("\n#    -      Factory.Name:[%s]",
+						wComponentInfos.isCreated(),
+						wComponentInfos.getCreationTimeStamp()));
+				wSB.append(String.format("\n#    -      Factory.Name=[%s]",
 						wFactoryInfos.getName()));
-				wSB.append(String.format("\n#    - Factory.available:[%s]",
+				wSB.append(String.format("\n#    - Factory.available=[%5s]",
 						wFactoryInfos.hasFactoryServiceRef()));
-				wSB.append(String.format("\n#    -  Factory.instance:[%s]",
+				wSB.append(String.format("\n#    -  Factory.instance=[%s]",
 						wFactoryInfos.getFactory()));
 			}
 		}
@@ -512,7 +541,7 @@ public class CConponentsControler implements ServiceListener {
 
 	/*
 	 * (non-Javadoc)
-	 *
+	 * 
 	 * @see
 	 * org.osgi.framework.ServiceListener#serviceChanged(org.osgi.framework.
 	 * ServiceEvent)
@@ -538,7 +567,7 @@ public class CConponentsControler implements ServiceListener {
 			}
 			}
 
-			if (isAllFactoriesAvailable()) {
+			if (isAllNeededFactoriesAvailable()) {
 				instancaiateComponents();
 			}
 
@@ -631,9 +660,9 @@ public class CConponentsControler implements ServiceListener {
 				// data model
 				setFactoryServiceRefsAvaibility();
 
-				// if all the waited 'Factory' services available,
+				// if all the needed 'Factory' services are available,
 				// instanciates the wanted components
-				if (isAllFactoriesAvailable()) {
+				if (isAllNeededFactoriesAvailable()) {
 					instancaiateComponents();
 				}
 			}
@@ -646,7 +675,7 @@ public class CConponentsControler implements ServiceListener {
 				this,
 				"validate",
 				"validated. InAction=[%b] isFactoriesAvailable=[%b] CompositionFile=[%s]",
-				wMustControlComponent, isAllFactoriesAvailable(),
+				wMustControlComponent, isAllNeededFactoriesAvailable(),
 				pCompositionFile);
 
 	}

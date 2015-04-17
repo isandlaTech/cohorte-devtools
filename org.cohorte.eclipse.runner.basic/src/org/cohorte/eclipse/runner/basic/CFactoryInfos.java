@@ -16,6 +16,9 @@ public class CFactoryInfos {
 
 	private final String pName;
 
+	// MOD_OG_20150417
+	private boolean pNeeded = false;
+
 	/**
 	 * @param oName
 	 *            The name of the factory
@@ -42,9 +45,9 @@ public class CFactoryInfos {
 	/**
 	 * A ServiceReference object may be shared between bundles and can be used
 	 * to examine the properties of the service and to get the service object.
-	 * 
+	 *
 	 * @return
-	 * 
+	 *
 	 * @see https 
 	 *      ://osgi.org/javadoc/r4v43/core/org/osgi/framework/ServiceReference
 	 *      .html
@@ -85,6 +88,15 @@ public class CFactoryInfos {
 	}
 
 	/**
+	 * MOD_OG_20150417
+	 *
+	 * @return
+	 */
+	boolean isNeeded() {
+		return pNeeded;
+	}
+
+	/**
 	 * @param the
 	 *            FactoryServiceRef of the service which has the right factory
 	 *            name
@@ -92,5 +104,15 @@ public class CFactoryInfos {
 	synchronized void setFactoryServiceRef(
 			final ServiceReference<Factory> aFactoryServiceRef) {
 		pFactoryServiceRef = aFactoryServiceRef;
+	}
+
+	/**
+	 * MOD_OG_20150417
+	 *
+	 * @param aNeeded
+	 */
+	void setNeeded(final boolean aNeeded) {
+		pNeeded = aNeeded;
+
 	}
 }

@@ -1,0 +1,5 @@
+
+
+MOD_OG_20150417 
+ - Manage explicitly the component flag "isInCurrentIsolate" and the factory flag "isNeeded"
+ - change the version : 1.0.1

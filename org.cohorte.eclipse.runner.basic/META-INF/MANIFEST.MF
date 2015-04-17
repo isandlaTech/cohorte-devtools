@@ -5,7 +5,7 @@ Bundle-Name: org.cohorte.eclipse.runner.basic
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-SymbolicName: org.cohorte.eclipse.runner.basic
 Bundle-Vendor: www.isandlatech.com xx
-Bundle-Version: 1.0.0
+Bundle-Version: 1.0.1
 Created-By: iPOJO 1.12.0
 Import-Package: org.apache.felix.ipojo;version="[1.12.0,2.0.0)", org.a
  pache.felix.ipojo.architecture;version="[1.12.0,2.0.0)", org.osgi.fra
@@ -40,16 +40,16 @@ iPOJO-Components: instance { $component="org.cohorte.eclipse.runner.ba
  .files.CXFileUtf8" }method { $name="getFilteredFactoryServiceRefs" $r
  eturn="java.util.Collection" }method { $name="hasCompositionFile" $re
  turn="boolean" }method { $name="initMaps" }method { $name="instancaia
- teComponents" }method { $name="invalidate" }method { $name="isAllFact
- oriesAvailable" $return="boolean" }method { $name="logControlerState"
-  }method { $name="logControlerState" $arguments="{boolean}" $names="{
- aInAction}" }method { $name="logFactoryServiceRef" $arguments="{org.o
- sgi.framework.ServiceReference}" $names="{wfactorySRef}" }method { $n
- ame="logFactoryServiceRefs" }method { $name="registerFactoryServiceLi
- stener" }method { $name="serviceChanged" $arguments="{org.osgi.framew
- ork.ServiceEvent}" $names="{aServiceEvent}" }method { $name="setFacto
- ryServiceRefAvaibility" $arguments="{org.osgi.framework.ServiceRefere
- nce,int}" $names="{wFactoryServiceRef,aServiceEvent}" }method { $name
- ="setFactoryServiceRefsAvaibility" }method { $name="unregisterFactory
- ServiceListener" }method { $name="validate" }}}
+ teComponents" }method { $name="invalidate" }method { $name="isAllNeed
+ edFactoriesAvailable" $return="boolean" }method { $name="logControler
+ State" }method { $name="logControlerState" $arguments="{boolean}" $na
+ mes="{aInAction}" }method { $name="logFactoryServiceRef" $arguments="
+ {org.osgi.framework.ServiceReference}" $names="{wfactorySRef}" }metho
+ d { $name="logFactoryServiceRefs" }method { $name="registerFactorySer
+ viceListener" }method { $name="serviceChanged" $arguments="{org.osgi.
+ framework.ServiceEvent}" $names="{aServiceEvent}" }method { $name="se
+ tFactoryServiceRefAvaibility" $arguments="{org.osgi.framework.Service
+ Reference,int}" $names="{wFactoryServiceRef,aServiceEvent}" }method {
+  $name="setFactoryServiceRefsAvaibility" }method { $name="unregisterF
+ actoryServiceListener" }method { $name="validate" }}}
 
