@@ -241,6 +241,9 @@ public class CConponentsControler implements ServiceListener {
 
 		String wCurrentIsolateName = pPlatformDirsSvc.getIsolateName();
 
+		pLogger.logInfo(this, "initMaps", "CurrentIsolateName={%s]",
+				wCurrentIsolateName);
+
 		JSONArray wComponentDefArray = getComponentDefs(getCompositionDef(pCompositionFile));
 
 		for (int wIdx = 0; wIdx < wComponentDefArray.length(); wIdx++) {
@@ -262,6 +265,9 @@ public class CConponentsControler implements ServiceListener {
 
 			// MOD_OG_20150417
 			wFactoryInfos.setNeeded(wInCurrentIsolate);
+
+			pLogger.logInfo(this, "initMaps", "Factory=[%60s] setNeeded=[%s]",
+					wFactoryInfos.getName(), wInCurrentIsolate);
 
 			pComponentInfos.put(wComponentInfo.getName(), wComponentInfo);
 		}
@@ -472,10 +478,13 @@ public class CConponentsControler implements ServiceListener {
 	private void logFactoryServiceRef(
 			final ServiceReference<Factory> wfactorySRef) {
 
+		String[] wPropertyKeys = wfactorySRef.getPropertyKeys();
+
 		pLogger.logInfo(this, "logFactoryServiceRef", "%s_%s", wfactorySRef
-				.getClass().getSimpleName(), wfactorySRef.hashCode());
+				.getClass().getSimpleName(), wfactorySRef.hashCode(),
+				wPropertyKeys.length);
 		int wIdx = 0;
-		for (String wKey : wfactorySRef.getPropertyKeys()) {
+		for (String wKey : wPropertyKeys) {
 			String wStrValue = null;
 			Object wObj = wfactorySRef.getProperty(wKey);
 			if (wObj != null) {
@@ -541,7 +550,7 @@ public class CConponentsControler implements ServiceListener {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see
 	 * org.osgi.framework.ServiceListener#serviceChanged(org.osgi.framework.
 	 * ServiceEvent)
@@ -595,9 +604,16 @@ public class CConponentsControler implements ServiceListener {
 
 		CFactoryInfos wFactoryInfos = pFactoriesInfos.get(wFactoryName);
 		if (wFactoryInfos != null) {
-			wFactoryInfos
-					.setFactoryServiceRef((ServiceEvent.REGISTERED == aServiceEvent) ? wFactoryServiceRef
-							: null);
+			boolean wRegistered = (ServiceEvent.REGISTERED == aServiceEvent);
+			wFactoryInfos.setFactoryServiceRef(wRegistered ? wFactoryServiceRef
+					: null);
+
+			pLogger.logInfo(
+					this,
+					"setFactoryServiceRefAvaibility",
+					"wFactoryName=[%60s] Registered=[%b] FactoryServiceRef=[%s]",
+					wFactoryName, wRegistered,
+					wRegistered ? wFactoryServiceRef.toString() : null);
 		}
 	}
 
@@ -637,6 +653,9 @@ public class CConponentsControler implements ServiceListener {
 		try {
 			// retreive the composition file
 			pCompositionFile = getCompositionFile();
+
+			pLogger.logSevere(this, "validate", "CompositionFile=[%s]",
+					pCompositionFile);
 
 			// itialize the component info map
 			initMaps();
