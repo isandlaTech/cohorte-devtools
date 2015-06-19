@@ -31,7 +31,7 @@ public class CFactoryInfos {
 	/**
 	 * @return The service Factory or null if no FactoryServiceRef is available
 	 */
-	public Factory getFactory() {
+	public Factory getFactoryService() {
 
 		ServiceReference<Factory> wFactoryServiceRef = getFactoryServiceRef();
 		if (wFactoryServiceRef == null) {
@@ -39,6 +39,19 @@ public class CFactoryInfos {
 		} else {
 			return pFactoryServiceRef.getBundle().getBundleContext()
 					.getService(pFactoryServiceRef);
+		}
+	}
+
+	/**
+	 * @return
+	 */
+	public String getFactoryServiceInfos() {
+		Factory wFactoryService = getFactoryService();
+		if (wFactoryService == null) {
+			return null;
+		} else {
+			return String.format("%s_%s", wFactoryService.getName(),
+					wFactoryService.hashCode());
 		}
 	}
 

@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.logging.Level;
 
 import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.ConfigurationException;
@@ -302,7 +303,7 @@ public class CConponentsControler implements ServiceListener {
 								wComponentInfos.getName());
 
 						ComponentInstance wComponentInstance = wComponentInfos
-								.getFactoryInfos().getFactory()
+								.getFactoryInfos().getFactoryService()
 								.createComponentInstance(wComponentProps);
 
 						wComponentInfos.setCreated();
@@ -423,20 +424,29 @@ public class CConponentsControler implements ServiceListener {
 			for (CComponentInfos wComponentInfos : pComponentInfos.values()) {
 				CFactoryInfos wFactoryInfos = wComponentInfos.getFactoryInfos();
 
-				wSB.append(String.format("\n# ## Component=[%s]",
-						wComponentInfos.getName()));
-				wSB.append(String.format("\n#    -isInCurrentIsolate=[%5s]",
-						wComponentInfos.isInCurrentIsolate()));
-				wSB.append(String.format(
-						"\n#    -           Created:[%5s] TimeStamp=[%s]",
-						wComponentInfos.isCreated(),
-						wComponentInfos.getCreationTimeStamp()));
-				wSB.append(String.format("\n#    -      Factory.Name=[%s]",
-						wFactoryInfos.getName()));
-				wSB.append(String.format("\n#    - Factory.available=[%5s]",
-						wFactoryInfos.hasFactoryServiceRef()));
-				wSB.append(String.format("\n#    -  Factory.instance=[%s]",
-						wFactoryInfos.getFactory()));
+				// log all the components only if the level is FINER ( higher
+				// than DEBUG )
+				boolean wLogComponent = wComponentInfos.isInCurrentIsolate()
+						|| pLogger.isLoggable(Level.FINER);
+
+				if (wLogComponent) {
+					wSB.append(String.format("\n# ## Component=[%s]",
+							wComponentInfos.getName()));
+					wSB.append(String.format(
+							"\n#    -isInCurrentIsolate=[%5s]",
+							wComponentInfos.isInCurrentIsolate()));
+					wSB.append(String.format(
+							"\n#    -           Created:[%5s] TimeStamp=[%s]",
+							wComponentInfos.isCreated(),
+							wComponentInfos.getCreationTimeStamp()));
+					wSB.append(String.format("\n#    -      Factory.Name=[%s]",
+							wFactoryInfos.getName()));
+					wSB.append(String.format(
+							"\n#    - Factory.available=[%5s]",
+							wFactoryInfos.hasFactoryServiceRef()));
+					wSB.append(String.format("\n#    -  Factory.instance=[%s]",
+							wFactoryInfos.getFactoryServiceInfos()));
+				}
 			}
 		}
 		wSB.append("\n#");
@@ -550,7 +560,7 @@ public class CConponentsControler implements ServiceListener {
 
 	/*
 	 * (non-Javadoc)
-	 *
+	 * 
 	 * @see
 	 * org.osgi.framework.ServiceListener#serviceChanged(org.osgi.framework.
 	 * ServiceEvent)
