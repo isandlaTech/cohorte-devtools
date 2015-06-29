@@ -3,10 +3,10 @@ package org.cohorte.eclipse.runner.basic;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Properties;
+import java.util.Set;
 
-import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.ConfigurationException;
 import org.apache.felix.ipojo.Factory;
 import org.apache.felix.ipojo.MissingHandlerException;
@@ -17,6 +17,8 @@ import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Validate;
 import org.apache.felix.ipojo.architecture.PropertyDescription;
+import org.cohorte.composer.api.IIsolateComposer;
+import org.cohorte.composer.api.RawComponent;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceEvent;
@@ -102,6 +104,9 @@ public class CConponentsControler implements ServiceListener {
 
 	// the map factory name => factory infos
 	private final Map<String, CFactoryInfos> pFactoriesInfos = new HashMap<String, CFactoryInfos>();
+
+	@Requires
+	private IIsolateComposer pIsolateComposer;
 
 	@Requires
 	private IIsolateLoggerSvc pLogger;
@@ -287,6 +292,8 @@ public class CConponentsControler implements ServiceListener {
 		pLogger.logInfo(this, "instancaiateComponents",
 				"CurrentIsolateName=[%s]", wCurrentIsolateName);
 
+		Set<RawComponent> aCpts = new LinkedHashSet<RawComponent>();
+
 		for (CComponentInfos wComponentInfos : pComponentInfos.values()) {
 
 			synchronized (wComponentInfos) {
@@ -297,21 +304,29 @@ public class CConponentsControler implements ServiceListener {
 				if (wComponentInfos.isInCurrentIsolate()) {
 					if (!wComponentInfos.isCreated()) {
 
-						Properties wComponentProps = new Properties();
-						wComponentProps.put("instance.name",
+						// MOD_BD_20150629 using of Cohorte's Isolate Composer
+						// to instantiate components
+						RawComponent aCpt = new RawComponent(
+								wComponentInfos.getFactoryName(),
 								wComponentInfos.getName());
+						aCpts.add(aCpt);
 
-						ComponentInstance wComponentInstance = wComponentInfos
-								.getFactoryInfos().getFactory()
-								.createComponentInstance(wComponentProps);
-
+						/*
+						 * Properties wComponentProps = new Properties();
+						 * wComponentProps.put("instance.name",
+						 * wComponentInfos.getName()); wComponentProps.put(
+						 * Constants.SERVICE_EXPORTED_INTERFACES, "*");
+						 * wComponentProps.put("toto", "lolo");
+						 * ComponentInstance wComponentInstance =
+						 * wComponentInfos .getFactoryInfos().getFactory()
+						 * .createComponentInstance(wComponentProps);
+						 */
 						wComponentInfos.setCreated();
 
 						pLogger.logInfo(this, "instancaiateComponents",
 								"Name=[%s] TimeStamp=[%s] component=[%s]",
 								wComponentInfos.getName(),
-								wComponentInfos.getCreationTimeStamp(),
-								wComponentInstance);
+								wComponentInfos.getCreationTimeStamp(), null);
 					}
 				} else {
 
@@ -324,6 +339,8 @@ public class CConponentsControler implements ServiceListener {
 				}
 			}
 		}
+		// order the isolate composer to instantiate the components.
+		pIsolateComposer.instantiate(aCpts);
 
 		logControlerState();
 	}
@@ -550,7 +567,7 @@ public class CConponentsControler implements ServiceListener {
 
 	/*
 	 * (non-Javadoc)
-	 *
+	 * 
 	 * @see
 	 * org.osgi.framework.ServiceListener#serviceChanged(org.osgi.framework.
 	 * ServiceEvent)
