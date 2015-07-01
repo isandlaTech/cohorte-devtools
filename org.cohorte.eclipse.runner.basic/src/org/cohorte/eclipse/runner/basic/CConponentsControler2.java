@@ -11,7 +11,6 @@ import org.apache.felix.ipojo.Factory;
 import org.apache.felix.ipojo.MissingHandlerException;
 import org.apache.felix.ipojo.UnacceptableConfiguration;
 import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Validate;
@@ -86,7 +85,7 @@ import org.psem2m.utilities.json.JSONObject;
  *
  */
 @Component
-@Instantiate
+// @Instantiate
 public class CConponentsControler2 {
 
 	private final BundleContext pBundleContext;
@@ -395,7 +394,7 @@ public class CConponentsControler2 {
 				wSB.append(String.format("\n#    - Factory.available=[%5s]",
 						wFactoryInfos.hasFactoryServiceRef()));
 				wSB.append(String.format("\n#    -  Factory.instance=[%s]",
-						wFactoryInfos.getFactory()));
+						wFactoryInfos.getFactoryService()));
 			}
 		}
 		wSB.append("\n#");

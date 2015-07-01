@@ -3,25 +3,24 @@ package org.cohorte.eclipse.runner.basic;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Properties;
+import java.util.Set;
+import java.util.logging.Level;
 
-import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.ConfigurationException;
 import org.apache.felix.ipojo.Factory;
-import org.apache.felix.ipojo.InstanceManager;
 import org.apache.felix.ipojo.MissingHandlerException;
 import org.apache.felix.ipojo.UnacceptableConfiguration;
 import org.apache.felix.ipojo.annotations.Component;
+import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Validate;
 import org.apache.felix.ipojo.architecture.PropertyDescription;
-import org.apache.felix.ipojo.handlers.providedservice.ProvidedServiceHandler;
-import org.cohorte.composer.api.ComposerConstants;
 import org.cohorte.composer.api.IIsolateComposer;
+import org.cohorte.composer.api.RawComponent;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
@@ -92,7 +91,7 @@ import org.psem2m.utilities.json.JSONObject;
  *
  */
 @Component
-// @Instantiate
+@Instantiate
 public class CConponentsControler implements ServiceListener {
 
 	static final String PROP_FACTORY_NAME = "factory.name";
@@ -188,15 +187,16 @@ public class CConponentsControler implements ServiceListener {
 	 */
 	private CXFileUtf8 getCompositionFile() throws IOException {
 
-		CXFileDir wConfDir = new CXFileDir(pPlatformDirsSvc.getPlatformBase(),
-				"conf");
+		final CXFileDir wConfDir = new CXFileDir(
+				pPlatformDirsSvc.getPlatformBase(), "conf");
 		if (!wConfDir.exists()) {
 			throw new IOException(String.format(
 					"The cohorte 'conf' directory [%s] doesn't exist",
 					wConfDir.getAbsolutePath()));
 		}
 
-		CXFileUtf8 wCompositionFile = new CXFileUtf8(wConfDir, "composition.js");
+		final CXFileUtf8 wCompositionFile = new CXFileUtf8(wConfDir,
+				"composition.js");
 		if (!wCompositionFile.exists()) {
 			throw new IOException(String.format(
 					"The cohorte 'composition' file [%s] doesn't exist",
@@ -214,7 +214,7 @@ public class CConponentsControler implements ServiceListener {
 
 		String wLdapFilter = null;
 
-		String wFilter = System.getProperty(
+		final String wFilter = System.getProperty(
 				"org.cohorte.eclipse.runner.basic.service.filter", null);
 
 		if (wFilter != null && !wFilter.isEmpty()) {
@@ -246,28 +246,29 @@ public class CConponentsControler implements ServiceListener {
 	 */
 	private void initMaps() throws JSONException, IOException {
 
-		String wCurrentIsolateName = pPlatformDirsSvc.getIsolateName();
+		final String wCurrentIsolateName = pPlatformDirsSvc.getIsolateName();
 
 		pLogger.logInfo(this, "initMaps", "CurrentIsolateName={%s]",
 				wCurrentIsolateName);
 
-		JSONArray wComponentDefArray = getComponentDefs(getCompositionDef(pCompositionFile));
+		final JSONArray wComponentDefArray = getComponentDefs(getCompositionDef(pCompositionFile));
 
 		for (int wIdx = 0; wIdx < wComponentDefArray.length(); wIdx++) {
 
-			JSONObject wDef = wComponentDefArray.getJSONObject(wIdx);
-			String wfactoryName = wDef.getString(CComponentInfos.PROP_FACTORY);
+			final JSONObject wDef = wComponentDefArray.getJSONObject(wIdx);
+			final String wfactoryName = wDef
+					.getString(CComponentInfos.PROP_FACTORY);
 
 			CFactoryInfos wFactoryInfos = pFactoriesInfos.get(wfactoryName);
 			if (wFactoryInfos == null) {
 				wFactoryInfos = new CFactoryInfos(wfactoryName);
 				pFactoriesInfos.put(wfactoryName, wFactoryInfos);
 			}
-			CComponentInfos wComponentInfo = new CComponentInfos(wDef,
+			final CComponentInfos wComponentInfo = new CComponentInfos(wDef,
 					wFactoryInfos);
 
 			// MOD_OG_20150417
-			boolean wInCurrentIsolate = wComponentInfo
+			final boolean wInCurrentIsolate = wComponentInfo
 					.initIsInCurrentIsolate(wCurrentIsolateName);
 
 			// MOD_OG_20150417
@@ -289,14 +290,14 @@ public class CConponentsControler implements ServiceListener {
 	private void instancaiateComponents() throws UnacceptableConfiguration,
 			MissingHandlerException, ConfigurationException {
 
-		String wCurrentIsolateName = pPlatformDirsSvc.getIsolateName();
+		final String wCurrentIsolateName = pPlatformDirsSvc.getIsolateName();
 
 		pLogger.logInfo(this, "instancaiateComponents",
 				"CurrentIsolateName=[%s]", wCurrentIsolateName);
 
-		// Set<RawComponent> aCpts = new LinkedHashSet<RawComponent>();
+		final Set<RawComponent> wRawCpnts = new LinkedHashSet<RawComponent>();
 
-		for (CComponentInfos wComponentInfos : pComponentInfos.values()) {
+		for (final CComponentInfos wComponentInfos : pComponentInfos.values()) {
 
 			synchronized (wComponentInfos) {
 				// component is instantiated in this local isolate only if it
@@ -308,60 +309,35 @@ public class CConponentsControler implements ServiceListener {
 
 						// MOD_BD_20150629 using of Cohorte's Isolate Composer
 						// to instantiate components
-						// RawComponent aCpt = new RawComponent(
-						// wComponentInfos.getFactoryName(),
-						// wComponentInfos.getName());
-						// aCpts.add(aCpt);
-
-						Properties wComponentProps = new Properties();
-						wComponentProps.put("instance.name",
+						final RawComponent wRawCpt = new RawComponent(
+								wComponentInfos.getFactoryName(),
 								wComponentInfos.getName());
+
+						wRawCpnts.add(wRawCpt);
 
 						/*
-						 * service properties
+						 * Properties wComponentProps = new Properties();
+						 * wComponentProps.put("instance.name",
+						 * wComponentInfos.getName()); wComponentProps.put(
+						 * Constants.SERVICE_EXPORTED_INTERFACES, "*");
+						 * wComponentProps.put("toto", "lolo");
+						 * ComponentInstance wComponentInstance =
+						 * wComponentInfos .getFactoryInfos().getFactory()
+						 * .createComponentInstance(wComponentProps);
 						 */
-						Properties wServiceProperties = new Properties();
-						wServiceProperties.put(
-								Constants.SERVICE_EXPORTED_INTERFACES, "*");
-						// Set up forced properties
-						wServiceProperties.put(
-								ComposerConstants.PROP_INSTANCE_NAME,
-								wComponentInfos.getName());
-						wServiceProperties.put(
-								ComposerConstants.PROP_ISOLATE_NAME,
-								pIsolateComposer.get_isolate_info().getName());
-						wServiceProperties.put(
-								ComposerConstants.PROP_NODE_NAME,
-								pPlatformDirsSvc.getNodeName());
-
-						ComponentInstance wComponentInstance = wComponentInfos
-								.getFactoryInfos().getFactory()
-								.createComponentInstance(wComponentProps);
-
-						if (wComponentInstance instanceof InstanceManager) {
-							// We can get the control of the provided service
-							// handler
-							final InstanceManager instanceManager = (InstanceManager) wComponentInstance;
-							final ProvidedServiceHandler serviceHandler = (ProvidedServiceHandler) instanceManager
-									.getHandler("org.apache.felix.ipojo:provides");
-							if (serviceHandler != null) {
-								serviceHandler
-										.addProperties(wServiceProperties);
-							}
-						}
-
 						wComponentInfos.setCreated();
 
 						pLogger.logInfo(
 								this,
 								"instancaiateComponents",
-								"RawComponent(%d): name=[%s] from factory=[%s]",
+								"RawComponent(%d): name=[%s]  factory=[%s]  bundle=[%s][%s]",
 								wRawCpnts.size(), wComponentInfos.getName(),
-								wRawCpt.getFactory());
+								wRawCpt.getFactory(), wRawCpt.getBundle_name(),
+								wRawCpt.getBundle_version());
 					}
 				} else {
 
-					pLogger.logInfo(
+					pLogger.logDebug(
 							this,
 							"instancaiateComponents",
 							"Component [%s] explicitly in another Isolate => [%s]",
@@ -371,7 +347,7 @@ public class CConponentsControler implements ServiceListener {
 			}
 		}
 		// order the isolate composer to instantiate the components.
-		// pIsolateComposer.instantiate(aCpts);
+		pIsolateComposer.instantiate(wRawCpnts);
 
 		logControlerState();
 	}
@@ -397,7 +373,7 @@ public class CConponentsControler implements ServiceListener {
 	 */
 	private boolean isAllNeededFactoriesAvailable() {
 
-		for (CFactoryInfos wDef : pFactoriesInfos.values()) {
+		for (final CFactoryInfos wDef : pFactoriesInfos.values()) {
 			if (wDef.isNeeded() && !wDef.hasFactoryServiceRef()) {
 				return false;
 			}
@@ -456,7 +432,7 @@ public class CConponentsControler implements ServiceListener {
 	 */
 	private void logControlerState(final boolean aInAction) {
 
-		StringBuilder wSB = new StringBuilder();
+		final StringBuilder wSB = new StringBuilder();
 		wSB.append(String.format("\n#%s", CXStringUtils.strFromChar('#', 80)));
 		wSB.append("\n#");
 		wSB.append(String.format("\n# [%s] in action [%s]", getClass()
@@ -468,29 +444,41 @@ public class CConponentsControler implements ServiceListener {
 					.format("\n# UNABLE TO INSTANCIATE THE COMPONENTS OF THE COMPOSITION [%s]",
 							pCompositionFile));
 		} else {
-			for (CComponentInfos wComponentInfos : pComponentInfos.values()) {
-				CFactoryInfos wFactoryInfos = wComponentInfos.getFactoryInfos();
+			for (final CComponentInfos wComponentInfos : pComponentInfos
+					.values()) {
+				final CFactoryInfos wFactoryInfos = wComponentInfos
+						.getFactoryInfos();
 
-				wSB.append(String.format("\n# ## Component=[%s]",
-						wComponentInfos.getName()));
-				wSB.append(String.format("\n#    -isInCurrentIsolate=[%5s]",
-						wComponentInfos.isInCurrentIsolate()));
-				wSB.append(String.format(
-						"\n#    -           Created:[%5s] TimeStamp=[%s]",
-						wComponentInfos.isCreated(),
-						wComponentInfos.getCreationTimeStamp()));
-				wSB.append(String.format("\n#    -      Factory.Name=[%s]",
-						wFactoryInfos.getName()));
-				wSB.append(String.format("\n#    - Factory.available=[%5s]",
-						wFactoryInfos.hasFactoryServiceRef()));
-				wSB.append(String.format("\n#    -  Factory.instance=[%s]",
-						wFactoryInfos.getFactory()));
+				// log all the components only if the level is FINER ( higher
+				// than DEBUG )
+				final boolean wLogComponent = wComponentInfos
+						.isInCurrentIsolate()
+						|| pLogger.isLoggable(Level.FINER);
+
+				if (wLogComponent) {
+					wSB.append(String.format("\n# ## Component=[%s]",
+							wComponentInfos.getName()));
+					wSB.append(String.format(
+							"\n#    -isInCurrentIsolate=[%5s]",
+							wComponentInfos.isInCurrentIsolate()));
+					wSB.append(String.format(
+							"\n#    -           Created:[%5s] TimeStamp=[%s]",
+							wComponentInfos.isCreated(),
+							wComponentInfos.getCreationTimeStamp()));
+					wSB.append(String.format("\n#    -      Factory.Name=[%s]",
+							wFactoryInfos.getName()));
+					wSB.append(String.format(
+							"\n#    - Factory.available=[%5s]",
+							wFactoryInfos.hasFactoryServiceRef()));
+					wSB.append(String.format("\n#    -  Factory.instance=[%s]",
+							wFactoryInfos.getFactoryServiceInfos()));
+				}
 			}
 		}
 		wSB.append("\n#");
 		wSB.append(String.format("\n#%s", CXStringUtils.strFromChar('#', 80)));
 
-		for (String wLine : wSB.toString().split("\n")) {
+		for (final String wLine : wSB.toString().split("\n")) {
 			pLogger.logInfo(this, "logControlerState", wLine);
 		}
 	}
@@ -526,15 +514,15 @@ public class CConponentsControler implements ServiceListener {
 	private void logFactoryServiceRef(
 			final ServiceReference<Factory> wfactorySRef) {
 
-		String[] wPropertyKeys = wfactorySRef.getPropertyKeys();
+		final String[] wPropertyKeys = wfactorySRef.getPropertyKeys();
 
 		pLogger.logInfo(this, "logFactoryServiceRef", "%s_%s", wfactorySRef
 				.getClass().getSimpleName(), wfactorySRef.hashCode(),
 				wPropertyKeys.length);
 		int wIdx = 0;
-		for (String wKey : wPropertyKeys) {
+		for (final String wKey : wPropertyKeys) {
 			String wStrValue = null;
-			Object wObj = wfactorySRef.getProperty(wKey);
+			final Object wObj = wfactorySRef.getProperty(wKey);
 			if (wObj != null) {
 				if (wObj instanceof String) {
 					wStrValue = (String) wObj;
@@ -546,8 +534,8 @@ public class CConponentsControler implements ServiceListener {
 				} else
 				//
 				if (wObj instanceof PropertyDescription[]) {
-					StringBuilder wSB = new StringBuilder();
-					for (PropertyDescription wPropertyDescription : ((PropertyDescription[]) wObj)) {
+					final StringBuilder wSB = new StringBuilder();
+					for (final PropertyDescription wPropertyDescription : ((PropertyDescription[]) wObj)) {
 						wSB.append(String.format("%s=\"%s\" ",
 								wPropertyDescription.getName(),
 								wPropertyDescription.getCurrentValue()));
@@ -578,7 +566,7 @@ public class CConponentsControler implements ServiceListener {
 	 */
 	private void logFactoryServiceRefs() throws InvalidSyntaxException {
 
-		for (ServiceReference<Factory> wfactorySRef : getFilteredFactoryServiceRefs()) {
+		for (final ServiceReference<Factory> wfactorySRef : getFilteredFactoryServiceRefs()) {
 			logFactoryServiceRef(wfactorySRef);
 		}
 	}
@@ -589,7 +577,7 @@ public class CConponentsControler implements ServiceListener {
 	 */
 	private void registerFactoryServiceListener() throws InvalidSyntaxException {
 
-		String wFilter = "(objectclass=" + Factory.class.getName() + ")";
+		final String wFilter = "(objectclass=" + Factory.class.getName() + ")";
 		pBundleContext.addServiceListener(this, wFilter);
 
 		pLogger.logInfo(this, "registerFactoryServiceListener",
@@ -608,7 +596,7 @@ public class CConponentsControler implements ServiceListener {
 
 		try {
 			@SuppressWarnings("unchecked")
-			ServiceReference<Factory> wFactoryServiceRef = (ServiceReference<Factory>) aServiceEvent
+			final ServiceReference<Factory> wFactoryServiceRef = (ServiceReference<Factory>) aServiceEvent
 					.getServiceReference();
 
 			switch (aServiceEvent.getType()) {
@@ -628,7 +616,7 @@ public class CConponentsControler implements ServiceListener {
 				instancaiateComponents();
 			}
 
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			pLogger.logSevere(this, "serviceChanged", "Error: %s", e);
 		}
 	}
@@ -642,7 +630,7 @@ public class CConponentsControler implements ServiceListener {
 			final ServiceReference<Factory> wFactoryServiceRef,
 			final int aServiceEvent) throws Exception {
 
-		String wFactoryName = (String) wFactoryServiceRef
+		final String wFactoryName = (String) wFactoryServiceRef
 				.getProperty(PROP_FACTORY_NAME);
 		if (wFactoryName == null) {
 			throw new Exception(String.format(
@@ -650,9 +638,9 @@ public class CConponentsControler implements ServiceListener {
 					PROP_FACTORY_NAME));
 		}
 
-		CFactoryInfos wFactoryInfos = pFactoriesInfos.get(wFactoryName);
+		final CFactoryInfos wFactoryInfos = pFactoriesInfos.get(wFactoryName);
 		if (wFactoryInfos != null) {
-			boolean wRegistered = (ServiceEvent.REGISTERED == aServiceEvent);
+			final boolean wRegistered = (ServiceEvent.REGISTERED == aServiceEvent);
 			wFactoryInfos.setFactoryServiceRef(wRegistered ? wFactoryServiceRef
 					: null);
 
@@ -673,7 +661,7 @@ public class CConponentsControler implements ServiceListener {
 	 */
 	private void setFactoryServiceRefsAvaibility() throws Exception {
 
-		for (ServiceReference<Factory> wFactoryServiceRef : getAllFactoryServiceRefs()) {
+		for (final ServiceReference<Factory> wFactoryServiceRef : getAllFactoryServiceRefs()) {
 
 			setFactoryServiceRefAvaibility(wFactoryServiceRef,
 					ServiceEvent.REGISTERED);
@@ -734,7 +722,7 @@ public class CConponentsControler implements ServiceListener {
 				}
 			}
 
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			pLogger.logSevere(this, "validate", "Error: %s", e);
 		}
 
