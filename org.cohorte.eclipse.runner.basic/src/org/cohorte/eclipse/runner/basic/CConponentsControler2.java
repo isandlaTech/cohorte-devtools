@@ -1,30 +1,24 @@
 package org.cohorte.eclipse.runner.basic;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Properties;
+import java.util.Set;
 
-import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.ConfigurationException;
 import org.apache.felix.ipojo.Factory;
-import org.apache.felix.ipojo.InstanceManager;
 import org.apache.felix.ipojo.MissingHandlerException;
 import org.apache.felix.ipojo.UnacceptableConfiguration;
 import org.apache.felix.ipojo.annotations.Component;
+import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Validate;
 import org.apache.felix.ipojo.architecture.PropertyDescription;
-import org.apache.felix.ipojo.handlers.providedservice.ProvidedServiceHandler;
-import org.cohorte.composer.api.ComposerConstants;
 import org.cohorte.composer.api.IIsolateComposer;
+import org.cohorte.composer.api.RawComponent;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceEvent;
-import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.psem2m.isolates.base.IIsolateLoggerSvc;
 import org.psem2m.isolates.services.dirs.IPlatformDirsSvc;
@@ -92,10 +86,8 @@ import org.psem2m.utilities.json.JSONObject;
  *
  */
 @Component
-// @Instantiate
-public class CConponentsControler implements ServiceListener {
-
-	static final String PROP_FACTORY_NAME = "factory.name";
+@Instantiate
+public class CConponentsControler2 {
 
 	private final BundleContext pBundleContext;
 
@@ -119,20 +111,9 @@ public class CConponentsControler implements ServiceListener {
 	/**
 	 * @param aBundleContext
 	 */
-	public CConponentsControler(final BundleContext aBundleContext) {
+	public CConponentsControler2(final BundleContext aBundleContext) {
 		super();
 		pBundleContext = aBundleContext;
-	}
-
-	/**
-	 * @return the collection af all the Factory services available in the
-	 *         service registry.
-	 * @throws InvalidSyntaxException
-	 */
-	private Collection<ServiceReference<Factory>> getAllFactoryServiceRefs()
-			throws InvalidSyntaxException {
-
-		return pBundleContext.getServiceReferences(Factory.class, null);
 	}
 
 	/**
@@ -207,28 +188,6 @@ public class CConponentsControler implements ServiceListener {
 
 	/**
 	 * @return
-	 * @throws InvalidSyntaxException
-	 */
-	private Collection<ServiceReference<Factory>> getFilteredFactoryServiceRefs()
-			throws InvalidSyntaxException {
-
-		String wLdapFilter = null;
-
-		String wFilter = System.getProperty(
-				"org.cohorte.eclipse.runner.basic.service.filter", null);
-
-		if (wFilter != null && !wFilter.isEmpty()) {
-			// @see
-			// http://www.ldapexplorer.com/en/manual/109010000-ldap-filter-syntax.htm
-
-			wLdapFilter = String.format("(%s=fr.agilium*)", PROP_FACTORY_NAME);
-		}
-		return pBundleContext.getServiceReferences(Factory.class, wLdapFilter);
-
-	}
-
-	/**
-	 * @return
 	 */
 	boolean hasCompositionFile() {
 		return pCompositionFile != null;
@@ -294,84 +253,53 @@ public class CConponentsControler implements ServiceListener {
 		pLogger.logInfo(this, "instancaiateComponents",
 				"CurrentIsolateName=[%s]", wCurrentIsolateName);
 
-		// Set<RawComponent> aCpts = new LinkedHashSet<RawComponent>();
+		Set<RawComponent> aCpts = new LinkedHashSet<RawComponent>();
 
 		for (CComponentInfos wComponentInfos : pComponentInfos.values()) {
 
-			synchronized (wComponentInfos) {
-				// component is instantiated in this local isolate only if it
-				// has no isolate defined in composition.js file or if the
-				// defined isolate name match with this local isolate's name.
-				// MOD_OG_20150417 use the explicit flag
-				if (wComponentInfos.isInCurrentIsolate()) {
-					if (!wComponentInfos.isCreated()) {
+			// component is instantiated in this local isolate only if it
+			// has no isolate defined in composition.js file or if the
+			// defined isolate name match with this local isolate's name.
+			// MOD_OG_20150417 use the explicit flag
+			if (wComponentInfos.isInCurrentIsolate()) {
+				pLogger.logInfo(
+						this,
+						"instancaiateComponents",
+						"Component [%s] will be instantiated in this local Isolate => [%s]",
+						wComponentInfos.getName(),
+						wComponentInfos.getIsolateName());
+				// if (!wComponentInfos.isCreated()) {
 
-						// MOD_BD_20150629 using of Cohorte's Isolate Composer
-						// to instantiate components
-						// RawComponent aCpt = new RawComponent(
-						// wComponentInfos.getFactoryName(),
-						// wComponentInfos.getName());
-						// aCpts.add(aCpt);
+				// MOD_BD_20150629 using of Cohorte's Isolate Composer
+				// to instantiate components
+				RawComponent aCpt = new RawComponent(
+						wComponentInfos.getFactoryName(),
+						wComponentInfos.getName());
+				aCpts.add(aCpt);
 
-						Properties wComponentProps = new Properties();
-						wComponentProps.put("instance.name",
-								wComponentInfos.getName());
+				// wComponentInfos.setCreated();
 
-						/*
-						 * service properties
-						 */
-						Properties wServiceProperties = new Properties();
-						wServiceProperties.put(
-								Constants.SERVICE_EXPORTED_INTERFACES, "*");
-						// Set up forced properties
-						wServiceProperties.put(
-								ComposerConstants.PROP_INSTANCE_NAME,
-								wComponentInfos.getName());
-						wServiceProperties.put(
-								ComposerConstants.PROP_ISOLATE_NAME,
-								pIsolateComposer.get_isolate_info().getName());
-						wServiceProperties.put(
-								ComposerConstants.PROP_NODE_NAME,
-								pPlatformDirsSvc.getNodeName());
+				/*
+				 * pLogger.logInfo(this, "instancaiateComponents",
+				 * "Name=[%s] TimeStamp=[%s] component=[%s]",
+				 * wComponentInfos.getName(),
+				 * wComponesntInfos.getCreationTimeStamp(), null);
+				 */
+				// }
+			} else {
 
-						ComponentInstance wComponentInstance = wComponentInfos
-								.getFactoryInfos().getFactory()
-								.createComponentInstance(wComponentProps);
-
-						if (wComponentInstance instanceof InstanceManager) {
-							// We can get the control of the provided service
-							// handler
-							final InstanceManager instanceManager = (InstanceManager) wComponentInstance;
-							final ProvidedServiceHandler serviceHandler = (ProvidedServiceHandler) instanceManager
-									.getHandler("org.apache.felix.ipojo:provides");
-							if (serviceHandler != null) {
-								serviceHandler
-										.addProperties(wServiceProperties);
-							}
-						}
-
-						wComponentInfos.setCreated();
-
-						pLogger.logInfo(
-								this,
-								"instancaiateComponents",
-								"RawComponent(%d): name=[%s] from factory=[%s]",
-								wRawCpnts.size(), wComponentInfos.getName(),
-								wRawCpt.getFactory());
-					}
-				} else {
-
-					pLogger.logInfo(
-							this,
-							"instancaiateComponents",
-							"Component [%s] explicitly in another Isolate => [%s]",
-							wComponentInfos.getName(),
-							wComponentInfos.getIsolateName());
-				}
+				pLogger.logInfo(this, "instancaiateComponents",
+						"Component [%s] explicitly in another Isolate => [%s]",
+						wComponentInfos.getName(),
+						wComponentInfos.getIsolateName());
 			}
+
 		}
 		// order the isolate composer to instantiate the components.
-		// pIsolateComposer.instantiate(aCpts);
+		pLogger.logInfo(this, "instancaiateComponents",
+				"Ordering Isolate Composer to instantiate [%s] components",
+				aCpts.size());
+		pIsolateComposer.instantiate(aCpts);
 
 		logControlerState();
 	}
@@ -382,27 +310,10 @@ public class CConponentsControler implements ServiceListener {
 	@Invalidate
 	public void invalidate() {
 
-		unregisterFactoryServiceListener();
-
 		pComponentInfos.clear();
 		pFactoriesInfos.clear();
 
 		pLogger.logInfo(this, "invalidate", "invalidated");
-	}
-
-	/**
-	 * MOD_OG_20150417 rename
-	 *
-	 * @return true if all the needed factory are available
-	 */
-	private boolean isAllNeededFactoriesAvailable() {
-
-		for (CFactoryInfos wDef : pFactoriesInfos.values()) {
-			if (wDef.isNeeded() && !wDef.hasFactoryServiceRef()) {
-				return false;
-			}
-		}
-		return true;
 	}
 
 	/**
@@ -569,134 +480,10 @@ public class CConponentsControler implements ServiceListener {
 	}
 
 	/**
-	 * <pre>
-	 *   -    factory.name=[fr.agilium.services.converter.provider.CAsposeConverter]
-	 *   -   factory.state=[1]
-	 * </pre>
-	 *
-	 * @throws InvalidSyntaxException
-	 */
-	private void logFactoryServiceRefs() throws InvalidSyntaxException {
-
-		for (ServiceReference<Factory> wfactorySRef : getFilteredFactoryServiceRefs()) {
-			logFactoryServiceRef(wfactorySRef);
-		}
-	}
-
-	/**
-	 * @throws InvalidSyntaxException
-	 *
-	 */
-	private void registerFactoryServiceListener() throws InvalidSyntaxException {
-
-		String wFilter = "(objectclass=" + Factory.class.getName() + ")";
-		pBundleContext.addServiceListener(this, wFilter);
-
-		pLogger.logInfo(this, "registerFactoryServiceListener",
-				"Registered=[%b] FactoryServiceListener=[%s]", true, this);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.osgi.framework.ServiceListener#serviceChanged(org.osgi.framework.
-	 * ServiceEvent)
-	 */
-	@Override
-	public void serviceChanged(final ServiceEvent aServiceEvent) {
-
-		try {
-			@SuppressWarnings("unchecked")
-			ServiceReference<Factory> wFactoryServiceRef = (ServiceReference<Factory>) aServiceEvent
-					.getServiceReference();
-
-			switch (aServiceEvent.getType()) {
-			case ServiceEvent.REGISTERED: {
-				setFactoryServiceRefAvaibility(wFactoryServiceRef,
-						ServiceEvent.REGISTERED);
-				break;
-			}
-			case ServiceEvent.UNREGISTERING: {
-				setFactoryServiceRefAvaibility(wFactoryServiceRef,
-						ServiceEvent.UNREGISTERING);
-				break;
-			}
-			}
-
-			if (isAllNeededFactoriesAvailable()) {
-				instancaiateComponents();
-			}
-
-		} catch (Exception e) {
-			pLogger.logSevere(this, "serviceChanged", "Error: %s", e);
-		}
-	}
-
-	/**
-	 * @param wFactoryServiceRef
-	 * @param aServiceEvent
-	 * @throws Exception
-	 */
-	private void setFactoryServiceRefAvaibility(
-			final ServiceReference<Factory> wFactoryServiceRef,
-			final int aServiceEvent) throws Exception {
-
-		String wFactoryName = (String) wFactoryServiceRef
-				.getProperty(PROP_FACTORY_NAME);
-		if (wFactoryName == null) {
-			throw new Exception(String.format(
-					"Unable to find '%s' property in a Factory service",
-					PROP_FACTORY_NAME));
-		}
-
-		CFactoryInfos wFactoryInfos = pFactoriesInfos.get(wFactoryName);
-		if (wFactoryInfos != null) {
-			boolean wRegistered = (ServiceEvent.REGISTERED == aServiceEvent);
-			wFactoryInfos.setFactoryServiceRef(wRegistered ? wFactoryServiceRef
-					: null);
-
-			pLogger.logInfo(
-					this,
-					"setFactoryServiceRefAvaibility",
-					"wFactoryName=[%60s] Registered=[%b] FactoryServiceRef=[%s]",
-					wFactoryName, wRegistered,
-					wRegistered ? wFactoryServiceRef.toString() : null);
-		}
-	}
-
-	/**
-	 * Update the data model of this component according the availability of the
-	 * Factory services.
-	 *
-	 * @throws Exception
-	 */
-	private void setFactoryServiceRefsAvaibility() throws Exception {
-
-		for (ServiceReference<Factory> wFactoryServiceRef : getAllFactoryServiceRefs()) {
-
-			setFactoryServiceRefAvaibility(wFactoryServiceRef,
-					ServiceEvent.REGISTERED);
-		}
-	}
-
-	/**
-	 *
-	 */
-	private void unregisterFactoryServiceListener() {
-
-		pBundleContext.removeServiceListener(this);
-		pLogger.logInfo(this, "unregisterFactoryServiceListener",
-				"UnRegistered=[%b] FactoryServiceListener=[%s]", true, this);
-	}
-
-	/**
 	 *
 	 */
 	@Validate
 	public void validate() {
-
-		boolean wMustControlComponent = false;
 
 		try {
 			// retreive the composition file
@@ -708,41 +495,13 @@ public class CConponentsControler implements ServiceListener {
 			// itialize the component info map
 			initMaps();
 
-			wMustControlComponent = (pComponentInfos.size() > 0);
-
-			// if there's no component to control
-			if (!wMustControlComponent) {
-				logControlerState(wMustControlComponent);
-			} else
-			// else, if there is at least one component to control
-			{
-				// instal 'Factory' service listener
-				registerFactoryServiceListener();
-
-				// log existing 'Factory' services
-				logFactoryServiceRefs();
-
-				// update the availability of the waited 'Factory' services in
-				// the
-				// data model
-				setFactoryServiceRefsAvaibility();
-
-				// if all the needed 'Factory' services are available,
-				// instanciates the wanted components
-				if (isAllNeededFactoriesAvailable()) {
-					instancaiateComponents();
-				}
-			}
+			instancaiateComponents();
 
 		} catch (Exception e) {
 			pLogger.logSevere(this, "validate", "Error: %s", e);
 		}
 
-		pLogger.logInfo(
-				this,
-				"validate",
-				"validated. InAction=[%b] isFactoriesAvailable=[%b] CompositionFile=[%s]",
-				wMustControlComponent, isAllNeededFactoriesAvailable(),
+		pLogger.logInfo(this, "validate", "validated.  CompositionFile=[%s]",
 				pCompositionFile);
 
 	}
