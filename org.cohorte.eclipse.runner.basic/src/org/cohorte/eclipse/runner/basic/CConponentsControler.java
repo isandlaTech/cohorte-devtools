@@ -330,10 +330,9 @@ public class CConponentsControler implements ServiceListener {
 						pLogger.logInfo(
 								this,
 								"instancaiateComponents",
-								"RawComponent(%d): name=[%s]  factory=[%s]  bundle=[%s][%s]",
+								"RawComponent(%d): name=[%s] from factory=[%s]",
 								wRawCpnts.size(), wComponentInfos.getName(),
-								wRawCpt.getFactory(), wRawCpt.getBundle_name(),
-								wRawCpt.getBundle_version());
+								wRawCpt.getFactory());
 					}
 				} else {
 
@@ -586,7 +585,7 @@ public class CConponentsControler implements ServiceListener {
 
 	/*
 	 * (non-Javadoc)
-	 *
+	 * 
 	 * @see
 	 * org.osgi.framework.ServiceListener#serviceChanged(org.osgi.framework.
 	 * ServiceEvent)
