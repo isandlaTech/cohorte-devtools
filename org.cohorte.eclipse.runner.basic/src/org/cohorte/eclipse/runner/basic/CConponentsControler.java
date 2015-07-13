@@ -274,7 +274,7 @@ public class CConponentsControler implements ServiceListener {
 			// MOD_OG_20150417
 			wFactoryInfos.setNeeded(wInCurrentIsolate);
 
-			pLogger.logInfo(this, "initMaps", "Factory=[%60s] setNeeded=[%s]",
+			pLogger.logInfo(this, "initMaps", "Factory=[%70s] setNeeded=[%s]",
 					wFactoryInfos.getName(), wInCurrentIsolate);
 
 			pComponentInfos.put(wComponentInfo.getName(), wComponentInfo);
@@ -586,7 +586,7 @@ public class CConponentsControler implements ServiceListener {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see
 	 * org.osgi.framework.ServiceListener#serviceChanged(org.osgi.framework.
 	 * ServiceEvent)
