@@ -274,7 +274,8 @@ public class CConponentsControler implements ServiceListener {
 			// MOD_OG_20150417
 			wFactoryInfos.setNeeded(wInCurrentIsolate);
 
-			pLogger.logInfo(this, "initMaps", "Factory=[%70s] setNeeded=[%s]",
+			pLogger.logInfo(this, "initMaps",
+					"FactoryName=[%70s] setNeeded=[%s]",
 					wFactoryInfos.getName(), wInCurrentIsolate);
 
 			pComponentInfos.put(wComponentInfo.getName(), wComponentInfo);
@@ -647,9 +648,13 @@ public class CConponentsControler implements ServiceListener {
 			pLogger.logInfo(
 					this,
 					"setFactoryServiceRefAvaibility",
-					"wFactoryName=[%60s] Registered=[%b] FactoryServiceRef=[%s]",
-					wFactoryName, wRegistered,
-					wRegistered ? wFactoryServiceRef.toString() : null);
+					"FactoryName=[%70s] Registered=[%b] FactoryServiceRef=[%s]",
+					wFactoryName,
+					wRegistered,
+					wRegistered ? wFactoryServiceRef.toString()
+							+ '_'
+							+ CXStringUtils.strAdjustRight(
+									wFactoryServiceRef.hashCode(), 5) : null);
 		}
 	}
 
@@ -661,7 +666,12 @@ public class CConponentsControler implements ServiceListener {
 	 */
 	private void setFactoryServiceRefsAvaibility() throws Exception {
 
-		for (final ServiceReference<Factory> wFactoryServiceRef : getAllFactoryServiceRefs()) {
+		Collection<ServiceReference<Factory>> wFactoryServiceRefs = getAllFactoryServiceRefs();
+
+		pLogger.logInfo(this, "setFactoryServiceRefsAvaibility",
+				"NbAvalaibleServicefactory=[%d]", wFactoryServiceRefs.size());
+
+		for (final ServiceReference<Factory> wFactoryServiceRef : wFactoryServiceRefs) {
 
 			setFactoryServiceRefAvaibility(wFactoryServiceRef,
 					ServiceEvent.REGISTERED);
