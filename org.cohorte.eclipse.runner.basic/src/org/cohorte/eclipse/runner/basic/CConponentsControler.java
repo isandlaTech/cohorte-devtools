@@ -13,7 +13,6 @@ import org.apache.felix.ipojo.Factory;
 import org.apache.felix.ipojo.MissingHandlerException;
 import org.apache.felix.ipojo.UnacceptableConfiguration;
 import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Validate;
@@ -91,7 +90,7 @@ import org.psem2m.utilities.json.JSONObject;
  *
  */
 @Component
-@Instantiate
+// @Instantiate
 public class CConponentsControler implements ServiceListener {
 
 	static final String PROP_FACTORY_NAME = "factory.name";
@@ -300,56 +299,68 @@ public class CConponentsControler implements ServiceListener {
 
 		for (final CComponentInfos wComponentInfos : pComponentInfos.values()) {
 
-			synchronized (wComponentInfos) {
-				// component is instantiated in this local isolate only if it
-				// has no isolate defined in composition.js file or if the
-				// defined isolate name match with this local isolate's name.
-				// MOD_OG_20150417 use the explicit flag
-				if (wComponentInfos.isInCurrentIsolate()) {
-					if (!wComponentInfos.isCreated()) {
+			// synchronized (wComponentInfos) {
+			// component is instantiated in this local isolate only if it
+			// has no isolate defined in composition.js file or if the
+			// defined isolate name match with this local isolate's name.
+			// MOD_OG_20150417 use the explicit flag
+			if (wComponentInfos.isInCurrentIsolate()) {
+				if (!wComponentInfos.isCreated()) {
 
-						// MOD_BD_20150629 using of Cohorte's Isolate Composer
-						// to instantiate components
-						final RawComponent wRawCpt = new RawComponent(
-								wComponentInfos.getFactoryName(),
-								wComponentInfos.getName());
+					// MOD_BD_20150629 using of Cohorte's Isolate Composer
+					// to instantiate components
+					final RawComponent wRawCpt = new RawComponent(
+							wComponentInfos.getFactoryName(),
+							wComponentInfos.getName());
 
-						wRawCpnts.add(wRawCpt);
+					wRawCpnts.add(wRawCpt);
 
-						/*
-						 * Properties wComponentProps = new Properties();
-						 * wComponentProps.put("instance.name",
-						 * wComponentInfos.getName()); wComponentProps.put(
-						 * Constants.SERVICE_EXPORTED_INTERFACES, "*");
-						 * wComponentProps.put("toto", "lolo");
-						 * ComponentInstance wComponentInstance =
-						 * wComponentInfos .getFactoryInfos().getFactory()
-						 * .createComponentInstance(wComponentProps);
-						 */
-						wComponentInfos.setCreated();
+					/*
+					 * Properties wComponentProps = new Properties();
+					 * wComponentProps.put("instance.name",
+					 * wComponentInfos.getName()); wComponentProps.put(
+					 * Constants.SERVICE_EXPORTED_INTERFACES, "*");
+					 * wComponentProps.put("toto", "lolo"); ComponentInstance
+					 * wComponentInstance = wComponentInfos
+					 * .getFactoryInfos().getFactory()
+					 * .createComponentInstance(wComponentProps);
+					 */
+					wComponentInfos.setCreated();
 
-						pLogger.logInfo(
-								this,
-								"instancaiateComponents",
-								"RawComponent(%d): name=[%s]  factory=[%s]  bundle=[%s][%s]",
-								wRawCpnts.size(), wComponentInfos.getName(),
-								wRawCpt.getFactory(), wRawCpt.getBundle_name(),
-								wRawCpt.getBundle_version());
-					}
-				} else {
-
-					pLogger.logDebug(
+					pLogger.logInfo(
 							this,
 							"instancaiateComponents",
-							"Component [%s] explicitly in another Isolate => [%s]",
-							wComponentInfos.getName(),
-							wComponentInfos.getIsolateName());
+							"RawComponent(%d): name=[%s]  factory=[%s]  bundle=[%s][%s]",
+							wRawCpnts.size(), wComponentInfos.getName(),
+							wRawCpt.getFactory(), wRawCpt.getBundle_name(),
+							wRawCpt.getBundle_version());
+				} else {
+					pLogger.logWarn(this, "instancaiateComponents",
+							"Component [%s] is already created!",
+							wComponentInfos.getName());
 				}
+			} else {
+
+				pLogger.logDebug(this, "instancaiateComponents",
+						"Component [%s] explicitly in another Isolate => [%s]",
+						wComponentInfos.getName(),
+						wComponentInfos.getIsolateName());
 			}
+			// }
 		}
+		StringBuilder sb = new StringBuilder();
+		for (RawComponent rc : wRawCpnts) {
+			sb.append("- " + rc.getName() + ":" + rc.getFactory() + "\n");
+		}
+		pLogger.logDebug(
+				this,
+				"instancaiateComponents",
+				"Start instantiation...\nList of components to instantiate [%s]",
+				sb.toString());
+
 		// order the isolate composer to instantiate the components.
 		pIsolateComposer.instantiate(wRawCpnts);
-
+		pLogger.logDebug(this, "instancaiateComponents", "End instantiation");
 		logControlerState();
 	}
 
@@ -587,7 +598,7 @@ public class CConponentsControler implements ServiceListener {
 
 	/*
 	 * (non-Javadoc)
-	 *
+	 * 
 	 * @see
 	 * org.osgi.framework.ServiceListener#serviceChanged(org.osgi.framework.
 	 * ServiceEvent)
@@ -614,7 +625,7 @@ public class CConponentsControler implements ServiceListener {
 			}
 
 			if (isAllNeededFactoriesAvailable()) {
-				instancaiateComponents();
+				// instancaiateComponents();
 			}
 
 		} catch (final Exception e) {
@@ -710,6 +721,8 @@ public class CConponentsControler implements ServiceListener {
 
 			// if there's no component to control
 			if (!wMustControlComponent) {
+				pLogger.logSevere(this, "validate",
+						"There is no component to control in this isolate!");
 				logControlerState(wMustControlComponent);
 			} else
 			// else, if there is at least one component to control
@@ -728,6 +741,8 @@ public class CConponentsControler implements ServiceListener {
 				// if all the needed 'Factory' services are available,
 				// instanciates the wanted components
 				if (isAllNeededFactoriesAvailable()) {
+					pLogger.logInfo(this, "validate",
+							"All Needed Factories are Available, proceed to components instantiation...");
 					instancaiateComponents();
 				}
 			}
