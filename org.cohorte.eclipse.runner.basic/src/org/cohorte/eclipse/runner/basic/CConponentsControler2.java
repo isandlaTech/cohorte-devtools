@@ -13,7 +13,6 @@ import org.apache.felix.ipojo.Factory;
 import org.apache.felix.ipojo.MissingHandlerException;
 import org.apache.felix.ipojo.UnacceptableConfiguration;
 import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Validate;
@@ -89,7 +88,7 @@ import org.psem2m.utilities.json.JSONObject;
  *
  */
 @Component
-@Instantiate
+// @Instantiate
 public class CConponentsControler2 implements ServiceListener {
 
 	static final String PROP_FACTORY_NAME = "factory.name";
@@ -560,7 +559,7 @@ public class CConponentsControler2 implements ServiceListener {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see
 	 * org.osgi.framework.ServiceListener#serviceChanged(org.osgi.framework.
 	 * ServiceEvent)
