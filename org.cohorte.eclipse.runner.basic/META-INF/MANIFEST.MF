@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-Activator: org.cohorte.eclipse.runner.basic.CActivator
 Bundle-ManifestVersion: 2
 Bundle-Name: org.cohorte.eclipse.runner.basic
-Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-SymbolicName: org.cohorte.eclipse.runner.basic
 Bundle-Vendor: www.isandlatech.com xx
 Bundle-Version: 1.0.1
