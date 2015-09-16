@@ -94,6 +94,21 @@ import org.psem2m.utilities.json.JSONObject;
 @Instantiate
 public class CConponentsControler implements ServiceListener {
 
+	static final String FMT_COMPOSITION_FILENAME = "composition%s.js";
+
+	/**
+	 * MOD_OG_20150916
+	 *
+	 * Define a file name suffix used to load alternate composition file as
+	 * "compositionSuffix.js" rather than the classic "composition.js" file.
+	 *
+	 * <pre>
+	 * -Dorg.conhorte.runner.basic.composition.suffix=_ogat_test ==> [conf/composition_ogat_test.js]
+	 * </pre>
+	 *
+	 */
+	static final String PROP_COMPOSITION_FILENAME_SUFFIX = "org.conhorte.runner.basic.composition.suffix";
+
 	static final String PROP_FACTORY_NAME = "factory.name";
 
 	private final BundleContext pBundleContext;
@@ -105,8 +120,9 @@ public class CConponentsControler implements ServiceListener {
 
 	// the map factory name => factory infos
 	private final Map<String, CFactoryInfos> pFactoriesInfos = new HashMap<String, CFactoryInfos>();
-	
-	@Requires(filter = "(!(service.imported=*))")	// MOD_BD_20150811
+
+	@Requires(filter = "(!(service.imported=*))")
+	// MOD_BD_20150811
 	private IIsolateComposer pIsolateComposer;
 
 	@Requires
@@ -195,12 +211,42 @@ public class CConponentsControler implements ServiceListener {
 					wConfDir.getAbsolutePath()));
 		}
 
-		final CXFileUtf8 wCompositionFile = new CXFileUtf8(wConfDir,
-				"composition.js");
+		// Returns the value of the requested property, or null if the property
+		// is undefined.
+		String wFileNameSuffix = pBundleContext
+				.getProperty(PROP_COMPOSITION_FILENAME_SUFFIX);
+
+		return getCompositionFile(wConfDir, wFileNameSuffix);
+	}
+
+	/**
+	 * @param aConfDir
+	 * @param aFileNameSuffix
+	 * @return
+	 * @throws IOException
+	 */
+	private CXFileUtf8 getCompositionFile(final CXFileDir aConfDir,
+			final String aFileNameSuffix) throws IOException {
+
+		String wFileName = String.format(FMT_COMPOSITION_FILENAME,
+				(aFileNameSuffix != null) ? aFileNameSuffix : "");
+
+		CXFileUtf8 wCompositionFile = new CXFileUtf8(aConfDir, wFileName);
+
+		pLogger.logInfo(this, "getCompositionFile",
+				"Suffix=[%s] FileName=[%s] Exists=[%b] path=[%s]",
+				aFileNameSuffix, wFileName, wCompositionFile.exists(),
+				wCompositionFile);
+
+		// if the composition file doesn't exist => Exception
 		if (!wCompositionFile.exists()) {
-			throw new IOException(String.format(
-					"The cohorte 'composition' file [%s] doesn't exist",
-					wCompositionFile.getAbsolutePath()));
+
+			String wMessage = String
+					.format("The cohorte composition file [%s] doesn't exist. path=[%s]",
+							wFileName, wCompositionFile.getAbsolutePath());
+
+			throw new IOException(wMessage);
+
 		}
 		return wCompositionFile;
 	}
