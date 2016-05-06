@@ -1,10 +1,12 @@
+MOD_BD_20160406 
+ - log remaining, not available factories
+
 MOD_BD_20160420
  - Adding "runner:shutdown" gogo command to stop all isolats
 
 MOD_OG_20150916
  - take account of the variable "org.conhorte.runner.basic.composition.suffix" to load alternate composition file
    eg.  -Dorg.conhorte.runner.basic.composition.suffix=_ogat_test ==> [conf/composition_ogat_test.js]
-
 
 MOD_BD_20150811
  - Using the local IsolateComposer to instantiate components (not remote one)

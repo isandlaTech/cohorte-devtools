@@ -42,7 +42,8 @@ iPOJO-Components: instance { $component="org.cohorte.eclipse.runner.ba
  mpositionFile" $return="org.psem2m.utilities.files.CXFileUtf8" $argum
  ents="{org.psem2m.utilities.files.CXFileDir,java.lang.String}" $names
  ="{aConfDir,aFileNameSuffix}" }method { $name="getFilteredFactoryServ
- iceRefs" $return="java.util.Collection" }method { $name="hasCompositi
+ iceRefs" $return="java.util.Collection" }method { $name="getRemaining
+ FactoriesList" $return="java.util.List" }method { $name="hasCompositi
  onFile" $return="boolean" }method { $name="initMaps" }method { $name=
  "instancaiateComponents" }method { $name="invalidate" }method { $name
  ="isAllNeededFactoriesAvailable" $return="boolean" }method { $name="l

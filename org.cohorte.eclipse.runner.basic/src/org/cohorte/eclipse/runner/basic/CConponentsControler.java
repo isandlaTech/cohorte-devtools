@@ -1,9 +1,11 @@
 package org.cohorte.eclipse.runner.basic;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -271,6 +273,21 @@ public class CConponentsControler implements ServiceListener {
 		}
 		return pBundleContext.getServiceReferences(Factory.class, wLdapFilter);
 
+	}
+
+	/**
+	 * MOD_BD_20160406 log remaining factories
+	 *
+	 * @return list of remaining not available factories
+	 */
+	private List<String> getRemainingFactoriesList() {
+		List<String> wResult = new ArrayList<String>();
+		for (final CFactoryInfos wDef : pFactoriesInfos.values()) {
+			if (wDef.isNeeded() && !wDef.hasFactoryServiceRef()) {
+				wResult.add(wDef.getName());
+			}
+		}
+		return wResult;
 	}
 
 	/**
@@ -801,9 +818,10 @@ public class CConponentsControler implements ServiceListener {
 		pLogger.logInfo(
 				this,
 				"validate",
-				"validated. InAction=[%b] isFactoriesAvailable=[%b] CompositionFile=[%s]",
+				"validated. InAction=[%b] isFactoriesAvailable=[%b] CompositionFile=[%s] remainingFactories=[%s]",
 				wMustControlComponent, isAllNeededFactoriesAvailable(),
-				pCompositionFile);
+				pCompositionFile,
+				CXStringUtils.stringListToString(getRemainingFactoriesList()));
 
 	}
 }
