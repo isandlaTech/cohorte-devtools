@@ -67,7 +67,15 @@ public class CShutdownGogoCommand implements IConstants, IMessageListener {
 	 * Stops bundle 0 (OSGi framework).
 	 */
 	private void doShutdown() {
-		pLogger.logInfo(this, "doShutdown", "trying to stop bundle 0...");
+		pLogger.logInfo(this, "doShutdown",
+				"trying to stop bundle 0 after 2 second...");
+		// stop actual isolate
+		try {
+			// wait the broadcast message to be sent
+			Thread.sleep(2000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		try {
 			pBundleContext.getBundle(0).stop();
 			pLogger.logInfo(this, "doShutdown", "bundle 0 stopped");
@@ -97,13 +105,6 @@ public class CShutdownGogoCommand implements IConstants, IMessageListener {
 		try {
 			pHerald.fireGroup("all", new Message(SHUTDOWN_MESSAGE));
 		} catch (NoTransport e) {
-			e.printStackTrace();
-		}
-		// stop actual isolate
-		try {
-			// wait the broadcast message to be sent
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 		doShutdown();
