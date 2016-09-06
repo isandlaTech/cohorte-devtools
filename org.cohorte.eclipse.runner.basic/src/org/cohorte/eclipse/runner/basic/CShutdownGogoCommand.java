@@ -2,9 +2,11 @@ package org.cohorte.eclipse.runner.basic;
 
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;
+import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.ServiceProperty;
+import org.apache.felix.ipojo.annotations.Validate;
 import org.cohorte.herald.HeraldException;
 import org.cohorte.herald.IHerald;
 import org.cohorte.herald.IMessageListener;
@@ -14,6 +16,7 @@ import org.cohorte.herald.NoTransport;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.psem2m.isolates.base.IIsolateLoggerSvc;
+import org.psem2m.utilities.CXStringUtils;
 
 /**
  * Gogo command to stop all Isolate on Eclipse developpement environement.
@@ -48,6 +51,7 @@ public class CShutdownGogoCommand implements IConstants, IMessageListener {
 	 */
 	@Requires
 	private IIsolateLoggerSvc pLogger;
+
 	/**
 	 * The Gogo commands scope
 	 */
@@ -61,6 +65,9 @@ public class CShutdownGogoCommand implements IConstants, IMessageListener {
 	 */
 	public CShutdownGogoCommand(final BundleContext aBundleContext) {
 		pBundleContext = aBundleContext;
+
+		// System.out.printf("devtool-basic-runner: %50s | instanciated \n",
+		// this.getClass().getName());
 	}
 
 	/**
@@ -96,6 +103,15 @@ public class CShutdownGogoCommand implements IConstants, IMessageListener {
 	}
 
 	/**
+	 * MOD_OG_20160905 Log traces enhancement
+	 */
+	@Invalidate
+	public void invalidate() {
+
+		pLogger.logInfo(this, "invalidate", "invalidated");
+	}
+
+	/**
 	 * Shutdown Gogo command.
 	 */
 	public void shutdown() {
@@ -109,4 +125,15 @@ public class CShutdownGogoCommand implements IConstants, IMessageListener {
 		}
 		doShutdown();
 	}
+
+	/**
+	 * MOD_OG_20160905 Log traces enhancement
+	 */
+	@Validate
+	public void validate() {
+
+		pLogger.logInfo(this, "validate", "Commands=[%s]",
+				CXStringUtils.stringTableToString(pCommands));
+	}
+
 }

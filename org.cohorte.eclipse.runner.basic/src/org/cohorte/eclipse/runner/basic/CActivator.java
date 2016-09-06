@@ -1,10 +1,11 @@
 package org.cohorte.eclipse.runner.basic;
 
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.psem2m.isolates.base.activators.CActivatorBase;
 
 /**
- * 
+ *
  * @author ogattaz
  *
  */
@@ -21,6 +22,12 @@ public class CActivator extends CActivatorBase {
 	public void start(final BundleContext bundleContext) throws Exception {
 
 		super.start(bundleContext);
+
+		// MOD_OG_20160906 Basic Runner log enhancement
+		Bundle wBundle = bundleContext.getBundle();
+		System.out.printf("%50s | Bundle=[%50s][%s] started\n",
+				"Activator.start()", wBundle.getSymbolicName(),
+				wBundle.getVersion());
 	}
 
 	/*
@@ -31,6 +38,11 @@ public class CActivator extends CActivatorBase {
 	 */
 	@Override
 	public void stop(final BundleContext bundleContext) throws Exception {
+
+		// MOD_OG_20160906 Basic Runner log enhancement
+		Bundle wBundle = bundleContext.getBundle();
+		System.out.printf("%50s | Bundle=[%50s] stopped\n", "Activator.stop()",
+				wBundle.getSymbolicName());
 
 		super.stop(bundleContext);
 

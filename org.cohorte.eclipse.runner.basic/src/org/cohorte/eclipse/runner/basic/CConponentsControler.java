@@ -139,6 +139,8 @@ public class CConponentsControler implements ServiceListener {
 	public CConponentsControler(final BundleContext aBundleContext) {
 		super();
 		pBundleContext = aBundleContext;
+		// System.out.printf("devtool-basic-runner: %50s | instanciated \n",
+		// this.getClass().getName());
 	}
 
 	/**
@@ -352,7 +354,7 @@ public class CConponentsControler implements ServiceListener {
 	 *
 	 */
 	private void instancaiateComponents() throws UnacceptableConfiguration,
-			MissingHandlerException, ConfigurationException {
+	MissingHandlerException, ConfigurationException {
 
 		final String wCurrentIsolateName = pPlatformDirsSvc.getIsolateName();
 
@@ -603,25 +605,25 @@ public class CConponentsControler implements ServiceListener {
 				if (wObj instanceof String) {
 					wStrValue = (String) wObj;
 				} else
-				//
-				if (wObj instanceof String[]) {
-					wStrValue = CXStringUtils
-							.stringTableToString((String[]) wObj);
-				} else
-				//
-				if (wObj instanceof PropertyDescription[]) {
-					final StringBuilder wSB = new StringBuilder();
-					for (final PropertyDescription wPropertyDescription : ((PropertyDescription[]) wObj)) {
-						wSB.append(String.format("%s=\"%s\" ",
-								wPropertyDescription.getName(),
-								wPropertyDescription.getCurrentValue()));
-					}
-					wStrValue = wSB.toString();
-				} else
-				//
-				{
-					wStrValue = String.valueOf(wObj);
-				}
+					//
+					if (wObj instanceof String[]) {
+						wStrValue = CXStringUtils
+								.stringTableToString((String[]) wObj);
+					} else
+						//
+						if (wObj instanceof PropertyDescription[]) {
+							final StringBuilder wSB = new StringBuilder();
+							for (final PropertyDescription wPropertyDescription : ((PropertyDescription[]) wObj)) {
+								wSB.append(String.format("%s=\"%s\" ",
+										wPropertyDescription.getName(),
+										wPropertyDescription.getCurrentValue()));
+							}
+							wStrValue = wSB.toString();
+						} else
+							//
+						{
+							wStrValue = String.valueOf(wObj);
+						}
 				if (wStrValue.indexOf('\n') > 0) {
 					wStrValue = wStrValue.replace('\n', '§');
 				}
@@ -648,6 +650,24 @@ public class CConponentsControler implements ServiceListener {
 	}
 
 	/**
+	 * MOD_OG_20160906 Basic Runner log enhancement
+	 *
+	 * <pre>
+	 * CConponentsControler_0956;                  validate; All Needed Factories are NOT Available, the components will not be instantiated!
+	 * CConponentsControler_0956; eededFactoriesUnavailable; Unavailable Factory=[Agilium-CAgiliumServicesInfos-factory]
+	 * </pre>
+	 */
+	private void logNeededFactoriesUnavailable() {
+
+		for (final CFactoryInfos wDef : pFactoriesInfos.values()) {
+			if (wDef.isNeeded() && !wDef.hasFactoryServiceRef()) {
+				pLogger.logWarn(this, "logNeededFactoriesUnavailable",
+						"Unavailable Factory=[%s] ", wDef.getName());
+			}
+		}
+	}
+
+	/**
 	 * @throws InvalidSyntaxException
 	 *
 	 */
@@ -662,7 +682,7 @@ public class CConponentsControler implements ServiceListener {
 
 	/*
 	 * (non-Javadoc)
-	 *
+	 * 
 	 * @see
 	 * org.osgi.framework.ServiceListener#serviceChanged(org.osgi.framework.
 	 * ServiceEvent)
@@ -673,7 +693,7 @@ public class CConponentsControler implements ServiceListener {
 		try {
 			@SuppressWarnings("unchecked")
 			final ServiceReference<Factory> wFactoryServiceRef = (ServiceReference<Factory>) aServiceEvent
-					.getServiceReference();
+			.getServiceReference();
 
 			switch (aServiceEvent.getType()) {
 			case ServiceEvent.REGISTERED: {
@@ -769,13 +789,15 @@ public class CConponentsControler implements ServiceListener {
 	@Validate
 	public void validate() {
 
+		pLogger.logInfo(this, "validate", "Validating...");
+
 		boolean wMustControlComponent = false;
 
 		try {
 			// retreive the composition file
 			pCompositionFile = getCompositionFile();
 
-			pLogger.logSevere(this, "validate", "CompositionFile=[%s]",
+			pLogger.logInfo(this, "validate", "CompositionFile=[%s]",
 					pCompositionFile);
 
 			// itialize the component info map
@@ -789,7 +811,7 @@ public class CConponentsControler implements ServiceListener {
 						"There is no component to control in this isolate!");
 				logControlerState(wMustControlComponent);
 			} else
-			// else, if there is at least one component to control
+				// else, if there is at least one component to control
 			{
 				// instal 'Factory' service listener
 				registerFactoryServiceListener();
@@ -808,6 +830,13 @@ public class CConponentsControler implements ServiceListener {
 					pLogger.logInfo(this, "validate",
 							"All Needed Factories are Available, proceed to components instantiation...");
 					instancaiateComponents();
+				} else {
+					// MOD_OG_20160906 Basic Runner log enhancement
+					pLogger.logWarn(
+							this,
+							"validate",
+							"All Needed Factories are NOT Available, the components will not be instantiated!");
+					logNeededFactoriesUnavailable();
 				}
 			}
 
@@ -818,10 +847,11 @@ public class CConponentsControler implements ServiceListener {
 		pLogger.logInfo(
 				this,
 				"validate",
-				"validated. InAction=[%b] isFactoriesAvailable=[%b] CompositionFile=[%s] remainingFactories=[%s]",
+				"validated. InAction=[%b] isAllNeededFactoriesAvailable=[%b] CompositionFile=[%s] remainingFactories=[%s]",
 				wMustControlComponent, isAllNeededFactoriesAvailable(),
 				pCompositionFile,
 				CXStringUtils.stringListToString(getRemainingFactoriesList()));
 
 	}
+
 }
