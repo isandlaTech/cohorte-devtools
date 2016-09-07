@@ -379,6 +379,12 @@ public class CConponentsControler implements ServiceListener {
 							wComponentInfos.getFactoryName(),
 							wComponentInfos.getName());
 
+					// MOD_OG_20160906 Addition of the managment of the
+					// component properties
+					if (wComponentInfos.hasProperties()) {
+						wRawCpt.setProperties(wComponentInfos
+								.getPropertiesMap());
+					}
 					wRawCpnts.add(wRawCpt);
 
 					/*
