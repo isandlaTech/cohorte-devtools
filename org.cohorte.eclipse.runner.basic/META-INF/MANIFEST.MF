@@ -4,8 +4,8 @@ Bundle-ManifestVersion: 2
 Bundle-Name: org.cohorte.eclipse.runner.basic
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-SymbolicName: org.cohorte.eclipse.runner.basic
-Bundle-Vendor: www.isandlatech.com xx
-Bundle-Version: 1.0.1
+Bundle-Vendor: Cohorte Technologies
+Bundle-Version: 1.1.0
 Created-By: iPOJO 1.12.0
 Import-Package: org.apache.felix.ipojo, org.apache.felix.ipojo.archite
  cture, org.cohorte.composer.api;version=3.0.0, org.cohorte.herald, or
@@ -41,77 +41,82 @@ iPOJO-Components: instance { $component="org.cohorte.eclipse.runner.ba
  return="org.psem2m.utilities.files.CXFileUtf8" }method { $name="getCo
  mpositionFile" $return="org.psem2m.utilities.files.CXFileUtf8" $argum
  ents="{org.psem2m.utilities.files.CXFileDir,java.lang.String}" $names
- ="{aConfDir,aFileNameSuffix}" }method { $name="getFilteredFactoryServ
- iceRefs" $return="java.util.Collection" }method { $name="getRemaining
- FactoriesList" $return="java.util.List" }method { $name="hasCompositi
- onFile" $return="boolean" }method { $name="initMaps" }method { $name=
- "instancaiateComponents" }method { $name="invalidate" }method { $name
- ="isAllNeededFactoriesAvailable" $return="boolean" }method { $name="l
- ogControlerState" }method { $name="logControlerState" $arguments="{bo
- olean}" $names="{aInAction}" }method { $name="logFactoryServiceRef" $
- arguments="{org.osgi.framework.ServiceReference}" $names="{wfactorySR
- ef}" }method { $name="logFactoryServiceRefs" }method { $name="logNeed
- edFactoriesUnavailable" }method { $name="registerFactoryServiceListen
- er" }method { $name="serviceChanged" $arguments="{org.osgi.framework.
- ServiceEvent}" $names="{aServiceEvent}" }method { $name="setFactorySe
- rviceRefAvaibility" $arguments="{org.osgi.framework.ServiceReference,
- int}" $names="{wFactoryServiceRef,aServiceEvent}" }method { $name="se
- tFactoryServiceRefsAvaibility" }method { $name="unregisterFactoryServ
- iceListener" }method { $name="validate" }}}component { $name="org.coh
- orte.eclipse.runner.basic.CConponentsControler2" $classname="org.coho
- rte.eclipse.runner.basic.CConponentsControler2" requires { $field="pL
- ogger" }requires { $field="pPlatformDirsSvc" }callback { $transition=
- "invalidate" $method="invalidate" }callback { $transition="validate" 
- $method="validate" }manipulation { $classname="org.cohorte.eclipse.ru
- nner.basic.CConponentsControler2" interface { $name="org.osgi.framewo
- rk.ServiceListener" }field { $name="pBundleContext" $type="org.osgi.f
- ramework.BundleContext" }field { $name="pComponentInfos" $type="java.
- util.Map" }field { $name="pCompositionFile" $type="org.psem2m.utiliti
- es.files.CXFileUtf8" }field { $name="pFactoriesInfos" $type="java.uti
- l.Map" }field { $name="pLogger" $type="org.psem2m.isolates.base.IIsol
- ateLoggerSvc" }field { $name="pPlatformDirsSvc" $type="org.psem2m.iso
- lates.services.dirs.IPlatformDirsSvc" }method { $name="getAllFactoryS
- erviceRefs" $return="java.util.Collection" }method { $name="getCompon
- entDefs" $return="org.psem2m.utilities.json.JSONArray" $arguments="{o
- rg.psem2m.utilities.json.JSONObject}" $names="{aCompositionDef}" }met
- hod { $name="getCompositionDef" $return="org.psem2m.utilities.json.JS
- ONObject" $arguments="{org.psem2m.utilities.files.CXFileUtf8}" $names
- ="{aCompositionFile}" }method { $name="getCompositionFile" $return="o
- rg.psem2m.utilities.files.CXFileUtf8" }method { $name="getFilteredFac
- toryServiceRefs" $return="java.util.Collection" }method { $name="hasC
- ompositionFile" $return="boolean" }method { $name="initMaps" }method 
- { $name="instancaiateComponents" }method { $name="invalidate" }method
-  { $name="isAllNeededFactoriesAvailable" $return="boolean" }method { 
- $name="logControlerState" }method { $name="logControlerState" $argume
- nts="{boolean}" $names="{aInAction}" }method { $name="logFactoryServi
- ceRef" $arguments="{org.osgi.framework.ServiceReference}" $names="{wf
- actorySRef}" }method { $name="logFactoryServiceRefs" }method { $name=
- "registerFactoryServiceListener" }method { $name="serviceChanged" $ar
- guments="{org.osgi.framework.ServiceEvent}" $names="{aServiceEvent}" 
- }method { $name="setFactoryServiceRefAvaibility" $arguments="{org.osg
- i.framework.ServiceReference,int}" $names="{wFactoryServiceRef,aServi
- ceEvent}" }method { $name="setFactoryServiceRefsAvaibility" }method {
-  $name="unregisterFactoryServiceListener" }method { $name="validate" 
- }}}component { $name="org.cohorte.eclipse.runner.basic.CShutdownGogoC
- ommand" $classname="org.cohorte.eclipse.runner.basic.CShutdownGogoCom
- mand" provides { $specifications="{org.cohorte.eclipse.runner.basic.C
- ShutdownGogoCommand,org.cohorte.herald.IMessageListener}" property { 
- $name="osgi.command.function" $field="pCommands" $value="{shutdown}" 
- }property { $name="herald.filters" $field="pFilters" $value="{cohorte
- /eclipse/runner/shutdown}" }property { $name="osgi.command.scope" $fi
- eld="pScope" $value="runner" }}requires { $field="pHerald" }requires 
- { $field="pLogger" }callback { $transition="invalidate" $method="inva
- lidate" }callback { $transition="validate" $method="validate" }manipu
- lation { $classname="org.cohorte.eclipse.runner.basic.CShutdownGogoCo
- mmand" interface { $name="org.cohorte.eclipse.runner.basic.IConstants
- " }interface { $name="org.cohorte.herald.IMessageListener" }field { $
- name="pBundleContext" $type="org.osgi.framework.BundleContext" }field
-  { $name="pCommands" $type="java.lang.String[]" }field { $name="pFilt
- ers" $type="java.lang.String[]" }field { $name="pHerald" $type="org.c
- ohorte.herald.IHerald" }field { $name="pLogger" $type="org.psem2m.iso
- lates.base.IIsolateLoggerSvc" }field { $name="pScope" $type="java.lan
- g.String" }method { $name="doShutdown" }method { $name="heraldMessage
- " $arguments="{org.cohorte.herald.IHerald,org.cohorte.herald.MessageR
- eceived}" $names="{aHerald,aMessage}" }method { $name="invalidate" }m
- ethod { $name="shutdown" }method { $name="validate" }}}
+ ="{aConfDir,aFileNameSuffix}" }method { $name="getCompositionFile" $r
+ eturn="org.psem2m.utilities.files.CXFileUtf8" $arguments="{java.lang.
+ String}" $names="{aFileName}" }method { $name="getFilteredFactoryServ
+ iceRefs" $return="java.util.Collection" }method { $name="getParentsCo
+ mponents" $return="org.psem2m.utilities.json.JSONArray" $arguments="{
+ org.psem2m.utilities.json.JSONObject}" $names="{aComposition}" }metho
+ d { $name="getRemainingFactoriesList" $return="java.util.List" }metho
+ d { $name="hasCompositionFile" $return="boolean" }method { $name="ini
+ tMaps" }method { $name="instancaiateComponents" }method { $name="inva
+ lidate" }method { $name="isAllNeededFactoriesAvailable" $return="bool
+ ean" }method { $name="logControlerState" }method { $name="logControle
+ rState" $arguments="{boolean}" $names="{aInAction}" }method { $name="
+ logFactoryServiceRef" $arguments="{org.osgi.framework.ServiceReferenc
+ e}" $names="{wfactorySRef}" }method { $name="logFactoryServiceRefs" }
+ method { $name="logNeededFactoriesUnavailable" }method { $name="regis
+ terFactoryServiceListener" }method { $name="serviceChanged" $argument
+ s="{org.osgi.framework.ServiceEvent}" $names="{aServiceEvent}" }metho
+ d { $name="setFactoryServiceRefAvaibility" $arguments="{org.osgi.fram
+ ework.ServiceReference,int}" $names="{wFactoryServiceRef,aServiceEven
+ t}" }method { $name="setFactoryServiceRefsAvaibility" }method { $name
+ ="unregisterFactoryServiceListener" }method { $name="validate" }}}com
+ ponent { $name="org.cohorte.eclipse.runner.basic.CConponentsControler
+ 2" $classname="org.cohorte.eclipse.runner.basic.CConponentsControler2
+ " requires { $field="pLogger" }requires { $field="pPlatformDirsSvc" }
+ callback { $transition="invalidate" $method="invalidate" }callback { 
+ $transition="validate" $method="validate" }manipulation { $classname=
+ "org.cohorte.eclipse.runner.basic.CConponentsControler2" interface { 
+ $name="org.osgi.framework.ServiceListener" }field { $name="pBundleCon
+ text" $type="org.osgi.framework.BundleContext" }field { $name="pCompo
+ nentInfos" $type="java.util.Map" }field { $name="pCompositionFile" $t
+ ype="org.psem2m.utilities.files.CXFileUtf8" }field { $name="pFactorie
+ sInfos" $type="java.util.Map" }field { $name="pLogger" $type="org.pse
+ m2m.isolates.base.IIsolateLoggerSvc" }field { $name="pPlatformDirsSvc
+ " $type="org.psem2m.isolates.services.dirs.IPlatformDirsSvc" }method 
+ { $name="getAllFactoryServiceRefs" $return="java.util.Collection" }me
+ thod { $name="getComponentDefs" $return="org.psem2m.utilities.json.JS
+ ONArray" $arguments="{org.psem2m.utilities.json.JSONObject}" $names="
+ {aCompositionDef}" }method { $name="getCompositionDef" $return="org.p
+ sem2m.utilities.json.JSONObject" $arguments="{org.psem2m.utilities.fi
+ les.CXFileUtf8}" $names="{aCompositionFile}" }method { $name="getComp
+ ositionFile" $return="org.psem2m.utilities.files.CXFileUtf8" }method 
+ { $name="getFilteredFactoryServiceRefs" $return="java.util.Collection
+ " }method { $name="hasCompositionFile" $return="boolean" }method { $n
+ ame="initMaps" }method { $name="instancaiateComponents" }method { $na
+ me="invalidate" }method { $name="isAllNeededFactoriesAvailable" $retu
+ rn="boolean" }method { $name="logControlerState" }method { $name="log
+ ControlerState" $arguments="{boolean}" $names="{aInAction}" }method {
+  $name="logFactoryServiceRef" $arguments="{org.osgi.framework.Service
+ Reference}" $names="{wfactorySRef}" }method { $name="logFactoryServic
+ eRefs" }method { $name="registerFactoryServiceListener" }method { $na
+ me="serviceChanged" $arguments="{org.osgi.framework.ServiceEvent}" $n
+ ames="{aServiceEvent}" }method { $name="setFactoryServiceRefAvaibilit
+ y" $arguments="{org.osgi.framework.ServiceReference,int}" $names="{wF
+ actoryServiceRef,aServiceEvent}" }method { $name="setFactoryServiceRe
+ fsAvaibility" }method { $name="unregisterFactoryServiceListener" }met
+ hod { $name="validate" }}}component { $name="org.cohorte.eclipse.runn
+ er.basic.CShutdownGogoCommand" $classname="org.cohorte.eclipse.runner
+ .basic.CShutdownGogoCommand" provides { $specifications="{org.cohorte
+ .eclipse.runner.basic.CShutdownGogoCommand,org.cohorte.herald.IMessag
+ eListener}" property { $name="osgi.command.function" $field="pCommand
+ s" $value="{shutdown}" }property { $name="herald.filters" $field="pFi
+ lters" $value="{cohorte/eclipse/runner/shutdown}" }property { $name="
+ osgi.command.scope" $field="pScope" $value="runner" }}requires { $fie
+ ld="pHerald" }requires { $field="pLogger" }callback { $transition="in
+ validate" $method="invalidate" }callback { $transition="validate" $me
+ thod="validate" }manipulation { $classname="org.cohorte.eclipse.runne
+ r.basic.CShutdownGogoCommand" interface { $name="org.cohorte.eclipse.
+ runner.basic.IConstants" }interface { $name="org.cohorte.herald.IMess
+ ageListener" }field { $name="pBundleContext" $type="org.osgi.framewor
+ k.BundleContext" }field { $name="pCommands" $type="java.lang.String[]
+ " }field { $name="pFilters" $type="java.lang.String[]" }field { $name
+ ="pHerald" $type="org.cohorte.herald.IHerald" }field { $name="pLogger
+ " $type="org.psem2m.isolates.base.IIsolateLoggerSvc" }field { $name="
+ pScope" $type="java.lang.String" }method { $name="doShutdown" }method
+  { $name="heraldMessage" $arguments="{org.cohorte.herald.IHerald,org.
+ cohorte.herald.MessageReceived}" $names="{aHerald,aMessage}" }method 
+ { $name="invalidate" }method { $name="shutdown" }method { $name="vali
+ date" }}}
 

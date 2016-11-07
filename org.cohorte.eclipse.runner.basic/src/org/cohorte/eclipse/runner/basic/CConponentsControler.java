@@ -196,7 +196,16 @@ public class CConponentsControler implements ServiceListener {
 	private JSONObject getCompositionDef(final CXFileUtf8 aCompositionFile)
 			throws JSONException, IOException {
 
-		return new JSONObject(aCompositionFile.readAll());
+		JSONObject wComposition = new JSONObject(aCompositionFile.readAll());
+
+		JSONArray wParentsComponents = getParentsComponents(wComposition);
+
+		for (int i = 0; i < wParentsComponents.length(); i++) {
+			wComposition.getJSONObject("root").getJSONArray("components")
+					.put(wParentsComponents.get(i));
+		}
+
+		return wComposition;
 	}
 
 	/**
@@ -255,6 +264,28 @@ public class CConponentsControler implements ServiceListener {
 		return wCompositionFile;
 	}
 
+	private CXFileUtf8 getCompositionFile(final String aFileName)
+			throws IOException {
+
+		CXFileUtf8 wCompositionFile = new CXFileUtf8(aFileName);
+
+		pLogger.logInfo(this, "getCompositionFile",
+				"FileName=[%s] Exists=[%b] path=[%s]", aFileName,
+				wCompositionFile.exists(), wCompositionFile);
+
+		// if the composition file doesn't exist => Exception
+		if (!wCompositionFile.exists()) {
+
+			String wMessage = String
+					.format("The cohorte composition file [%s] doesn't exist. path=[%s]",
+							aFileName, wCompositionFile.getAbsolutePath());
+
+			throw new IOException(wMessage);
+
+		}
+		return wCompositionFile;
+	}
+
 	/**
 	 * @return
 	 * @throws InvalidSyntaxException
@@ -275,6 +306,44 @@ public class CConponentsControler implements ServiceListener {
 		}
 		return pBundleContext.getServiceReferences(Factory.class, wLdapFilter);
 
+	}
+
+	private JSONArray getParentsComponents(final JSONObject aComposition)
+			throws JSONException, IOException {
+		JSONArray wResult = new JSONArray();
+		JSONObject wRoot = aComposition.getJSONObject("root");
+		if (wRoot != null) {
+			JSONArray wImportFiles = wRoot.getJSONArray("import-files");
+			if (wImportFiles != null) {
+				for (int i = 0; i < wImportFiles.length(); i++) {
+
+					final CXFileDir wConfDir = new CXFileDir(
+							pPlatformDirsSvc.getPlatformBase(), "conf");
+					String wImportFile = wImportFiles.getString(i);
+					CXFileUtf8 wParentCompositionFile = new CXFileUtf8(
+							wConfDir, wImportFile);
+
+					JSONObject wParentComposition = new JSONObject(
+							wParentCompositionFile.readAll());
+
+					JSONArray wParentComponents = getParentsComponents(wParentComposition);
+					if (wParentComponents != null) {
+						for (int j = 0; j < wParentComponents.length(); j++) {
+							wResult.put(wParentComponents.get(j));
+						}
+					}
+
+					JSONArray wComponents = wParentComposition.getJSONObject(
+							"root").getJSONArray("components");
+					if (wComponents != null) {
+						for (int j = 0; j < wComponents.length(); j++) {
+							wResult.put(wComponents.get(j));
+						}
+					}
+				}
+			}
+		}
+		return wResult;
 	}
 
 	/**
@@ -354,7 +423,7 @@ public class CConponentsControler implements ServiceListener {
 	 *
 	 */
 	private void instancaiateComponents() throws UnacceptableConfiguration,
-	MissingHandlerException, ConfigurationException {
+			MissingHandlerException, ConfigurationException {
 
 		final String wCurrentIsolateName = pPlatformDirsSvc.getIsolateName();
 
@@ -611,25 +680,25 @@ public class CConponentsControler implements ServiceListener {
 				if (wObj instanceof String) {
 					wStrValue = (String) wObj;
 				} else
-					//
-					if (wObj instanceof String[]) {
-						wStrValue = CXStringUtils
-								.stringTableToString((String[]) wObj);
-					} else
-						//
-						if (wObj instanceof PropertyDescription[]) {
-							final StringBuilder wSB = new StringBuilder();
-							for (final PropertyDescription wPropertyDescription : ((PropertyDescription[]) wObj)) {
-								wSB.append(String.format("%s=\"%s\" ",
-										wPropertyDescription.getName(),
-										wPropertyDescription.getCurrentValue()));
-							}
-							wStrValue = wSB.toString();
-						} else
-							//
-						{
-							wStrValue = String.valueOf(wObj);
-						}
+				//
+				if (wObj instanceof String[]) {
+					wStrValue = CXStringUtils
+							.stringTableToString((String[]) wObj);
+				} else
+				//
+				if (wObj instanceof PropertyDescription[]) {
+					final StringBuilder wSB = new StringBuilder();
+					for (final PropertyDescription wPropertyDescription : ((PropertyDescription[]) wObj)) {
+						wSB.append(String.format("%s=\"%s\" ",
+								wPropertyDescription.getName(),
+								wPropertyDescription.getCurrentValue()));
+					}
+					wStrValue = wSB.toString();
+				} else
+				//
+				{
+					wStrValue = String.valueOf(wObj);
+				}
 				if (wStrValue.indexOf('\n') > 0) {
 					wStrValue = wStrValue.replace('\n', '§');
 				}
@@ -688,7 +757,7 @@ public class CConponentsControler implements ServiceListener {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see
 	 * org.osgi.framework.ServiceListener#serviceChanged(org.osgi.framework.
 	 * ServiceEvent)
@@ -699,7 +768,7 @@ public class CConponentsControler implements ServiceListener {
 		try {
 			@SuppressWarnings("unchecked")
 			final ServiceReference<Factory> wFactoryServiceRef = (ServiceReference<Factory>) aServiceEvent
-			.getServiceReference();
+					.getServiceReference();
 
 			switch (aServiceEvent.getType()) {
 			case ServiceEvent.REGISTERED: {
@@ -817,7 +886,7 @@ public class CConponentsControler implements ServiceListener {
 						"There is no component to control in this isolate!");
 				logControlerState(wMustControlComponent);
 			} else
-				// else, if there is at least one component to control
+			// else, if there is at least one component to control
 			{
 				// instal 'Factory' service listener
 				registerFactoryServiceListener();
