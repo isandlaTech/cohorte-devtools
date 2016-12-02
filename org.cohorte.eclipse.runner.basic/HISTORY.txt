@@ -1,3 +1,6 @@
+MOD_BD_20161202
+ - correct json exception fired when composition.js does not contain import-files
+ 
 MOD_BD_20161031
  - consider importing component of parent composition
  - change the version : 1.1.0

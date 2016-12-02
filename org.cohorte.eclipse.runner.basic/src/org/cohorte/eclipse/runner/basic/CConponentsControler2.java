@@ -85,8 +85,9 @@ import org.psem2m.utilities.json.JSONObject;
  * </pre>
  *
  * @author ogattaz
- *
+ * @deprecated
  */
+@Deprecated
 @Component
 // @Instantiate
 public class CConponentsControler2 implements ServiceListener {
@@ -559,7 +560,7 @@ public class CConponentsControler2 implements ServiceListener {
 
 	/*
 	 * (non-Javadoc)
-	 *
+	 * 
 	 * @see
 	 * org.osgi.framework.ServiceListener#serviceChanged(org.osgi.framework.
 	 * ServiceEvent)

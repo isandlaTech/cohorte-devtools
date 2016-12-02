@@ -308,12 +308,15 @@ public class CConponentsControler implements ServiceListener {
 
 	}
 
+	/*
+	 * MOD_BD_20161202
+	 */
 	private JSONArray getParentsComponents(final JSONObject aComposition)
 			throws JSONException, IOException {
 		JSONArray wResult = new JSONArray();
 		JSONObject wRoot = aComposition.getJSONObject("root");
 		if (wRoot != null) {
-			JSONArray wImportFiles = wRoot.getJSONArray("import-files");
+			JSONArray wImportFiles = wRoot.optJSONArray("import-files");
 			if (wImportFiles != null) {
 				for (int i = 0; i < wImportFiles.length(); i++) {
 
@@ -332,12 +335,14 @@ public class CConponentsControler implements ServiceListener {
 							wResult.put(wParentComponents.get(j));
 						}
 					}
-
-					JSONArray wComponents = wParentComposition.getJSONObject(
-							"root").getJSONArray("components");
-					if (wComponents != null) {
-						for (int j = 0; j < wComponents.length(); j++) {
-							wResult.put(wComponents.get(j));
+					if (wParentComposition.has("root")) {
+						JSONArray wComponents = wParentComposition
+								.optJSONObject("root").optJSONArray(
+										"components");
+						if (wComponents != null) {
+							for (int j = 0; j < wComponents.length(); j++) {
+								wResult.put(wComponents.get(j));
+							}
 						}
 					}
 				}
@@ -757,7 +762,7 @@ public class CConponentsControler implements ServiceListener {
 
 	/*
 	 * (non-Javadoc)
-	 *
+	 * 
 	 * @see
 	 * org.osgi.framework.ServiceListener#serviceChanged(org.osgi.framework.
 	 * ServiceEvent)
