@@ -1,4 +1,4 @@
-package com.cohorte.eclipse.models.validator;
+package main.java.com.cohorte.models.validator;
 
 import java.io.File;
 import java.nio.charset.Charset;
@@ -40,13 +40,19 @@ public class CValidator {
 	private final String pPrefixModule;
 
 	public CValidator(final IActivityLogger aLogger) {
+		this(aLogger, System.getenv("cohorte.data"), System
+				.getenv("cohorte.bata"), System.getenv("tag"), System
+				.getenv("module.prefix"));
+	}
+
+	public CValidator(final IActivityLogger aLogger, final String aCohorteData,
+			final String aCohorteBase, final String aIncludeTag,
+			final String aPrefix) {
 		pLogger = aLogger;
-		pCohorteData = System.getenv("cohorte.data");
-		pCohorteBase = System.getenv("cohorte.base");
-		pIncludeTag = System.getenv("tag") != null ? System.getenv("tag")
-				: "$include";
-		pPrefixModule = System.getenv("module.prefix") != null ? System
-				.getenv("module.prefix") : "module_";
+		pCohorteData = aCohorteData;
+		pCohorteBase = aCohorteBase;
+		pIncludeTag = aIncludeTag != null ? aIncludeTag : "$include";
+		pPrefixModule = aPrefix != null ? aPrefix : "module_";
 		try {
 			initProvider();
 			initModuleList();

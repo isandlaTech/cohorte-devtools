@@ -1,4 +1,4 @@
-package com.cohorte.eclipse.models.validator;
+package main.java.com.cohorte.models.validator;
 
 import org.psem2m.utilities.logging.CActivityLoggerBasicConsole;
 import org.psem2m.utilities.logging.IActivityLogger;
