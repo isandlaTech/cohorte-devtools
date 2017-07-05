@@ -30,6 +30,23 @@ public class CValidatorMojo extends AbstractMojo {
 	private String pCohorteData;
 
 	/**
+	 * target directory path where the json fake are generated.
+	 *
+	 * @parameter expression="${target.dir}"
+	 *            default-value="cohorte.base/generate"
+	 * @required
+	 */
+	private String pPathTarget;
+
+	/**
+	 * prefix for json fake files
+	 *
+	 * @parameter expression="${prefix.json}" default-value="json_fake_"
+	 * @required
+	 */
+	private String pPrefixJson;
+
+	/**
 	 * cohorte base path.
 	 *
 	 * @parameter expression="${prefix.module}" default-value="module_"
@@ -47,11 +64,14 @@ public class CValidatorMojo extends AbstractMojo {
 
 	@Override
 	public void execute() throws MojoExecutionException {
+		try {
+			CValidator wValidator = new CValidator(
+					CActivityLoggerBasicConsole.getInstance(), pCohorteData,
+					pCohorteBase, pTag, pPrefixModule, pPathTarget, pPrefixJson);
 
-		CValidator wValidator = new CValidator(
-				CActivityLoggerBasicConsole.getInstance(), pCohorteData,
-				pCohorteBase, pTag, pPrefixModule);
-
-		wValidator.validate();
+			wValidator.validate();
+		} catch (Exception e) {
+			throw new MojoExecutionException("validation failed ", e);
+		}
 	}
 }

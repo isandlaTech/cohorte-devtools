@@ -1,18 +1,26 @@
 package main.java.com.cohorte.models.validator;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.cohorte.iot.json.validator.api.CJsonValidator;
+import org.cohorte.iot.json.validator.api.CJsonGeneratorDefault;
+import org.cohorte.iot.json.validator.api.CJsonSchema;
+import org.cohorte.iot.json.validator.api.CJsonValidatorDefault;
+import org.cohorte.iot.json.validator.api.IJsonGenerator;
+import org.cohorte.iot.json.validator.api.IValidator;
 import org.cohorte.utilities.json.provider.CHandlerMemoryCacheSchema;
 import org.cohorte.utilities.json.provider.CJsonProvider;
 import org.cohorte.utilities.json.provider.CJsonRsrcResolver;
+import org.cohorte.utilities.json.provider.IJsonProvider;
 import org.psem2m.utilities.CXBytesUtils;
 import org.psem2m.utilities.files.CXFileDir;
+import org.psem2m.utilities.files.CXFileText;
 import org.psem2m.utilities.json.JSONArray;
+import org.psem2m.utilities.json.JSONException;
 import org.psem2m.utilities.json.JSONObject;
 import org.psem2m.utilities.logging.IActivityLogger;
 import org.psem2m.utilities.rsrc.CXRsrcProviderFile;
@@ -20,45 +28,63 @@ import org.psem2m.utilities.rsrc.CXRsrcProviderMemory;
 
 public class CValidator {
 
+	private static final String DEFINITIONS = "definitions";
+
 	public static String EXTENSION = ".js";
-
 	private static final String ITEMS = "items";
-	private static final String SCHEMA = "schema";
 
+	private static final String SCHEMA = "schema";
 	private final String pCohorteBase;
 	private final String pCohorteData;
 	private final String pIncludeTag;
-	private CJsonProvider pJsonProvider;
+	private final IJsonGenerator pJsonGenerator;
+
+	private IJsonProvider pJsonProvider;
+
 	private Set<String> pListModule;
 
 	private final IActivityLogger pLogger;
-
 	private CXFileDir pModelBase;
 
 	private CXFileDir pModelData;
 
-	private final String pPrefixModule;
+	private final String pPathTarget;
 
-	public CValidator(final IActivityLogger aLogger) {
+	private final String pPrefixFakeJson;
+
+	private final String pPrefixModule;
+	private final IValidator pValidator;
+
+	public CValidator(final IActivityLogger aLogger) throws Exception {
 		this(aLogger, System.getenv("cohorte.data"), System
-				.getenv("cohorte.bata"), System.getenv("tag"), System
-				.getenv("module.prefix"));
+				.getenv("cohorte.base"), System.getenv("tag"), System
+				.getenv("module.prefix"), System.getenv("target.dir"), System
+				.getenv("json.prefix"));
 	}
 
 	public CValidator(final IActivityLogger aLogger, final String aCohorteData,
 			final String aCohorteBase, final String aIncludeTag,
-			final String aPrefix) {
+			final String aPrefixModule, final String aPathTarget,
+			final String aPrefixJson) throws Exception {
+		if (aCohorteData == null || aCohorteBase == null) {
+			throw new Exception("cohorte.base or cohorte.data is not setted!");
+		}
 		pLogger = aLogger;
 		pCohorteData = aCohorteData;
 		pCohorteBase = aCohorteBase;
 		pIncludeTag = aIncludeTag != null ? aIncludeTag : "$include";
-		pPrefixModule = aPrefix != null ? aPrefix : "module_";
-		try {
-			initProvider();
-			initModuleList();
-		} catch (Exception e) {
-			pLogger.logSevere(null, "main", "ERROR; exception [%s]", e);
-		}
+		pPrefixModule = aPrefixModule != null ? aPrefixModule : "module_";
+		pPathTarget = aPathTarget != null ? aPathTarget : pCohorteBase
+				+ File.separatorChar + "generate";
+		pPrefixFakeJson = aPrefixJson != null ? aPrefixJson : "fake_json_";
+		pJsonGenerator = CJsonGeneratorDefault.getInstance();
+		pValidator = CJsonValidatorDefault.getInstance();
+
+		CXFileText wTarget = new CXFileText(pPathTarget);
+		wTarget.mkdirs();
+		initProvider();
+		initModuleList();
+
 	}
 
 	private void initModuleList() {
@@ -141,41 +167,70 @@ public class CValidator {
 	}
 
 	public void validate() {
-		for (String wName : pListModule) {
+		for (String wModuleName : pListModule) {
 			pLogger.logInfo(this, "validate", "module %s include validating",
-					wName);
+					wModuleName);
 			try {
 				JSONObject wObj = pJsonProvider.getJSONObject(pIncludeTag,
-						wName, pPrefixModule + wName + EXTENSION);
+						wModuleName, pPrefixModule + wModuleName + EXTENSION);
 				pLogger.logInfo(this, "validate",
-						"===>module %s include validated", wName);
+						"===>module %s include validated", wModuleName);
 
 				JSONArray wArr = wObj.optJSONArray(ITEMS);
 				for (int i = 0; wArr != null && i < wArr.length(); i++) {
 					JSONObject wItem = wArr.getJSONObject(i);
-					validateSchema(wItem.optString("id"),
+					validateSchema(wModuleName, wItem.optString("id"),
 							wItem.getJSONObject(SCHEMA));
 				}
 			} catch (Exception e) {
 				pLogger.logSevere(this, "validate",
-						"===>module %s include validation failed ", wName);
+						"===>module %s include validation failed ", wModuleName);
 			}
 		}
 	}
 
-	private void validateSchema(final String aItemId, final JSONObject aSchema)
-			throws Exception {
+	private void validateSchema(final String aModuleName, final String aItemId,
+			final JSONObject aSchema) throws Exception {
 		pLogger.logInfo(this, "validateSchema", "module %s schema validating",
 				aItemId);
 		try {
-			CJsonValidator.getDefault().getSchema(pLogger, aSchema);
+			// remove definition content
+			aSchema.remove(DEFINITIONS);
+			// get schema
+			CJsonSchema wSchema = pValidator.getSchema(pLogger, aSchema);
+
+			// generate fake json with data
+			JSONObject wFakeJson = pJsonGenerator.generateFakeJson(pLogger,
+					wSchema.getJsonSchema(), false);
+
+			// validation fake json with schema
+			pValidator.valdate(pLogger, wSchema,
+					new JSONObject(wFakeJson.toString()));
+
+			// write it to the target folder
+			writeFakeJson(wFakeJson, aModuleName, aItemId);
+
 		} catch (Exception e) {
-			pLogger.logSevere(this, "validateSchema",
-					"module %s schema validated", aItemId);
+			pLogger.logSevere(
+					this,
+					"validateSchema",
+					"ERRO; module  %s, item %s :  schema validation failed  [%s]",
+					aModuleName, aItemId, e);
 			throw e;
 		}
 		pLogger.logInfo(this, "validateSchema", "module %s schema validated",
 				aItemId);
 
 	}
+
+	private void writeFakeJson(final JSONObject aFakeJson,
+			final String aModuleName, final String aItemId) throws IOException,
+			JSONException {
+		CXFileText wFileJsonFake = new CXFileText(pPathTarget
+				+ File.separatorChar + pPrefixFakeJson + aModuleName + "_"
+				+ aItemId);
+		wFileJsonFake.writeAll(aFakeJson.toString(2));
+		wFileJsonFake.close();
+	}
+
 }
