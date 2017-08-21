@@ -1,7 +1,10 @@
 package org.cohorte.eclipse.runner.basic;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -9,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
+
+import javax.script.ScriptException;
 
 import org.apache.felix.ipojo.ConfigurationException;
 import org.apache.felix.ipojo.Factory;
@@ -22,6 +27,10 @@ import org.apache.felix.ipojo.annotations.Validate;
 import org.apache.felix.ipojo.architecture.PropertyDescription;
 import org.cohorte.composer.api.IIsolateComposer;
 import org.cohorte.composer.api.RawComponent;
+import org.cohorte.eclipse.runner.basic.jython.IFileFinder;
+import org.cohorte.eclipse.runner.basic.jython.IFileIncluder;
+import org.cohorte.eclipse.runner.basic.jython.IPythonBridge;
+import org.cohorte.eclipse.runner.basic.jython.IPythonFactory;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceEvent;
@@ -113,15 +122,21 @@ public class CConponentsControler implements ServiceListener {
 
 	static final String PROP_FACTORY_NAME = "factory.name";
 
+	private static String PYTHON_FACTORY = "controller";
+
 	private final BundleContext pBundleContext;
 
 	// the map compnonent name => component infos
 	private final Map<String, CComponentInfos> pComponentInfos = new HashMap<String, CComponentInfos>();
 
-	private CXFileUtf8 pCompositionFile = null;
+	private final CXFileUtf8 pCompositionFile = null;
 
 	// the map factory name => factory infos
 	private final Map<String, CFactoryInfos> pFactoriesInfos = new HashMap<String, CFactoryInfos>();
+
+	private IFileFinder pFinder;
+
+	private IFileIncluder pIncluder;
 
 	@Requires(filter = "(!(service.imported=*))")
 	// MOD_BD_20150811
@@ -133,6 +148,12 @@ public class CConponentsControler implements ServiceListener {
 	@Requires
 	private IPlatformDirsSvc pPlatformDirsSvc;
 
+	@Requires
+	IPythonBridge pPythonBridge;
+
+	@Requires
+	private CShutdownGogoCommand pShutDownCommand;
+
 	/**
 	 * @param aBundleContext
 	 */
@@ -141,6 +162,7 @@ public class CConponentsControler implements ServiceListener {
 		pBundleContext = aBundleContext;
 		// System.out.printf("devtool-basic-runner: %50s | instanciated \n",
 		// this.getClass().getName());
+
 	}
 
 	/**
@@ -184,6 +206,28 @@ public class CConponentsControler implements ServiceListener {
 	}
 
 	/**
+	 * return the composition file merge using jython
+	 *
+	 * @return
+	 * @throws ScriptException
+	 * @throws FileNotFoundException
+	 */
+	private String getCompositionContent() {
+		if (pIncluder != null) {
+			String wFileNameSuffix = pBundleContext
+					.getProperty(PROP_COMPOSITION_FILENAME_SUFFIX);
+			String wCompositionFileName = getCompositionFileName(wFileNameSuffix);
+			Object wRes = pIncluder.get_content("conf" + File.separatorChar
+					+ wCompositionFileName, false);
+
+			pPythonBridge.remove(PYTHON_FACTORY);
+			return wRes.toString();
+
+		}
+		return null;
+	}
+
+	/**
 	 * Convert the content of the "base/conf/composituion.js" file in a json
 	 * object.
 	 *
@@ -193,10 +237,11 @@ public class CConponentsControler implements ServiceListener {
 	 * @throws IOException
 	 * @throws JSONException
 	 */
-	private JSONObject getCompositionDef(final CXFileUtf8 aCompositionFile)
-			throws JSONException, IOException {
+	private JSONObject getCompositionDef() throws JSONException, IOException {
 
-		JSONObject wComposition = new JSONObject(aCompositionFile.readAll());
+		// replace here by a python call using jython
+
+		JSONObject wComposition = new JSONObject(getCompositionContent());
 
 		JSONArray wParentsComponents = getParentsComponents(wComposition);
 
@@ -241,8 +286,7 @@ public class CConponentsControler implements ServiceListener {
 	private CXFileUtf8 getCompositionFile(final CXFileDir aConfDir,
 			final String aFileNameSuffix) throws IOException {
 
-		String wFileName = String.format(FMT_COMPOSITION_FILENAME,
-				(aFileNameSuffix != null) ? aFileNameSuffix : "");
+		String wFileName = getCompositionFileName(aFileNameSuffix);
 
 		CXFileUtf8 wCompositionFile = new CXFileUtf8(aConfDir, wFileName);
 
@@ -284,6 +328,11 @@ public class CConponentsControler implements ServiceListener {
 
 		}
 		return wCompositionFile;
+	}
+
+	private String getCompositionFileName(final String aFileNameSuffix) {
+		return String.format(FMT_COMPOSITION_FILENAME,
+				(aFileNameSuffix != null) ? aFileNameSuffix : "");
 	}
 
 	/**
@@ -373,6 +422,26 @@ public class CConponentsControler implements ServiceListener {
 		return pCompositionFile != null;
 	}
 
+	private void initJythonObject() throws IOException {
+		// create finder and includer python object to resolve the configuration
+		// file
+		IPythonFactory wPythonFactory = pPythonBridge.getPythonObjectFactory(
+				PYTHON_FACTORY,
+				Arrays.asList(new String[] { pPlatformDirsSvc.getPlatformHome()
+						.getAbsolutePath() + File.separatorChar + "repo" }));
+
+		pFinder = (IFileFinder) wPythonFactory.newInstance(IFileFinder.class);
+		// set cohorte base and data to the finder
+
+		pIncluder = (IFileIncluder) wPythonFactory
+				.newInstance(IFileIncluder.class);
+
+		pFinder._set_roots(Arrays.asList(new String[] {
+				pPlatformDirsSvc.getNodeDataDir().getAbsolutePath(),
+				pPlatformDirsSvc.getPlatformBase().getAbsolutePath() }));
+		pIncluder.set_finder(pFinder);
+	}
+
 	/**
 	 * initialize the content of the "pFactoriesInfos" and "pComponentInfos"
 	 * maps.
@@ -390,7 +459,7 @@ public class CConponentsControler implements ServiceListener {
 		pLogger.logInfo(this, "initMaps", "CurrentIsolateName={%s]",
 				wCurrentIsolateName);
 
-		final JSONArray wComponentDefArray = getComponentDefs(getCompositionDef(pCompositionFile));
+		final JSONArray wComponentDefArray = getComponentDefs(getCompositionDef());
 
 		for (int wIdx = 0; wIdx < wComponentDefArray.length(); wIdx++) {
 
@@ -874,11 +943,8 @@ public class CConponentsControler implements ServiceListener {
 		boolean wMustControlComponent = false;
 
 		try {
-			// retreive the composition file
-			pCompositionFile = getCompositionFile();
-
-			pLogger.logInfo(this, "validate", "CompositionFile=[%s]",
-					pCompositionFile);
+			// init jython object to get composition
+			initJythonObject();
 
 			// itialize the component info map
 			initMaps();
@@ -922,6 +988,8 @@ public class CConponentsControler implements ServiceListener {
 
 		} catch (final Exception e) {
 			pLogger.logSevere(this, "validate", "Error: %s", e);
+			e.printStackTrace();
+			pShutDownCommand.shutdown();
 		}
 
 		pLogger.logInfo(
@@ -933,5 +1001,4 @@ public class CConponentsControler implements ServiceListener {
 				CXStringUtils.stringListToString(getRemainingFactoriesList()));
 
 	}
-
 }
