@@ -7,9 +7,9 @@ import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.cohorte.iot.json.validator.api.CJsonGeneratorDefault;
+import org.cohorte.iot.json.validator.api.CJsonGeneratorFactory;
 import org.cohorte.iot.json.validator.api.CJsonSchema;
-import org.cohorte.iot.json.validator.api.CJsonValidatorDefault;
+import org.cohorte.iot.json.validator.api.CJsonValidatorFactory;
 import org.cohorte.iot.json.validator.api.IJsonGenerator;
 import org.cohorte.iot.json.validator.api.IValidator;
 import org.cohorte.utilities.json.provider.CHandlerMemoryCacheSchema;
@@ -77,8 +77,8 @@ public class CValidator {
 		pPathTarget = aPathTarget != null ? aPathTarget : pCohorteBase
 				+ File.separatorChar + "generate";
 		pPrefixFakeJson = aPrefixJson != null ? aPrefixJson : "fake_json_";
-		pJsonGenerator = CJsonGeneratorDefault.getInstance();
-		pValidator = CJsonValidatorDefault.getInstance();
+		pJsonGenerator = CJsonGeneratorFactory.getSingleton();
+		pValidator = CJsonValidatorFactory.getSingleton();
 
 		CXFileText wTarget = new CXFileText(pPathTarget);
 		wTarget.mkdirs();
