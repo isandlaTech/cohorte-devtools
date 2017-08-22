@@ -11,6 +11,7 @@ import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Validate;
+import org.osgi.framework.BundleContext;
 import org.psem2m.isolates.base.IIsolateLoggerSvc;
 import org.psem2m.isolates.services.dirs.IPlatformDirsSvc;
 
@@ -26,6 +27,8 @@ import org.psem2m.isolates.services.dirs.IPlatformDirsSvc;
 @Provides(specifications = IPythonBridge.class)
 public class CCpntPythonBridge implements IPythonBridge {
 
+	private final BundleContext pContext;
+
 	@Requires
 	IIsolateLoggerSvc pLogger;
 
@@ -39,8 +42,9 @@ public class CCpntPythonBridge implements IPythonBridge {
 
 	private String pStdLibPath;
 
-	public CCpntPythonBridge() {
+	public CCpntPythonBridge(final BundleContext aContext) {
 		pMapFactory = new HashMap<String, IPythonFactory>();
+		pContext = aContext;
 	}
 
 	@Override
@@ -92,9 +96,10 @@ public class CCpntPythonBridge implements IPythonBridge {
 		pLogger.logInfo(this, "validate", "validating...");
 		// check existance of
 		try {
-			String wDataDir = pPlatformDirsSvc.getNodeDataDir()
-					.getAbsolutePath();
-			pStdLibPath = wDataDir + File.separatorChar + "jython";
+			// add stdLibPath
+
+			pStdLibPath = System.getProperty("jython.stdlib")
+					+ File.separatorChar + "lib";
 			if (!new File(pStdLibPath).exists()) {
 				throw new Exception(String.format(
 						"jython standard librarie can't be find in data in %s",
