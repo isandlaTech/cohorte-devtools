@@ -92,10 +92,12 @@ public class CPythonFactory implements IPythonFactory {
 				new String[0]);
 		pInterpreter = new PythonInterpreter();
 		pInterpreter.exec("import sys");
+		pInterpreter.exec("import logging");
+		pInterpreter.exec("logging.basicConfig(level=logging.DEBUG)");
+
 		if (aPythonPath != null) {
 			addPythonPath(aPythonPath);
 		}
-		System.out.println(pInterpreter.eval("sys.path").toString());
 		pMapHashCode = new HashMap<Integer, Integer>();
 		pMapProxy = new HashMap<Integer, WeakReference<Object>>();
 	}

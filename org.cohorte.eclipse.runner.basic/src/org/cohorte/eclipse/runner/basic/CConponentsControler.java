@@ -254,30 +254,6 @@ public class CConponentsControler implements ServiceListener {
 	}
 
 	/**
-	 * @return an instance of CXFileUtf8 corresponding to the existing
-	 *         "base/conf/composituion.js" file
-	 *
-	 * @throws IOException
-	 */
-	private CXFileUtf8 getCompositionFile() throws IOException {
-
-		final CXFileDir wConfDir = new CXFileDir(
-				pPlatformDirsSvc.getPlatformBase(), "conf");
-		if (!wConfDir.exists()) {
-			throw new IOException(String.format(
-					"The cohorte 'conf' directory [%s] doesn't exist",
-					wConfDir.getAbsolutePath()));
-		}
-
-		// Returns the value of the requested property, or null if the property
-		// is undefined.
-		String wFileNameSuffix = pBundleContext
-				.getProperty(PROP_COMPOSITION_FILENAME_SUFFIX);
-
-		return getCompositionFile(wConfDir, wFileNameSuffix);
-	}
-
-	/**
 	 * @param aConfDir
 	 * @param aFileNameSuffix
 	 * @return
@@ -301,28 +277,6 @@ public class CConponentsControler implements ServiceListener {
 			String wMessage = String
 					.format("The cohorte composition file [%s] doesn't exist. path=[%s]",
 							wFileName, wCompositionFile.getAbsolutePath());
-
-			throw new IOException(wMessage);
-
-		}
-		return wCompositionFile;
-	}
-
-	private CXFileUtf8 getCompositionFile(final String aFileName)
-			throws IOException {
-
-		CXFileUtf8 wCompositionFile = new CXFileUtf8(aFileName);
-
-		pLogger.logInfo(this, "getCompositionFile",
-				"FileName=[%s] Exists=[%b] path=[%s]", aFileName,
-				wCompositionFile.exists(), wCompositionFile);
-
-		// if the composition file doesn't exist => Exception
-		if (!wCompositionFile.exists()) {
-
-			String wMessage = String
-					.format("The cohorte composition file [%s] doesn't exist. path=[%s]",
-							aFileName, wCompositionFile.getAbsolutePath());
 
 			throw new IOException(wMessage);
 
@@ -831,7 +785,7 @@ public class CConponentsControler implements ServiceListener {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see
 	 * org.osgi.framework.ServiceListener#serviceChanged(org.osgi.framework.
 	 * ServiceEvent)
