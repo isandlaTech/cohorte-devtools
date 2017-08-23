@@ -222,7 +222,6 @@ public class CConponentsControler implements ServiceListener {
 
 			pPythonBridge.remove(PYTHON_FACTORY);
 			return wRes.toString();
-
 		}
 		return null;
 	}
@@ -239,9 +238,19 @@ public class CConponentsControler implements ServiceListener {
 	 */
 	private JSONObject getCompositionDef() throws JSONException, IOException {
 
-		// replace here by a python call using jython
+		pLogger.logInfo(this, "getCompositionDef", "call python includer");
+		String wCompositionStr = getCompositionContent();
 
-		JSONObject wComposition = new JSONObject(getCompositionContent());
+		// using jython doesn't work. means object can't be use or jython failed
+		if (wCompositionStr == null) {
+			pLogger.logInfo(this, "getCompositionDef",
+					"python includer failed or not initialize, read file");
+
+			CXFileUtf8 wCompositionFile = getCompositionFile();
+			wCompositionStr = wCompositionFile.readAll();
+		}
+
+		JSONObject wComposition = new JSONObject(wCompositionStr);
 
 		JSONArray wParentsComponents = getParentsComponents(wComposition);
 
@@ -249,8 +258,31 @@ public class CConponentsControler implements ServiceListener {
 			wComposition.getJSONObject("root").getJSONArray("components")
 					.put(wParentsComponents.get(i));
 		}
-
 		return wComposition;
+	}
+
+	/**
+	 * @return an instance of CXFileUtf8 corresponding to the existing
+	 *         "base/conf/composituion.js" file
+	 *
+	 * @throws IOException
+	 */
+	private CXFileUtf8 getCompositionFile() throws IOException {
+
+		final CXFileDir wConfDir = new CXFileDir(
+				pPlatformDirsSvc.getPlatformBase(), "conf");
+		if (!wConfDir.exists()) {
+			throw new IOException(String.format(
+					"The cohorte 'conf' directory [%s] doesn't exist",
+					wConfDir.getAbsolutePath()));
+		}
+
+		// Returns the value of the requested property, or null if the property
+		// is undefined.
+		String wFileNameSuffix = pBundleContext
+				.getProperty(PROP_COMPOSITION_FILENAME_SUFFIX);
+
+		return getCompositionFile(wConfDir, wFileNameSuffix);
 	}
 
 	/**
@@ -376,24 +408,39 @@ public class CConponentsControler implements ServiceListener {
 		return pCompositionFile != null;
 	}
 
-	private void initJythonObject() throws IOException {
-		// create finder and includer python object to resolve the configuration
-		// file
-		IPythonFactory wPythonFactory = pPythonBridge.getPythonObjectFactory(
-				PYTHON_FACTORY,
-				Arrays.asList(new String[] { pPlatformDirsSvc.getPlatformHome()
-						.getAbsolutePath() + File.separatorChar + "repo" }));
+	private void initJythonObject() {
+		try {
+			pLogger.logInfo(this, "initJythonObject");
+			// create finder and includer python object to resolve the
+			// configuration
+			// file
+			IPythonFactory wPythonFactory = pPythonBridge
+					.getPythonObjectFactory(PYTHON_FACTORY, Arrays
+							.asList(new String[] { pPlatformDirsSvc
+									.getPlatformHome().getAbsolutePath()
+									+ File.separatorChar + "repo" }));
 
-		pFinder = (IFileFinder) wPythonFactory.newInstance(IFileFinder.class);
-		// set cohorte base and data to the finder
+			pFinder = (IFileFinder) wPythonFactory
+					.newInstance(IFileFinder.class);
+			pLogger.logInfo(this, "init IFileFinder ");
 
-		pIncluder = (IFileIncluder) wPythonFactory
-				.newInstance(IFileIncluder.class);
+			// set cohorte base and data to the finder
 
-		pFinder._set_roots(Arrays.asList(new String[] {
-				pPlatformDirsSvc.getNodeDataDir().getAbsolutePath(),
-				pPlatformDirsSvc.getPlatformBase().getAbsolutePath() }));
-		pIncluder.set_finder(pFinder);
+			pIncluder = (IFileIncluder) wPythonFactory
+					.newInstance(IFileIncluder.class);
+			pLogger.logInfo(this, "init IFileIncluder ");
+
+			pFinder._set_roots(Arrays.asList(new String[] {
+					pPlatformDirsSvc.getNodeDataDir().getAbsolutePath(),
+					pPlatformDirsSvc.getPlatformBase().getAbsolutePath() }));
+			pIncluder.set_finder(pFinder);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+
+			pLogger.logSevere(this, "initJythonObject",
+					"can't init Jython object %d", e);
+		}
 	}
 
 	/**
@@ -785,7 +832,7 @@ public class CConponentsControler implements ServiceListener {
 
 	/*
 	 * (non-Javadoc)
-	 *
+	 * 
 	 * @see
 	 * org.osgi.framework.ServiceListener#serviceChanged(org.osgi.framework.
 	 * ServiceEvent)

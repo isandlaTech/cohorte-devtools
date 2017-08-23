@@ -131,6 +131,10 @@ public class CPythonFactory implements IPythonFactory {
 			}
 		}
 		if (wFoundFullPath != null) {
+			if (!new File(wFoundFullPath).exists()) {
+				throw new IOException(String.format("file {0} doesn't exists",
+						wFoundFullPath));
+			}
 			if (!pLoadedFile.contains(wFoundFullPath)) {
 
 				pInterpreter.execfile(wFoundFullPath);
