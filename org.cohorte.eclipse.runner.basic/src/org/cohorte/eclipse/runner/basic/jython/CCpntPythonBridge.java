@@ -27,6 +27,13 @@ import org.psem2m.isolates.services.dirs.IPlatformDirsSvc;
 @Provides(specifications = IPythonBridge.class)
 public class CCpntPythonBridge implements IPythonBridge {
 
+	/**
+	 * <pre>
+	 * -Dorg.cohorte.eclipse.runner.basic.jython.stdlib=${project_loc:org.cohorte.eclipse.runner.basic}/lib
+	 * </pre>
+	 */
+	static final String PROP_JYTHON_STD_LIB_PATH = "org.cohorte.eclipse.runner.basic.jython.stdlib.path";
+
 	private final BundleContext pContext;
 
 	@Requires
@@ -85,7 +92,7 @@ public class CCpntPythonBridge implements IPythonBridge {
 	@Override
 	public void remove(final String aId) {
 		synchronized (pMapFactory) {
-			IPythonFactory wFactory = pMapFactory.remove(aId);
+			final IPythonFactory wFactory = pMapFactory.remove(aId);
 			// clean properly the factory
 			wFactory.clear();
 		}
@@ -98,14 +105,15 @@ public class CCpntPythonBridge implements IPythonBridge {
 		try {
 			// add stdLibPath
 
-			pStdLibPath = System.getProperty("jython.stdlib")
-					+ File.separatorChar + "lib";
-			if (!new File(pStdLibPath).exists()) {
-				throw new Exception(String.format(
-						"jython standard librarie can't be find in data in %s",
-						pStdLibPath));
+			pStdLibPath = System.getProperty(PROP_JYTHON_STD_LIB_PATH);
+
+			if (pStdLibPath == null || !new File(pStdLibPath).exists()) {
+				throw new Exception(
+						String.format(
+								"jython standard librarie can't be find in data in [%s]. @See [%s]",
+								pStdLibPath, PROP_JYTHON_STD_LIB_PATH));
 			}
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			pLogger.logSevere(this, "validate", "ERROR %s", e);
 
 		}

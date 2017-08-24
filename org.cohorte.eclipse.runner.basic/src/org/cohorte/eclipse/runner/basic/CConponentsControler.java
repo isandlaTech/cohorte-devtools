@@ -118,9 +118,18 @@ public class CConponentsControler implements ServiceListener {
 	 * </pre>
 	 *
 	 */
-	static final String PROP_COMPOSITION_FILENAME_SUFFIX = "org.conhorte.runner.basic.composition.suffix";
+	static final String PROP_COMPOSITION_FILENAME_SUFFIX = "org.cohorte.eclipse.runner.basic.composition.suffix";
 
 	static final String PROP_FACTORY_NAME = "factory.name";
+
+	/**
+	 * <pre>
+	 * -Dorg.cohorte.eclipse.runner.basic.logging.servicerefs.filter=com.cohorte*
+	 * -Dorg.cohorte.eclipse.runner.basic.composition.suffix=-app-oneisolate${COMPOSITION_SUFFIX}
+	 * -Dorg.cohorte.eclipse.runner.basic.jython.stdlib.path=${project_loc:org.cohorte.eclipse.runner.basic}/lib
+	 * </pre>
+	 */
+	static final String PROP_LOGGING_SERVICEREF_FILTER = "org.cohorte.eclipse.runner.basic.logging.servicerefs.filter";
 
 	private static String PYTHON_FACTORY = "controller";
 
@@ -214,11 +223,11 @@ public class CConponentsControler implements ServiceListener {
 	 */
 	private String getCompositionContent() {
 		if (pIncluder != null) {
-			String wFileNameSuffix = pBundleContext
+			final String wFileNameSuffix = pBundleContext
 					.getProperty(PROP_COMPOSITION_FILENAME_SUFFIX);
-			String wCompositionFileName = getCompositionFileName(wFileNameSuffix);
-			Object wRes = pIncluder.get_content("conf" + File.separatorChar
-					+ wCompositionFileName, false);
+			final String wCompositionFileName = getCompositionFileName(wFileNameSuffix);
+			final Object wRes = pIncluder.get_content("conf"
+					+ File.separatorChar + wCompositionFileName, false);
 
 			pPythonBridge.remove(PYTHON_FACTORY);
 			return wRes.toString();
@@ -246,13 +255,13 @@ public class CConponentsControler implements ServiceListener {
 			pLogger.logInfo(this, "getCompositionDef",
 					"python includer failed or not initialize, read file");
 
-			CXFileUtf8 wCompositionFile = getCompositionFile();
+			final CXFileUtf8 wCompositionFile = getCompositionFile();
 			wCompositionStr = wCompositionFile.readAll();
 		}
 
-		JSONObject wComposition = new JSONObject(wCompositionStr);
+		final JSONObject wComposition = new JSONObject(wCompositionStr);
 
-		JSONArray wParentsComponents = getParentsComponents(wComposition);
+		final JSONArray wParentsComponents = getParentsComponents(wComposition);
 
 		for (int i = 0; i < wParentsComponents.length(); i++) {
 			wComposition.getJSONObject("root").getJSONArray("components")
@@ -279,7 +288,7 @@ public class CConponentsControler implements ServiceListener {
 
 		// Returns the value of the requested property, or null if the property
 		// is undefined.
-		String wFileNameSuffix = pBundleContext
+		final String wFileNameSuffix = pBundleContext
 				.getProperty(PROP_COMPOSITION_FILENAME_SUFFIX);
 
 		return getCompositionFile(wConfDir, wFileNameSuffix);
@@ -294,9 +303,9 @@ public class CConponentsControler implements ServiceListener {
 	private CXFileUtf8 getCompositionFile(final CXFileDir aConfDir,
 			final String aFileNameSuffix) throws IOException {
 
-		String wFileName = getCompositionFileName(aFileNameSuffix);
+		final String wFileName = getCompositionFileName(aFileNameSuffix);
 
-		CXFileUtf8 wCompositionFile = new CXFileUtf8(aConfDir, wFileName);
+		final CXFileUtf8 wCompositionFile = new CXFileUtf8(aConfDir, wFileName);
 
 		pLogger.logInfo(this, "getCompositionFile",
 				"Suffix=[%s] FileName=[%s] Exists=[%b] path=[%s]",
@@ -306,7 +315,7 @@ public class CConponentsControler implements ServiceListener {
 		// if the composition file doesn't exist => Exception
 		if (!wCompositionFile.exists()) {
 
-			String wMessage = String
+			final String wMessage = String
 					.format("The cohorte composition file [%s] doesn't exist. path=[%s]",
 							wFileName, wCompositionFile.getAbsolutePath());
 
@@ -331,13 +340,18 @@ public class CConponentsControler implements ServiceListener {
 		String wLdapFilter = null;
 
 		final String wFilter = System.getProperty(
-				"org.cohorte.eclipse.runner.basic.service.filter", null);
+				PROP_LOGGING_SERVICEREF_FILTER, null);
 
 		if (wFilter != null && !wFilter.isEmpty()) {
 			// @see
 			// http://www.ldapexplorer.com/en/manual/109010000-ldap-filter-syntax.htm
 
-			wLdapFilter = String.format("(%s=fr.agilium*)", PROP_FACTORY_NAME);
+			// eg. (factory.name=fr.agilium.*
+			wLdapFilter = String.format("(%s=%s)", PROP_FACTORY_NAME, wFilter);
+
+			pLogger.logInfo(this, "getFilteredFactoryServiceRefs",
+					"Current ldap filter=[%s]", wLdapFilter);
+
 		}
 		return pBundleContext.getServiceReferences(Factory.class, wLdapFilter);
 
@@ -348,30 +362,30 @@ public class CConponentsControler implements ServiceListener {
 	 */
 	private JSONArray getParentsComponents(final JSONObject aComposition)
 			throws JSONException, IOException {
-		JSONArray wResult = new JSONArray();
-		JSONObject wRoot = aComposition.getJSONObject("root");
+		final JSONArray wResult = new JSONArray();
+		final JSONObject wRoot = aComposition.getJSONObject("root");
 		if (wRoot != null) {
-			JSONArray wImportFiles = wRoot.optJSONArray("import-files");
+			final JSONArray wImportFiles = wRoot.optJSONArray("import-files");
 			if (wImportFiles != null) {
 				for (int i = 0; i < wImportFiles.length(); i++) {
 
 					final CXFileDir wConfDir = new CXFileDir(
 							pPlatformDirsSvc.getPlatformBase(), "conf");
-					String wImportFile = wImportFiles.getString(i);
-					CXFileUtf8 wParentCompositionFile = new CXFileUtf8(
+					final String wImportFile = wImportFiles.getString(i);
+					final CXFileUtf8 wParentCompositionFile = new CXFileUtf8(
 							wConfDir, wImportFile);
 
-					JSONObject wParentComposition = new JSONObject(
+					final JSONObject wParentComposition = new JSONObject(
 							wParentCompositionFile.readAll());
 
-					JSONArray wParentComponents = getParentsComponents(wParentComposition);
+					final JSONArray wParentComponents = getParentsComponents(wParentComposition);
 					if (wParentComponents != null) {
 						for (int j = 0; j < wParentComponents.length(); j++) {
 							wResult.put(wParentComponents.get(j));
 						}
 					}
 					if (wParentComposition.has("root")) {
-						JSONArray wComponents = wParentComposition
+						final JSONArray wComponents = wParentComposition
 								.optJSONObject("root").optJSONArray(
 										"components");
 						if (wComponents != null) {
@@ -392,7 +406,7 @@ public class CConponentsControler implements ServiceListener {
 	 * @return list of remaining not available factories
 	 */
 	private List<String> getRemainingFactoriesList() {
-		List<String> wResult = new ArrayList<String>();
+		final List<String> wResult = new ArrayList<String>();
 		for (final CFactoryInfos wDef : pFactoriesInfos.values()) {
 			if (wDef.isNeeded() && !wDef.hasFactoryServiceRef()) {
 				wResult.add(wDef.getName());
@@ -414,7 +428,7 @@ public class CConponentsControler implements ServiceListener {
 			// create finder and includer python object to resolve the
 			// configuration
 			// file
-			IPythonFactory wPythonFactory = pPythonBridge
+			final IPythonFactory wPythonFactory = pPythonBridge
 					.getPythonObjectFactory(PYTHON_FACTORY, Arrays
 							.asList(new String[] { pPlatformDirsSvc
 									.getPlatformHome().getAbsolutePath()
@@ -435,7 +449,7 @@ public class CConponentsControler implements ServiceListener {
 					pPlatformDirsSvc.getPlatformBase().getAbsolutePath() }));
 			pIncluder.set_finder(pFinder);
 
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			e.printStackTrace();
 
 			pLogger.logSevere(this, "initJythonObject",
@@ -564,8 +578,8 @@ public class CConponentsControler implements ServiceListener {
 			}
 			// }
 		}
-		StringBuilder sb = new StringBuilder();
-		for (RawComponent rc : wRawCpnts) {
+		final StringBuilder sb = new StringBuilder();
+		for (final RawComponent rc : wRawCpnts) {
 			sb.append("- " + rc.getName() + ":" + rc.getFactory() + "\n");
 		}
 		pLogger.logDebug(
@@ -911,7 +925,7 @@ public class CConponentsControler implements ServiceListener {
 	 */
 	private void setFactoryServiceRefsAvaibility() throws Exception {
 
-		Collection<ServiceReference<Factory>> wFactoryServiceRefs = getAllFactoryServiceRefs();
+		final Collection<ServiceReference<Factory>> wFactoryServiceRefs = getAllFactoryServiceRefs();
 
 		pLogger.logInfo(this, "setFactoryServiceRefsAvaibility",
 				"NbAvalaibleServicefactory=[%d]", wFactoryServiceRefs.size());
