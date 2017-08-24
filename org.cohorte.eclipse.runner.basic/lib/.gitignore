@@ -1,0 +1,3 @@
+cachedir
+*$py.class
+*.pkc
