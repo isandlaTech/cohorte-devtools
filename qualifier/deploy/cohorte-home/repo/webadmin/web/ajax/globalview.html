@@ -1,0 +1,245 @@
+
+<div class="row">
+    <div id="breadcrumb" class="col-md-12">
+        <ol class="breadcrumb">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="#">Global view</a></li>
+        </ol>
+    </div>
+</div>
+<h3 class="page-header">Global view</h3>
+<div class="row">
+    <div class="col-xs-12">
+        <div class="box">
+            <div class="box-header">
+                <div class="box-name">
+                    <i class="fa fa-sitemap"></i>
+                    <a onclick="updateLayout()" href="#"><span>COHORTE System</span></a>
+                </div>
+                <div class="box-icons">
+                    <a class="collapse-link">
+                        <i class="fa fa-chevron-up"></i>
+                    </a>
+                    <a class="expand-link">
+                        <i class="fa fa-expand"></i>
+                    </a>                    
+                </div>
+            </div>
+            <div class="box-content">              
+                <select id="select-layout" class="form-control" onchange="updateLayout()">
+                  <option>Hierarchical</option>  
+                  <option>Circles</option>                  
+                </select>
+                <div style="height: 1000px;">
+                  <div id="layout-frame"></div>
+                </div>                
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<style>
+.node {
+  cursor: pointer;
+}
+
+.node:hover {
+  stroke: #000;
+  stroke-width: 1.5px;
+}
+
+.node--leaf {
+  fill: white;
+}
+
+.label {
+  font: 11px "Helvetica Neue", Helvetica, Arial, sans-serif;
+  text-anchor: middle;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff, 0 -1px 0 #fff;
+}
+
+.label,
+.node--root,
+.node--leaf {
+  pointer-events: none;
+}
+
+.link {
+  fill: none;
+  stroke: #aaa;
+}
+
+.node text {
+  font: 13px sans-serif;
+}
+
+.node circle {
+  stroke: #fff;
+  stroke-width: 1.5px;
+}
+
+.node.active {
+  fill: red;
+}
+
+
+</style>
+
+<script>
+function hierarchicalLayout() {
+  $('#layout-frame').html("");
+  var margin = {top: 40, right: 40, bottom: 40, left: 80},
+      width = 960 - margin.left - margin.right,
+      height = 500 - margin.top - margin.bottom;
+
+  var tree = d3.layout.tree()
+      .size([height, width]);
+
+  var diagonal = d3.svg.diagonal()
+      .projection(function(d) { return [d.y, d.x]; });
+
+  var svg = d3.select("#layout-frame").append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+  d3.json("/webadmin/gui/tabs/globalview", function(root) {
+    var nodes = tree.nodes(root),
+        links = tree.links(nodes);
+
+    // Create the link lines.
+    svg.selectAll(".link")
+        .data(links)
+      .enter().append("path")
+        .attr("class", "link")
+        .attr("d", diagonal);
+
+    // Create the node circles.
+    var node = svg.selectAll(".node")
+        .data(nodes)
+      .enter().append("g")
+        .attr("class", function(d) { return "node " + d.type; })
+        .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; })        
+
+    node.append("circle")
+        .attr("r", 4.5);
+
+    node.append("text")
+        .attr("x", -6)
+        .attr("dy", ".35em")
+        .attr("text-anchor", "end")
+        .text(function(d) { return d.name; });
+  });
+}
+
+function circularLayout() {
+  $('#layout-frame').html("");
+  var margin = 20,
+      diameter = 960;
+
+  var color = d3.scale.linear()
+      .domain([-1, 5])
+      .range(["hsl(152,80%,80%)", "hsl(228,30%,40%)"])
+      .interpolate(d3.interpolateHcl);
+
+  var pack = d3.layout.pack()
+      .padding(2)
+      .size([diameter - margin, diameter - margin])
+      .value(function(d) { return d.size; })
+
+  var svg = d3.select("#layout-frame").append("svg")
+      .attr("width", diameter)
+      .attr("height", diameter)
+    .append("g")
+      .attr("transform", "translate(" + diameter / 2 + "," + diameter / 2 + ")");
+
+  //d3.json("/webadmin/static/web/ajax/flare.json", function(error, root) {
+    d3.json("/webadmin/gui/tabs/globalview", function(error, root) {
+    if (error) return console.error(error);
+
+    var focus = root,
+        nodes = pack.nodes(root),
+        view;
+
+    var circle = svg.selectAll("circle")
+        .data(nodes)
+      .enter().append("circle")
+        .attr("class", function(d) { return d.parent ? d.children ? "node" : "node node--leaf" : "node node--root"; })
+        .style("fill", function(d) { return d.children ? color(d.depth) : null; })
+        .on("click", function(d) { if (focus !== d) zoom(d), d3.event.stopPropagation(); });
+
+    var text = svg.selectAll("text")
+        .data(nodes)
+      .enter().append("text")
+        .attr("class", "label")
+        .style("fill-opacity", function(d) { return d.parent === root ? 1 : 0; })
+        .style("display", function(d) { return d.parent === root ? null : "none"; })
+        .text(function(d) { return d.name; });
+
+    var node = svg.selectAll("circle,text");
+
+    d3.select("#layout-frame")
+        .on("click", function() { zoom(root); });
+
+    zoomTo([root.x, root.y, root.r * 2 + margin]);
+
+    function zoom(d) {
+      var focus0 = focus; focus = d;
+
+      var transition = d3.transition()
+          .duration(d3.event.altKey ? 7500 : 750)
+          .tween("zoom", function(d) {
+            var i = d3.interpolateZoom(view, [focus.x, focus.y, focus.r * 2 + margin]);
+            return function(t) { zoomTo(i(t)); };
+          });
+
+      transition.selectAll("text")
+        .filter(function(d) { return d.parent === focus || this.style.display === "inline"; })
+          .style("fill-opacity", function(d) { return d.parent === focus ? 1 : 0; })
+          .each("start", function(d) { if (d.parent === focus) this.style.display = "inline"; })
+          .each("end", function(d) { if (d.parent !== focus) this.style.display = "none"; });
+    }
+
+    function zoomTo(v) {
+      var k = diameter / v[2]; view = v;
+      node.attr("transform", function(d) { return "translate(" + (d.x - v[0]) * k + "," + (d.y - v[1]) * k + ")"; });
+      circle.attr("r", function(d) { return d.r * k; });
+    }
+  });
+
+  d3.select(self.frameElement).style("height", diameter + "px");
+}
+
+var nodes_lastupdate = 0.00;
+
+function refresh() {        
+    // make Ajax call here, inside the callback call:
+    setTimeout(refresh, 2000);
+    $.getJSON( "/webadmin/api/v1/nodes/lastupdate", function( data ) {
+        var result = data['meta']['lastupdate'];
+        if (result > nodes_lastupdate) {
+            nodes_lastupdate = result;
+            updateLayout();
+        }
+    });
+}
+
+function updateLayout() {
+  var ind = document.getElementById("select-layout").selectedIndex;
+  if (ind == 1) {   
+    circularLayout();
+  } else {
+    hierarchicalLayout();
+  }
+  
+}
+
+$(document).ready(function() {  
+  hierarchicalLayout();
+  setTimeout(refresh, 2000);
+});
+
+</script>
+

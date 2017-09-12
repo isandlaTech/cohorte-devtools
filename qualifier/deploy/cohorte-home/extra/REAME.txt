@@ -1,0 +1,1 @@
+This directory contains extra file used to install JPype when installing Cohorte for the first time (by launching setup.sh/.bat)

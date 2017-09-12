@@ -1,0 +1,59 @@
+
+
+<div class="row">
+  <div id="breadcrumb" class="col-md-12">
+    <ol class="breadcrumb">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="#">Composition</a></li>
+    </ol>
+  </div>
+</div>
+<h3 class="page-header">Composition</h3>
+<div class="row">
+  <div class="col-xs-12">
+    <div class="box">
+      <div class="box-header">
+        <div class="box-name">
+          <i class="fa fa-cogs"></i>
+          <span id="application_composition_lbl"></span>
+        </div>
+        <div class="box-icons">
+          <a class="collapse-link">
+            <i class="fa fa-chevron-up"></i>
+          </a>
+          <a class="expand-link">
+            <i class="fa fa-expand"></i>
+          </a>          
+        </div>
+        <div class="no-move"></div>
+      </div>
+      <div class="box-content no-padding">
+        <pre id="application_composition_txt">
+        </pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+
+var activities_lastupdate = 0.00;
+
+function loadApplicationComposition() {
+    $.getJSON( "/debug/api/v2/application/composition", function( data ) {              
+        $('#application_composition_lbl').html(data["application"]["name"]);
+        var compjson = JSON.stringify(data["application"]["composition"], null, 2);    
+        $('#application_composition_txt').html("<code class='JavaScript'>" + compjson + "</code>");        
+        activities_lastupdate = data['meta']['lastupdate'];
+    }).fail(function(jqXHR) {
+          if (jqXHR.status == 401) {
+              window.location.href = "login.html"
+          } 
+      });
+}
+
+$(document).ready(function() {
+    loadApplicationComposition();   
+});
+</script>
+

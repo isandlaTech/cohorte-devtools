@@ -1,0 +1,4 @@
+Libraries
+=========
+
+They are placed here automatically by maven when dependencies are given in the pom.xml file.

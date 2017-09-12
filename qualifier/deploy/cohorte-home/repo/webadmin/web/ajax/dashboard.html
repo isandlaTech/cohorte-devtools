@@ -1,0 +1,932 @@
+<div class="row">
+  <div id="breadcrumb" class="col-md-12">
+    <ol class="breadcrumb">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="#">Dashboard</a></li>
+    </ol>
+  </div>
+</div>
+
+<h3 class="page-header">Dashboard</h3>
+<div class="row">
+    <div class="col-xs-12 col-sm-6 col-md-8">
+    <p>
+      <table class="table table-condensed table-hover">        
+        <tr><td style="width:130px;">Application Id: </td><td><b><span id="application_id_lbl"></span></b></td></tr>
+        <tr><td>Application name: </td><td><b><span id="application_name_lbl"></span></b></td></tr>
+        <tr><td>Cohorte version: </td><td><b><span id="cohorte_version_lbl"></span></b></td></tr>        
+      </table>
+    </p>
+    </div>
+    <div style="float:right;margin-right:20px;" class="btn-group">
+				<a class="btn btn-default disabled" href="#">Actions</a>
+				<a class="btn btn-default dropdown-toggle" data-toggle="dropdown" href="#">
+				<span class="fa fa-caret-down"></span></a>
+				<ul class="dropdown-menu" style="z-index: 9999; width:240px">
+          <li> <a href="#">Show internal isolates: <input type="checkbox" checked="false" data-size="mini" data-on-text="YES" data-off-text="NO" name="show-internal-isolates-checkbox" checked/></a></li>
+					<li class="divider"></li>
+          <li><a href="#" data-toggle="modal" data-target="#stop_all_nodes_modal"><i class="fa fa-power-off fa-fw"></i> Stop All Nodes</a></li>		          	
+				</ul>
+		</div>    
+</div>
+<br/>
+
+<div class="row">
+  <div class="col-xs-12">
+    <div id="frm_content"></div>
+    <!-- content will be injected here -->
+  </div>
+</div>
+
+
+<!-- Modals -->
+
+<div class="modal modal-wide" id="stop_all_nodes_modal" tabindex="-1" role="dialog" aria-labelledby="" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="myModalLabel">Stop All Nodes</h4>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to stop all the nodes?</p>
+        <p>This running application will stop to function, you need to restart all the nodes manually!</p>
+      </div>  
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button id="killall-nodes-btn" type="button" class="btn btn-danger" data-dismiss="modal">Stop All Nodes</button>
+      </div>    
+    </div>
+  </div>
+</div>
+
+<div class="modal"  id="node_modal" tabindex="-1" role="dialog" aria-labelledby="" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="myModalLabel">Modal title</h4>
+      </div>
+      <div class="modal-body">
+        <div id="node_modal_ajax-content">
+            <img src="img/devoops_getdata.gif"  alt="preloader"/>
+        </div>
+      </div>    
+      <div class="modal-footer">
+          <div style="float:right;margin-right:20px;" class="btn-group">
+              <a class="btn btn-default disabled" href="#">Actions</a>
+              <a class="btn btn-default dropdown-toggle" data-toggle="dropdown" href="#">
+              <span class="fa fa-caret-down"></span></a>
+              <ul class="dropdown-menu">
+                <li><a id="kill-node-btn" href="#"><i class="fa fa-power-off fa-fw"></i> Stop Node</a></li>
+              </ul>
+          </div>                    
+      </div>    
+
+    </div>
+  </div>
+</div>
+
+<div class="modal modal-wide" id="isolate_modal" tabindex="-1" role="dialog" aria-labelledby="" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="myModalLabel">Modal title</h4>
+      </div>
+      <div class="modal-body">
+        
+        <div role="tabpanel">
+
+          <!-- Nav tabs -->
+          <ul class="nav nav-tabs" role="tablist">
+            <li role="presentation"><a href="#infos" aria-controls="infos" role="tab" data-toggle="tab" data-tab="tab-iso-info" >Infos</a></li>
+            <li role="presentation"><a href="#bundles" aria-controls="bundles" role="tab" data-toggle="tab" data-tab="tab-iso-bundles" >Bundles</a></li>
+            <li role="presentation"><a href="#factories" aria-controls="factories" role="tab" data-toggle="tab" data-tab="tab-iso-factories" >Factories</a></li>
+            <li role="presentation"><a href="#instances" aria-controls="instances" role="tab" data-toggle="tab" data-tab="tab-iso-instances" >Instances</a></li>
+            <li role="presentation"><a href="#services" aria-controls="services" role="tab" data-toggle="tab" data-tab="tab-iso-services" >Services</a></li>
+            <li role="presentation"><a href="#threads" aria-controls="threads" role="tab" data-toggle="tab" data-tab="tab-iso-threads" >Threads</a></li>
+            <li role="presentation"><a href="#herald" aria-controls="herald" role="tab" data-toggle="tab" data-tab="tab-iso-herald" >Herald</a></li>
+            <li role="presentation"><a href="#logs" aria-controls="logs" role="tab" data-toggle="tab" data-tab="tab-iso-logs" >Logs</a></li>
+            <li role="presentation"><a href="#actions" aria-controls="actions" role="tab" data-toggle="tab" data-tab="tab-iso-actions" >Actions</a></li>
+          </ul>
+        
+          <!-- Tab panes -->
+          <div class="tab-content">
+            <div role="tabpanel" class="tab-pane active" id="infos">              
+              <div id="isolate_modal_ajax-content">
+                  <img src="img/devoops_getdata.gif"  alt="preloader"/>
+              </div>
+            </div>
+            <div role="tabpanel" class="tab-pane" id="bundles">
+              <div id="isolate_modal_ajax-content_bundles">
+                  <img src="img/devoops_getdata.gif"  alt="preloader"/>
+              </div>
+            </div>
+            <div role="tabpanel" class="tab-pane" id="factories">
+              <div id="isolate_modal_ajax-content_factories">
+                  <img src="img/devoops_getdata.gif"  alt="preloader"/>
+              </div>
+            </div>
+            <div role="tabpanel" class="tab-pane" id="instances">
+              <div id="isolate_modal_ajax-content_instances">
+                  <img src="img/devoops_getdata.gif"  alt="preloader"/>
+              </div>
+            </div>
+            <div role="tabpanel" class="tab-pane" id="services">
+              <div id="isolate_modal_ajax-content_services">
+                  <img src="img/devoops_getdata.gif"  alt="preloader"/>
+              </div>
+            </div>
+            <div role="tabpanel" class="tab-pane" id="threads">
+              <div id="isolate_modal_ajax-content_threads">
+                  <img src="img/devoops_getdata.gif"  alt="preloader"/>
+              </div>
+            </div>
+            <div role="tabpanel" class="tab-pane" id="herald">                            
+              <div id="isolate_modal_ajax-content_herald">
+                  <img src="img/devoops_getdata.gif"  alt="preloader"/>
+              </div>              
+            </div>
+            <div role="tabpanel" class="tab-pane" id="logs">
+              <div id="isolate_modal_ajax-content_logs">
+                  <img src="img/devoops_getdata.gif"  alt="preloader"/>
+              </div>
+            </div>
+            <div role="tabpanel" class="tab-pane" id="actions">
+              <div id="isolate_modal_ajax-content_actions">
+                  <p>
+                    <br/>
+                    <a id="kill-isolate-btn" class="btn btn-danger" data-dismiss="modal" data-uid="0" href="#" >Destroy isolate</a>
+                  </p> 
+              </div>
+            </div>
+          </div>
+        
+        </div>
+
+      </div>
+      <div class="modal-footer">
+               
+      </div>  
+    </div>
+  </div>
+</div>
+
+<div class="modal modal-wide" id="component_modal" tabindex="-1" role="dialog" aria-labelledby="" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="myModalLabel">Modal title</h4>
+      </div>
+      <div class="modal-body">
+        <div id="component_modal_ajax-content">
+            <img src="img/devoops_getdata.gif"  alt="preloader"/>
+        </div>
+      </div>      
+    </div>
+  </div>
+</div>
+
+<script>
+  
+    /* ************************ Debug ************************** */
+    
+    function get_isolate_info(uid) {
+        console.log("get_isolate_info("+uid+")");
+        $('#isolate_modal_ajax-content').html('<img src="img/devoops_getdata.gif"  alt="preloader"/>');
+        $.getJSON( "/debug/api/v2/isolates/"+uid, function( data ) {            
+              var content = '<table class="table table-condensed table-striped table-hover">'
+              var kind = "python";
+              if (data["isolate"]["cohorte.isolate.kind"] == "Java") {
+                kind = "java"
+              } 
+              content += '<tr><td>KIND</td><td><img src="img/'+kind+'_16x16.gif"/> '+data["isolate"]["cohorte.isolate.kind"]+'</td></tr>'
+              content += '<tr><td>ISOLATE UID</td><td>' + data["isolate"]["cohorte.isolate.uid"] + '</td></tr>'
+              content += '<tr><td>ISOLATE NAME</td><td>' + data["isolate"]["cohorte.isolate.name"] + '</td></tr>'
+              content += '<tr><td>HTTP SERVICE PORT</td><td>'+data["isolate"]["cohorte.isolate.http.port"]+'</td></tr>'
+              content += '</table>'
+              $('#isolate_modal_ajax-content').html(content);
+          }).fail(function(jqXHR) {
+              if (jqXHR.status == 401) {
+                  window.location.href = "login.html"
+              } 
+          });
+    }
+    
+    function get_bundles(uid) {
+        console.log("get_bundles("+uid+")");
+        $('#isolate_modal_ajax-content_bundles').html('<img src="img/devoops_getdata.gif"  alt="preloader"/>');
+        $.getJSON( "/debug/api/v2/isolates/"+uid+"/bundles", function( data ) { 
+                    
+            var content = '<table class="table table-condensed table-striped table-hover">';
+            content += '<tr><th>ID</th><th>NAME</th><th>VERSION</th><th>STATE</th></tr>';
+            for (var i in data['bundles']) {
+              	content += '<tr><td>'+data['bundles'][i]["id"]+'</td><td><a href="#" class="link_get_bundle" data-uuid="'+uid+'" data-bundle="'+data['bundles'][i]["id"]+'">'+data['bundles'][i]["name"] + '</a></td><td>' + data['bundles'][i]["version"] + '</td><td>' + data['bundles'][i]["state"] +'</td></tr>';
+            }
+            content += '</table>'            
+            $('#isolate_modal_ajax-content_bundles').html(content);
+            $(".link_get_bundle").click(function(event) {
+                console.log("link_get_bundle clicked!");
+                console.log("data-uuid="+$(this).attr("data-uuid"));
+                console.log("data-logid="+$(this).attr("data-bundle"));
+                get_bundle($(this).attr("data-uuid"), $(this).attr("data-bundle"));
+            });
+        }).fail(function(jqXHR) {
+            if (jqXHR.status == 401) {
+                window.location.href = "login.html"
+            } 
+        });         
+    }
+    
+    function get_bundle(isolate_uuid, bundle_id) {
+        $('#isolate_modal_ajax-content_bundles').html('<img src="img/devoops_getdata.gif"  alt="preloader"/>');
+        $.getJSON( "/debug/api/v2/isolates/"+isolate_uuid+"/bundles/"+bundle_id, function( data ) { 
+            var content = "<p><br/><a class='btn btn-default' id='link_get_bundles' href='#' data-uuid='"+isolate_uuid+"'>&lt; Bundles list</a> ";
+            content += "</p>";     
+            content += '<table class="table table-condensed table-striped table-hover">';
+            content += '<tr><td>BUNDLE ID</td><td>' + data["bundle"]["id"] + '</td></tr>';
+            content += '<tr><td>NAME</td><td>' + data["bundle"]["name"] + '</td></tr>';
+            content += '<tr><td>VERSION</td><td>' + data["bundle"]["version"] + '</td></tr>';
+            content += '<tr><td>STATE</td><td>' + data["bundle"]["state"] + '</td></tr>';
+            content += '<tr><td>LOCATION</td><td>' + data["bundle"]["location"] + '</td></tr>';
+            content += '<tr><td>PUBLISHED SERVICES</td><td>' + data["bundle"]["published-services"] + '</td></tr>';
+            content += '<tr><td>USED SERVICES</td><td>' + data["bundle"]["used-services"] + '</td></tr>';            
+            content += '</table>';                                                 
+            $('#isolate_modal_ajax-content_bundles').html(content);
+            $("#link_get_bundles").click(function(event) {
+                console.log("link_get_bundles clicked!");
+                get_bundles($(this).attr("data-uuid"));
+            });
+        }).fail(function(jqXHR) {
+            if (jqXHR.status == 401) {
+                window.location.href = "login.html"
+            } 
+        }); 
+    }
+    
+    function get_factories(uid) {
+        $('#isolate_modal_ajax-content_factories').html('<img src="img/devoops_getdata.gif"  alt="preloader"/>');
+        $.getJSON( "/debug/api/v2/isolates/"+uid+"/factories", function( data ) { 
+                    
+            var content = '<table class="table table-condensed table-striped table-hover">';
+            content += '<tr><th>NAME</th><th>BUNDLE</th></tr>';
+            for (var i in data['factories']) {
+              	content += '<tr><td><a href="#" class="link_get_factory" data-uuid="'+uid+'" data-factory="'+data['factories'][i]["name"]+'">'+data['factories'][i]["name"]+'</a></td><td>'+ data['factories'][i]["bundle"]["name"] + ' (' + data['factories'][i]["bundle"]["id"] + ')'+ '</td></tr>';
+            }
+            content += '</table>'            
+            $('#isolate_modal_ajax-content_factories').html(content);
+            $(".link_get_factory").click(function(event) {
+                console.log("link_get_factory clicked!");
+                get_factory($(this).attr("data-uuid"), $(this).attr("data-factory"));
+            });
+        }).fail(function(jqXHR) {
+            if (jqXHR.status == 401) {
+                window.location.href = "login.html"
+            } 
+        });     
+    }
+    
+    function get_factory(isolate_uuid, factory_name) {
+        $('#isolate_modal_ajax-content_factories').html('<img src="img/devoops_getdata.gif"  alt="preloader"/>');
+        $.getJSON( "/debug/api/v2/isolates/"+isolate_uuid+"/factories/"+factory_name, function( data ) { 
+            var content = "<p><br/><a class='btn btn-default' id='link_get_factories' href='#' data-uuid='"+isolate_uuid+"'>&lt; Factories list</a> ";
+            content += "</p>";     
+            content += '<table class="table table-condensed table-striped table-hover">';
+            var kind = "python";
+            if (data["factory"]["kind"] == "Java") {
+              kind = "java"
+            } 
+            content += '<tr><td><b>NAME</b></td><td>' + data["factory"]["name"] + '</td></tr>';
+            content += '<tr><td><b>BUNDLE</b></td><td>' + data["factory"]["bundle"]["name"] + '</td></tr>';
+            if (kind != "java") {
+              content += '<tr><td><b>HANDLERS</b></td><td>' + data["factory"]["handlers"] + '</td></tr>';
+              content += '<tr><td><b>PROVIDED SERVICES</b></td><td>' + data["factory"]["provided-services"] + '</td></tr>';
+              // requirements
+              content += '<tr><td><b>REQUIREMENTS</b></td><td>';
+                content += '<table class="table table-condensed table-striped table-hover">';
+                content += '<tr><th>ID</th><th>Specification</th><th>Filter</th><th>Aggregate</th><th>Optional</th></tr>';
+                for (var i in data["factory"]["requirements"]) {
+                    var req = data["factory"]["requirements"];
+                    content += '<tr><td>'+req[i]["id"]+'</td><td>'+req[i]["specification"]+'</td><td>'+req[i]["filter"]+'</td><td>'+req[i]["aggregate"]+'</td><td>'+req[i]["optional"]+'</td></tr>';
+                  }              
+                content += '</table>';                
+              content += '</td></tr>';
+              // properties
+              content += '<tr><td><b>PROPERTIES</b></td><td>';
+                content += '<table class="table table-condensed table-striped table-hover">';
+                content += '<tr><th>Key</th><th>Default Value</th></tr>';
+                var keys = Object.keys(data["factory"]["properties"])
+                for (var i in keys) {
+                  var key = keys[i]                
+                  content += '<tr><td>'+key+'</td><td>'+data["factory"]["properties"][key]+'</td></tr>';
+                }
+            }
+            content += "</table>";
+            content +='</td></tr>';                        
+            content += '</table>';                                                 
+            $('#isolate_modal_ajax-content_factories').html(content);
+            $("#link_get_factories").click(function(event) {
+                console.log("link_get_factories clicked!");
+                get_factories($(this).attr("data-uuid"));
+            });
+        }).fail(function(jqXHR) {
+            if (jqXHR.status == 401) {
+                window.location.href = "login.html"
+            } 
+        }); 
+    }
+    
+    function get_instances(uid) {
+        $('#isolate_modal_ajax-content_instances').html('<img src="img/devoops_getdata.gif"  alt="preloader"/>');   
+        $.getJSON( "/debug/api/v2/isolates/"+uid+"/instances", function( data ) { 
+                    
+            var content = '<table class="table table-condensed table-striped table-hover">';
+            content += '<tr><th>NAME</th><th>FACTORY</th><th>STATE</th></tr>';
+            for (var i in data['instances']) {
+              	content += '<tr><td><a href="#" class="link_get_instance" data-uuid="'+uid+'" data-instance="'+data['instances'][i]["name"]+'">'+data['instances'][i]["name"]+'</a></td><td><a href="#" class="link_get_factory" data-uuid="'+uid+'" data-factory="'+data['instances'][i]["factory"]+'">'+data['instances'][i]["factory"]+'</a></td><td>'+data['instances'][i]["state"]+'</td></tr>';
+            }
+            content += '</table>'            
+            $('#isolate_modal_ajax-content_instances').html(content);
+            $(".link_get_instance").click(function(event) {
+                console.log("link_get_instance clicked!");                
+                get_instance($(this).attr("data-uuid"), $(this).attr("data-instance"), "isolate_modal_ajax-content_instances");
+            });
+            $(".link_get_factory").click(function(event) {
+                console.log("link_get_factory clicked!");
+                activateTab("factories");
+                get_factory($(this).attr("data-uuid"), $(this).attr("data-factory"));
+            });
+        }).fail(function(jqXHR) {
+            if (jqXHR.status == 401) {
+                window.location.href = "login.html"
+            } 
+        }); 
+    }
+    
+    function get_instance(isolate_uuid, instance_name, frame) {
+        $('#'+frame).html('<img src="img/devoops_getdata.gif"  alt="preloader"/>');
+        $.getJSON( "/debug/api/v2/isolates/"+isolate_uuid+"/instances/"+instance_name, function( data ) { 
+            var content = "";
+            if (frame == "isolate_modal_ajax-content_instances" ) {
+              content += "<p><br/><a class='btn btn-default' id='link_get_instances' href='#' data-uuid='"+isolate_uuid+"'>&lt; Instances list</a></p>";     
+            }
+            content += '<table class="table table-condensed table-striped table-hover">';
+            var kind = "python";
+            if (data["instance"]["kind"] == "Java") {
+              kind = "java"
+            } 
+            content += '<tr><td><b>KIND</b></td><td><img src="img/'+kind+'_16x16.gif"/> '+data["instance"]["kind"]+'</td></tr>'
+              
+            content += '<tr><td><b>NAME</b></td><td>' + data["instance"]["name"] + '</td></tr>';
+            content += '<tr><td><b>FACTORY</b></td><td>' + data["instance"]["factory"] + '</td></tr>';
+            var stateColor = "black";
+            if (data["instance"]["state"] == "VALID") {
+                stateColor = "green";
+            } else if (data["instance"]["state"] == "INVALID") {
+                stateColor = "red";
+            }           
+            content += '<tr><td><b>STATE</b></td><td style="color:'+stateColor+'">' + data["instance"]["state"] + '</td></tr>';
+            if (frame == "isolate_modal_ajax-content_instances" ) {
+              	content += '<tr><td><b>BUNDLE ID</b></td><td>' + data["instance"]["bundle-id"] + '</td></tr>';
+            }
+            if (kind != "java") {
+              content += '<tr><td><b>SERVICES</b></td><td>' + data["instance"]["services"] + '</td></tr>';
+              // dependencies            
+              content += '<tr><td><b>DEPENDENCIES</b></td><td>';
+              content += '<table class="table table-condensed table-striped table-hover">';
+              content += '<tr><th>Field</th><th>Specification</th><th>Optional</th><th>Aggregate</th><th>Handler</th><th>Bindings</th></tr>';
+              var deps = data["instance"]["dependencies"];              
+              for (var i in deps) {
+                  var dep = deps[i];
+                  var key = Object.keys(dep)[0]                                    
+                  content += '<tr><td>'+key+'</td><td>'+dep[key]["specification"]+'</td><td>'+dep[key]["optional"]+'</td><td>'+dep[key]["aggregate"]+'</td><td>'+dep[key]["handler"]+'</td><td>'+dep[key]["bindings"]+'</td></tr>';
+                }              
+            
+              content += '</table>';                
+              content += '</td></tr>';
+            
+              // properties
+              content += '<tr><td><b>PROPERTIES</b></td><td>';
+              content += '<table class="table table-condensed table-striped table-hover">';
+              content += '<tr><th>Key</th><th>Default Value</th></tr>';
+              var keys = Object.keys(data["instance"]["properties"])
+              for (var i in keys) {
+                var key = keys[i] ;               
+                content += '<tr><td>'+key+'</td><td>'+data["instance"]["properties"][key]+'</td></tr>';
+              }
+              content += "</table>";
+              content +='</td></tr>';            
+              if (frame == "isolate_modal_ajax-content_instances" ) {       
+                if (data["instance"]["error-trace"] != null) {
+                  content += '<tr><td><b>ERROR TRACE</b></td><td><pre>' + data["instance"]["error-trace"] + '</pre></td></tr>';
+                } else {
+                  content += '<tr><td><b>ERROR TRACE</b></td><td><pre></pre></td></tr>';
+                }               
+              }
+            }
+            content += '</table>';                                                 
+            $('#'+frame).html(content);
+            $("#link_get_instances").click(function(event) {
+                console.log("link_get_instances clicked!");
+                get_instances($(this).attr("data-uuid"));
+            });
+        }).fail(function(jqXHR) {
+            if (jqXHR.status == 401) {
+                window.location.href = "login.html"
+            } 
+        }); 
+    }
+    
+    function get_services(uid) {
+      $('#isolate_modal_ajax-content_services').html('<img src="img/devoops_getdata.gif"  alt="preloader"/>');   
+        $.getJSON( "/debug/api/v2/isolates/"+uid+"/services", function( data ) { 
+                    
+            var content = '<table class="table table-condensed table-striped table-hover">';
+            content += '<tr><th>NAME</th><th>RANKING</th><th>SPECIFICATIONS</th><th>BUNDLE</th></tr>';
+            for (var i in data['services']) {
+              	content += '<tr><td>'+data['services'][i]["id"]+'</td><td>'+data['services'][i]["ranking"]+'</td><td>'+data['services'][i]["specifications"]+'</td><td>'+ data['services'][i]["bundle"]["name"] + ' (' + data['services'][i]["bundle"]["id"] + ')' +'</td></tr>';
+            }
+            content += '</table>'            
+            $('#isolate_modal_ajax-content_services').html(content);
+        }).fail(function(jqXHR) {
+            if (jqXHR.status == 401) {
+                window.location.href = "login.html"
+            } 
+        }); 
+    }
+    
+    function get_threads(uid) {
+        $('#isolate_modal_ajax-content_threads').html('<img src="img/devoops_getdata.gif"  alt="preloader"/>');   
+        $.getJSON( "/debug/api/v2/isolates/"+uid+"/threads", function( data ) { 
+                    
+            var content = '<table class="table table-condensed table-striped table-hover">';
+            content += '<tr><th>ID</th><th>THREAD STACK</th></tr>';
+            for (var i in data['threads']) {
+                var is_current = ""
+                if (data['threads'][i]["current"] == true) 
+                  is_current = " (current)";
+              	content += '<tr><td>'+data['threads'][i]["id"]+is_current+'</td><td><dl>';
+                var st_length = Object.keys(data['threads'][i]["stack"]).length;
+                for (var j=1; j<st_length; j++) {
+                  content += "<dt>" + data['threads'][i]["stack"][j]["filename"] + "@" + data['threads'][i]["stack"][j]["lineno"];
+                  var name = data['threads'][i]["stack"][j]["name"]
+                  if (name != null) { 
+                    content += ' :: '+name+'(...)';
+                  }
+                  content += '</dt>\n<dd>';
+                  var line = data['threads'][i]["stack"][j]["line"]
+                  if (line != null) {
+                    content +=  '<pre>'+line+'</pre>'; 
+                  }
+                  content += '</dd>';
+                  
+                }                  
+                content +='</dl></td></tr>';
+            }
+            content += '</table>'            
+            $('#isolate_modal_ajax-content_threads').html(content);
+        }).fail(function(jqXHR) {
+            if (jqXHR.status == 401) {
+                window.location.href = "login.html"
+            } 
+        }); 
+    }
+    
+    function get_logs(isolate_uuid) {
+        $('#isolate_modal_ajax-content_logs').html('<img src="img/devoops_getdata.gif"  alt="preloader"/>');   
+        $.getJSON( "/debug/api/v2/isolates/"+isolate_uuid+"/logs", function( data ) { 
+            var content = '';     
+            if (data["logs"]["kind"] != "Python") {   
+            content += '<br/><p>Log Level: ';
+            content += '<select id="log_levels">';
+            content += '<option value="OFF">OFF</option>';
+            content += '<option value="SEVERE">SEVERE</option>';
+            content += '<option value="WARNING">WARNING</option>';
+            content += '<option value="INFO">INFO</option>';
+            content += '<option value="CONFIG">CONFIG</option>';
+            content += '<option value="FINE">FINE</option>';
+            content += '<option value="FINER">FINER</option>';
+            content += '<option value="FINEST">FINEST</option>';
+            content += '<option value="ALL">ALL</option>';
+            content += '</select></p>';            
+            }            
+            content += '<table class="table table-condensed table-striped table-hover">';
+            content += '<tr><th>LOG ID</th><th>LAST MODIFICATION DATE</th></tr>';
+            for (var i in data['logs']['log-files']) {                
+                var log_id = Object.keys(data['logs']['log-files'][i])[0]
+                var log_timestamp = data['logs']['log-files'][i][log_id]
+              	content += '<tr><td><a href="#" class="link_get_log" data-uuid="'+isolate_uuid+'" data-logid="'+log_id+'">'+log_id+'</a></td><td>'+log_timestamp+'</td></tr>';
+            }
+            content += '</table>'                        
+            $('#isolate_modal_ajax-content_logs').html(content);
+            $('#log_levels').val(data['logs']["level"]);
+            $("#log_levels").change(function() {
+              var myData = {                  
+                    logLevel: $('#log_levels').val(),
+                    hello: "World"
+                };
+              $.ajax(
+                {
+                  url: "/debug/api/v2/isolates/"+isolate_uuid+"/logs/level",
+                  type: "POST",
+                  data: $.toJSON(myData),
+                  contentType: "application/json; charset=utf-8",
+                  dataType: "text",
+                  success: function(data) {
+
+                  }
+                }
+              );
+              /*
+              $.post( "/debug/api/v2/isolates/"+isolate_uuid+"/logs/level",
+                {                  
+                  logLevel: $('#log_levels').val()
+                },
+                function(data, status) {
+                  console.log("received data:" + data + " - status:" + status);
+                }
+              );
+              */              
+            });
+            $(".link_get_log").click(function(event) {
+                get_log($(this).attr("data-uuid"), $(this).attr("data-logid"));
+            });
+        }).fail(function(jqXHR) {
+            if (jqXHR.status == 401) {
+                window.location.href = "login.html"
+            } 
+        });      
+    }
+
+    function get_log(isolate_uuid, log_id) {
+        $('#isolate_modal_ajax-content_logs').html('<img src="img/devoops_getdata.gif"  alt="preloader"/>');   
+        $.getJSON( "/debug/api/v2/isolates/"+isolate_uuid+"/logs/"+log_id, function( data ) { 
+            var content = "<p><br/><a class='btn btn-default' id='link_get_logs' href='#' data-uuid='"+isolate_uuid+"'>&lt; Logs list</a> ";
+            content += " <a href='/debug/api/v2/isolates/"+isolate_uuid+"/logs/"+log_id+"?raw' target='_blanc' class='btn btn-default'>Open in a seperate window</a></p>";
+            content += "<pre>" + escapeHTML(data["log"]["content"]) + "</pre>";
+            $('#isolate_modal_ajax-content_logs').html(content);
+            $("#link_get_logs").click(function(event) {
+                console.log("link_get_logs clicked!");
+                get_logs($(this).attr("data-uuid"));
+            });
+        }).fail(function(jqXHR) {
+            if (jqXHR.status == 401) {
+                window.location.href = "login.html"
+            } 
+        }); 
+    }
+    
+    function get_herald(isolate_uuid) {        
+        $('#isolate_modal_ajax-content_herald').html('<h4>Accesses</h4><div id="isolate_modal_ajax-content_herald_accesses"><img src="img/devoops_getdata.gif"  alt="preloader"/></div><h4>Directory</h4><div id="isolate_modal_ajax-content_herald_directory"><img src="img/devoops_getdata.gif"  alt="preloader"/></div>');
+  
+        $.getJSON( "/debug/api/v2/isolates/"+isolate_uuid+"/accesses", function( data ) {                     
+            var content = '<table class="table table-condensed table-striped table-hover">';
+            content += '<tr><th>ACCESS</th><th>DUMP</th></tr>';
+            for (var i in data['accesses']) {    
+                console.log(i)              
+                var access_id = i;
+                var access_dump = '<table class="table table-bordered"><tr><td>'+data['accesses'][i]+'</td></tr></table>';
+              	content += '<tr><td>'+access_id+'</td><td>'+access_dump+'</td></tr>';
+            }
+            content += '</table>'  
+            $('#isolate_modal_ajax-content_herald_accesses').html(content);            
+        }).fail(function(jqXHR) {
+            if (jqXHR.status == 401) {
+                window.location.href = "login.html"
+            } 
+        });   
+
+        $.getJSON( "/debug/api/v2/isolates/"+isolate_uuid+"/directory", function( data ) {                     
+            var content = '<table class="table table-condensed table-striped table-hover">';
+            content += '<tr><th>ISOLATE</th><th>NODE</th><th>ACCESSES</th></tr>';
+            for (var i in data['directory']) {                  
+                var dir_id = Object.keys(data['directory'][i])[0]
+                var dir_name = data['directory'][i]['name']
+                var dir_node = data['directory'][i]['node_name']                
+                var dir_accesses = '<table class="table table-bordered">';                   
+                for (var j in data['directory'][i]['accesses']) {                                   
+                  dir_accesses += "<tr><td>"+j+"</td><td>"+data['directory'][i]['accesses'][j]+"</td>"                   
+                }
+                dir_accesses += '</table>'
+              	content += '<tr><td>'+dir_name+'</td><td>'+dir_node+'</td><td>'+dir_accesses+'</td></tr>';
+            }
+            content += '</table>'  
+            $('#isolate_modal_ajax-content_herald_directory').html(content);            
+        }).fail(function(jqXHR) {
+            if (jqXHR.status == 401) {
+                window.location.href = "login.html"
+            } 
+        });      
+
+           
+    }
+
+        /* 
+      utils
+    */
+    function activateTab(tab) {
+      $('.nav-tabs a[href="#' + tab + '"]').removeClass("active");
+      $('.nav-tabs a[href="#' + tab + '"]').tab('show');
+      console.log("changing tab to : " + tab);
+    }
+    
+    /* modals */ 
+    $('#node_modal').on('show.bs.modal', function (event) {
+      var button = $(event.relatedTarget) // Button that triggered the modal
+      var name = button.data('name') // Extract info from data-* attributes
+      var uid = button.data('uid')      
+      var modal = $(this)      
+      modal.find('.modal-title').html('<img src="img/node.png" class="img-circle" style="max-width: 16px"></img> <b>Node :</b> ' + name)
+      modal.find('#kill-node-btn').attr('data-uid', uid);       
+      var content = '<table class="table table-condensed table-striped table-hover">'
+      content += '<tr><td>NODE UID</td><td>' + uid + '</td></tr>'
+      content += '<tr><td>NODE NAME</td><td>' + name + '</td></tr>'            
+      modal.find('#node_modal_ajax-content').html(content);
+           
+    })
+
+    /*
+      Showing "Isolate Modal" 
+    */
+     
+    
+    $('#isolate_modal').on('show.bs.modal', function (event) {      
+      var button = $(event.relatedTarget) 
+      var name = button.data('name')
+      var uid = button.data('uid')       
+      var modal = $(this)
+      // update modal title
+      modal.find('.modal-title').html('<img src="img/isolate.png" class="img-circle" style="max-width: 16px"></img> <b>Isolate :</b> ' + name)
+      // update destroy btn isolate's uid
+      modal.find('#kill-isolate-btn').attr('data-uid', uid); 
+      if (name == "cohorte.internals.forker") {
+        modal.find('#kill-isolate-btn').hide(); 
+      } else {
+        modal.find('#kill-isolate-btn').show(); 
+      }  
+      
+      // clean tabs
+      /*
+      $('#isolate_modal_ajax-content').html('<img src="img/devoops_getdata.gif"  alt="preloader"/>');
+      $('#isolate_modal_ajax-content_bundles').html('<img src="img/devoops_getdata.gif"  alt="preloader"/>');  
+      $('#isolate_modal_ajax-content_factories').html('<img src="img/devoops_getdata.gif"  alt="preloader"/>');  
+      $('#isolate_modal_ajax-content_instances').html('<img src="img/devoops_getdata.gif"  alt="preloader"/>');  
+      $('#isolate_modal_ajax-content_services').html('<img src="img/devoops_getdata.gif"  alt="preloader"/>');  
+      $('#isolate_modal_ajax-content_threads').html('<img src="img/devoops_getdata.gif"  alt="preloader"/>');
+      $('#isolate_modal_ajax-content_logs').html('<img src="img/devoops_getdata.gif"  alt="preloader"/>');
+      */            
+      //$('#isolate_modal_ajax-content_actions').html('<img src="img/devoops_getdata.gif"  alt="preloader"/>');  
+      
+      // remove/update on listeners of tabs to update uid
+      /* *** handle tab buttons *** */
+      $('a[data-tab="tab-iso-info"]').off('show.bs.tab');
+      $('a[data-tab="tab-iso-info"]').on('show.bs.tab',  function (e) {                        
+        get_isolate_info(uid)            
+      })
+      $('a[data-tab="tab-iso-bundles"]').off('show.bs.tab');
+      $('a[data-tab="tab-iso-bundles"]').on('show.bs.tab', function (e) {                          
+        get_bundles(uid)
+      })
+      $('a[data-tab="tab-iso-factories"]').off('show.bs.tab');
+      $('a[data-tab="tab-iso-factories"]').on('show.bs.tab', function (e) {                      
+        get_factories(uid);
+      })
+      $('a[data-tab="tab-iso-instances"]').off('show.bs.tab');
+      $('a[data-tab="tab-iso-instances"]').on('show.bs.tab', function (e) {                           
+        get_instances(uid);
+      })
+      $('a[data-tab="tab-iso-services"]').off('show.bs.tab');
+      $('a[data-tab="tab-iso-services"]').on('show.bs.tab', function (e) {                         
+        get_services(uid)
+      })
+      $('a[data-tab="tab-iso-threads"]').off('show.bs.tab');
+      $('a[data-tab="tab-iso-threads"]').on('show.bs.tab', function (e) {                           
+        get_threads(uid);        
+      });
+      $('a[data-tab="tab-iso-herald"]').off('show.bs.tab');
+      $('a[data-tab="tab-iso-herald"]').on('show.bs.tab', function (e) {                
+        get_herald(uid);        
+      });
+      $('a[data-tab="tab-iso-logs"]').off('show.bs.tab');
+      $('a[data-tab="tab-iso-logs"]').on('show.bs.tab', function (e) {                
+        get_logs(uid);        
+      });              
+      /* activate first tab */
+      activateTab("actions");   // to ensure changing tab to activate the next one (infos)
+      activateTab("infos");
+    })
+    
+    
+    $('#component_modal').on('show.bs.modal', function (event) {
+      var button = $(event.relatedTarget); 
+      var recipient = button.data('whatever');
+      var isolate_uuid = button.data('uuid');
+      var instance_name = button.data('instance');      
+      var modal = $(this)
+      modal.find('.modal-title').html('<img src="img/component.png" class="img-circle" style="max-width: 16px"></img> <b>Component :</b> ' + recipient)
+      get_instance(isolate_uuid, instance_name, "component_modal_ajax-content");
+    })
+
+
+    
+    
+    
+    /* ************************ Actions ************************** */
+
+  
+    function killAllNodes() {
+      console.log("destroying all nodes...")
+        $.getJSON( "/webadmin/api/v1/nodes/killall", function( data ) {
+            console.log("killall nodes OK")
+            var instance = $("#notifications-container").notify("create", {
+              title: 'COHORTE Platform Stopping...',
+              text: 'All Cohorte nodes will be destroyed! this interface will no longer be accessible.'
+            })
+        });
+    }
+
+    function killNode(node_uid) {
+      console.log("destroying node "+node_uid+"...")
+        $.getJSON( "/webadmin/api/v1/nodes/"+node_uid+"/kill", function( data ) {
+            console.log("node destroyed!")
+          var instance = $("#notifications-container").notify("create", {
+            title: 'Node stopping...',
+            text: 'Node ' + node_uid + ' will be destroyed!'
+          })
+        });
+    }
+
+    function killIsolate(isolate_uid) {
+      console.log("destroying isolate "+isolate_uid+"...")
+      $.getJSON( "/webadmin/api/v1/isolates/"+isolate_uid+"/kill", function( data ) {
+          console.log("isolate destroyed!")
+          var instance = $("#notifications-container").notify("create", {
+            title: 'Isolate stopping...',
+            text: 'Isolate ' + isolate_uid + ' will be destroyed!'
+          })
+      });
+    }
+
+    /* ************************ Updates ************************** */
+
+    var nodes_lastupdate = 0.00;
+
+    function loadComponentsOfIsolate(div_toreplace, isolate_uid) {        
+        $.getJSON( "/webadmin/api/v1/isolates/"+isolate_uid+"/components", function( data ) {
+            
+            var tmp = "";
+            for (var i in data['components']) {
+                tmp += '<img src="img/component.png" style="max-width: 16px" class="img-circle"></img><a href="#" data-toggle="modal" data-target="#component_modal" data-uuid="'+isolate_uid+'" data-instance="'+data['components'][i]['name']+'" data-whatever="'+data['components'][i]['name']+'">'+data['components'][i]['name']+'</a><br/>';
+            }            
+            $('#'+div_toreplace).html(tmp);
+        });
+    }
+
+    function loadIsolatesOfNode(div_toreplace, node_uid) {
+        $.getJSON( "/webadmin/api/v1/nodes/"+node_uid+"/isolates", function( data ) {
+            var tmp = '<div class="box-content no-padding table-responsive">';
+            tmp += '<table class="table table-bordered table-condensed table-striped table-hover table-heading table-datatable" style="height: 100%">';
+            tmp += "<tr >";
+            for (var i in data['isolates']) {
+                var isolate_type = data['isolates'][i]['type'];
+                
+                if (isolate_type == "app-dynamic-isolate") {
+                    tmp += "<td style='width:30%'>"; 
+                    tmp += '<table class="table m-table table-bordered table-condensed table-hover table-heading">';
+                    tmp += '<thead><tr><th><img src="img/status_resolved.png" class="img-circle" style="max-width: 16px"></img> <img src="img/isolate.png" class="img-circle" style="max-width: 16px"></img><a style="color:black" href="#" data-toggle="modal" data-target="#isolate_modal" data-name="'+data['isolates'][i]['name']+'" data-uid="'+data['isolates'][i]['uid']+'">'+data['isolates'][i]['name']+'</a></th>';
+                    tmp += '</thead><tbody>';                 
+                    tmp += '<tr><td class="m-ticker"><div id="isolate_components-'+data['isolates'][i]['uid']+'"></div></td></tr>';           
+                    tmp += '</tbody></table>'
+                    tmp +="</td>";
+                } else if (isolate_type == "cohorte-isolate") {                    
+                    if ( $("input[name='show-internal-isolates-checkbox']").prop('checked') == true ) {
+                      tmp += "<td style='width:30%'>"; 
+                      tmp += '<table class="table m-table table-bordered table-condensed table-hover table-heading">';
+                      tmp += '<thead><tr><th><img src="img/status_resolved.png" class="img-circle" style="max-width: 16px"></img> <img src="img/isolate.png" class="img-circle" style="max-width: 16px"></img><a style="color:black" href="#" data-toggle="modal" data-target="#isolate_modal" data-name="'+data['isolates'][i]['name']+'" data-uid="'+data['isolates'][i]['uid']+'">'+data['isolates'][i]['name']+'</a></th>';
+                      tmp += '</thead><tbody>';                 
+                      tmp += '<tr><td class="m-ticker" style="color:#CCC;">Internal components are hidden.</td></tr>';
+                      tmp += '</tbody></table>'
+                      tmp +="</td>";
+                    }                               
+                }
+                
+            }
+            tmp +="</tr>";
+            tmp += "</table>";
+
+            $('#'+div_toreplace).html(tmp);
+            for (var i in data['isolates']) {
+                loadComponentsOfIsolate('isolate_components-'+data['isolates'][i]['uid'], data['isolates'][i]['uid']);
+            }
+        });
+    }
+
+    function loadNodes() {
+        $.getJSON( "/webadmin/api/v1/nodes", function( data ) {            
+            frame = "";
+            for (var i in data['nodes']) {
+              // box
+              frame += '<div class="box" style="box-shadow: 0 0 6px #ABABAB;">';
+              // header
+                var element = 'node_isolates-'+data['nodes'][i]['uid'];
+                var node_id = data['nodes'][i]['uid'];
+              frame += '<div class="box-header" style="background: #CCC;"><div class="box-name"><img src="img/status_resolved.png" class="img-circle" style="max-width: 16px"></img> <img src="img/node.png" class=""></img> <span><b><a onclick="loadIsolatesOfNode(\''+element+'\',\''+node_id+'\')" href="#" data-toggle="modal" data-target="#node_modal" data-name="'+data['nodes'][i]['name']+'" data-uid="'+data['nodes'][i]['uid']+'">';
+              frame += data['nodes'][i]['name'];
+              frame += '</a></b></span></div>';
+              frame += '<div class="box-icons"><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>';
+        frame += '<a class="expand-link"><i class="fa fa-expand"></i></a></div><div class="no-move"></div></div>';
+        // node isolates
+              frame += '<div id="node_isolates-'+data['nodes'][i]['uid']+'"/>';
+              frame += '</div>';
+      } 
+            $('#frm_content').html(frame);
+            for (var i in data['nodes']) {
+                loadIsolatesOfNode('node_isolates-'+data['nodes'][i]['uid'], data['nodes'][i]['uid']);
+            }
+            nodes_lastupdate = data['meta']['lastupdate'];
+        });
+    }
+
+    function refresh() {        
+        // make Ajax call here, inside the callback call:
+        setTimeout(refresh, 2000);
+        $.getJSON( "/webadmin/api/v1/nodes/lastupdate", function( data ) {
+            var result = data['meta']['lastupdate'];
+            if (result > nodes_lastupdate) {
+                nodes_lastupdate = result;
+                loadNodes();
+            }
+        });
+    }
+
+    
+
+    $(document).ready(function() {
+        WinMove();
+        loadNodes();
+        setTimeout(refresh, 2000);
+        
+        /* ************************ links ************************** */               
+        $('#killall-nodes-btn').click(function() {                         
+            killAllNodes()
+        });
+        $('#kill-node-btn').click(function() {
+            var uid = $(this).attr('data-uid');            
+            killNode(uid)
+        });
+        $('#kill-isolate-btn').click(function() {
+            var uid = $(this).attr('data-uid');            
+            killIsolate(uid)
+        });
+        // get platform infos
+        $.ajax({
+              url: "/debug/api/v2/platform",
+              type:"GET",                          
+              contentType:"application/json",
+              success: function(data) {                
+                $("#cohorte_version_lbl").html(data["platform"]["cohorte-version"])
+              }
+        });
+        // get application infos
+        $.ajax({
+              url: "/debug/api/v2/application",
+              type:"GET",                          
+              contentType:"application/json",
+              success: function(data) {
+                $("#application_id_lbl").html(data["application"]["id"])
+                $("#application_name_lbl").html(data["application"]["name"])
+              }
+        });
+        // see http://www.bootstrap-switch.org/
+        $("input[name='show-internal-isolates-checkbox']").bootstrapSwitch();
+        $('input[name="show-internal-isolates-checkbox"]').on('switchChange.bootstrapSwitch', function(event, state) {
+          $.ajax({
+              url: "/webadmin/gui/options",
+              type:"GET",
+              data: {"show-internal-isolates":state},            
+              contentType:"application/json",
+              success: function(data) {
+                loadNodes();
+              }
+           });
+        });
+
+        $.ajax({
+          url: "/webadmin/gui/options",
+          type:"GET",
+          data: {},            
+          contentType:"application/json",
+          success: function(data) {
+            if (data["options"]["show-internal-isolates"] == "true") {
+              $('input[name="show-internal-isolates-checkbox"]').bootstrapSwitch('state', true, true);
+            } else {
+              $('input[name="show-internal-isolates-checkbox"]').bootstrapSwitch('state', false, false);
+            }                
+          }
+        });
+
+
+    });
+</script>
