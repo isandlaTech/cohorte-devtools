@@ -22,12 +22,10 @@ felix-cache/
 # Eclipse 
 .metadata
 RemoteSystemsTempFiles/
-.project
-.classpath
-.settings
+
 
 # Eclipse iPOJO Nature
-META-INF/
+
 
 # Binaries
 *.tar.gz
@@ -57,12 +55,9 @@ htmlcov/
 .sonar/
 sonar-project.properties
 
-# PSEM2M Compiler
-auto_build_psem2m.xml
 
 # Maven
 # generated
-cohorte-python-runtime/src/lib/python
 target/
 pom.xml.tag
 pom.xml.releaseBackup
