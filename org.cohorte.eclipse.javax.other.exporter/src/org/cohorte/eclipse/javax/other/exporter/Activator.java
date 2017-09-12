@@ -50,6 +50,12 @@ public class Activator implements BundleActivator {
 		System.out.printf("%50s | Bundle=[%50s][%s] started\n",
 				"Activator.start()", wBundle.getSymbolicName(),
 				wBundle.getVersion());
+
+		final String wMessA = "THIS BUNDLE MUST NOT BE PRESENT AT RUNTIME";
+		final String wMessB = String
+				.format("the bundle [%s] is an Eclipse tool used a compilation time in the workspace",
+						wBundle.getSymbolicName());
+		System.out.printf("%50s | %s\n", wMessA, wMessB);
 	}
 
 	/*
