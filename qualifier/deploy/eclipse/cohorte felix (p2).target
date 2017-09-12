@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<?pde version="3.8"?><target name="cohorte felix (p2)" sequenceNumber="41">
+<?pde version="3.8"?><target name="cohorte felix (p2)" sequenceNumber="51">
 <locations>
-<location path="${project_loc:eclipse}/repo" type="Directory"/>
 <location path="${project_loc:org.cohorte.felix.p2}/sources/plugins" type="Directory"/>
+<location path="${project_loc:eclipse}/repo" type="Directory"/>
 </locations>
 <includeBundles>
 <plugin id="log4j"/>
