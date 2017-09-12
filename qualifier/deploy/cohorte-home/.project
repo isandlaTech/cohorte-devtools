@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+	<name>cohorte-home</name>
+	<comment></comment>
+	<projects>
+	</projects>
+	<buildSpec>
+	</buildSpec>
+	<natures>
+	</natures>
+	<variableList>
+		<variable>
+			<name>COHORTE_PYTHON</name>
+			<value>python%257D/cohorte</value>
+		</variable>
+	</variableList>
+</projectDescription>

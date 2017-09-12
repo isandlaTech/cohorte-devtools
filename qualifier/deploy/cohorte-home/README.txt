@@ -1,0 +1,1 @@
+La target platforme de référence est dans le projet "
