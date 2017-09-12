@@ -1,0 +1,37 @@
+Manifest-Version: 1.0
+Bundle-ActivationPolicy: lazy
+Bundle-Activator: qualif.cohorte.isolates.main.isolate.one.Activator
+Bundle-ManifestVersion: 2
+Bundle-Name: Oneisolate
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-SymbolicName: qualif.cohorte.isolates.main.isolate.one
+Bundle-Version: 1.0.0.qualifier
+Created-By: iPOJO 1.12.1
+Export-Package: qualif.cohorte.isolates.main.isolate.one
+Import-Package: org.apache.felix.ipojo;version="[1.12.1,2.0.0)", org.a
+ pache.felix.ipojo.architecture;version="[1.12.1,2.0.0)", org.osgi.fra
+ mework, org.osgi.service.cm;version=1.2, org.osgi.service.log;version
+ =1.3, org.psem2m.isolates.base, org.psem2m.utilities.logging, qualif.
+ cohorte.isolates.slf4j.tests
+iPOJO-Components: component { $name="qualifier-cohorte-isolates-main-i
+ solate-one-factory" $classname="qualif.cohorte.isolates.main.isolate.
+ one.impl.CCpntQualifierMainIsolateOne" provides { $specifications="{q
+ ualif.cohorte.isolates.main.isolate.one.IQualifierMainIsolateOne}" }r
+ equires { $field="pLogger" }requires { $field="pOcilAdapterQualifier"
+  }callback { $transition="invalidate" $method="invalidate" }callback 
+ { $transition="validate" $method="validate" }manipulation { $classnam
+ e="qualif.cohorte.isolates.main.isolate.one.impl.CCpntQualifierMainIs
+ olateOne" interface { $name="qualif.cohorte.isolates.main.isolate.one
+ .IQualifierMainIsolateOne" }field { $name="BANNER_LINE_FORMAT" $type=
+ "java.lang.String" }field { $name="pBannerBundleUrl" $type="java.net.
+ URL" }field { $name="pBundleContext" $type="org.osgi.framework.Bundle
+ Context" }field { $name="pLogger" $type="org.psem2m.isolates.base.IIs
+ olateLoggerSvc" }field { $name="pOcilAdapterQualifier" $type="qualif.
+ cohorte.isolates.slf4j.tests.IOcilAdapterQualifier" }method { $name="
+ buildBannerLine" $return="java.lang.String" }method { $name="buildBan
+ nerLine" $return="java.lang.String" $arguments="{java.lang.String}" $
+ names="{aLine}" }method { $name="buildBannerText" $return="java.lang.
+ String" $arguments="{java.net.URL,java.lang.String}" $names="{wBanner
+ FileUrl,aText}" }method { $name="buildBannerUrl" $return="java.net.UR
+ L" }method { $name="invalidate" }method { $name="validate" }}}
+

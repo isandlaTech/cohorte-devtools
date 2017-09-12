@@ -1,0 +1,34 @@
+Manifest-Version: 1.0
+Bundle-Activator: qualif.cohorte.isolates.main.isolate.two.Activator
+Bundle-ManifestVersion: 2
+Bundle-Name: Qualifier isolate.two
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-SymbolicName: qualif.cohorte.isolates.main.isolate.two
+Bundle-Vendor: COHORTE
+Bundle-Version: 1.0.0.qualifier
+Created-By: iPOJO 1.12.1
+Import-Package: org.apache.felix.ipojo;version="[1.12.1,2.0.0)", org.a
+ pache.felix.ipojo.architecture;version="[1.12.1,2.0.0)", org.osgi.fra
+ mework;version=1.3.0, org.osgi.service.cm;version=1.2, org.osgi.servi
+ ce.log;version=1.3, org.psem2m.isolates.base, org.psem2m.utilities, o
+ rg.psem2m.utilities.logging
+iPOJO-Components: component { $name="qualifier-cohorte-isolates-main-i
+ solate-two-factory" $classname="qualif.cohorte.isolates.main.isolate.
+ two.impl.CCpntQualifierMainIsolateTwo" provides { $specifications="{q
+ ualif.cohorte.isolates.main.isolate.two.IQualifierMainIsolateTwo}" }r
+ equires { $field="pLogger" }callback { $transition="invalidate" $meth
+ od="invalidate" }callback { $transition="validate" $method="validate"
+  }manipulation { $classname="qualif.cohorte.isolates.main.isolate.two
+ .impl.CCpntQualifierMainIsolateTwo" interface { $name="qualif.cohorte
+ .isolates.main.isolate.two.IQualifierMainIsolateTwo" }field { $name="
+ BANNER_LINE_FORMAT" $type="java.lang.String" }field { $name="pBannerB
+ undleUrl" $type="java.net.URL" }field { $name="pBundleContext" $type=
+ "org.osgi.framework.BundleContext" }field { $name="pLogger" $type="or
+ g.psem2m.isolates.base.IIsolateLoggerSvc" }method { $name="buildBanne
+ rLine" $return="java.lang.String" }method { $name="buildBannerLine" $
+ return="java.lang.String" $arguments="{java.lang.String}" $names="{aL
+ ine}" }method { $name="buildBannerText" $return="java.lang.String" $a
+ rguments="{java.net.URL,java.lang.String}" $names="{wBannerFileUrl,aT
+ ext}" }method { $name="buildBannerUrl" $return="java.net.URL" }method
+  { $name="invalidate" }method { $name="validate" }}}
+
