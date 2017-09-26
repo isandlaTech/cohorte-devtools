@@ -18,5 +18,6 @@ Export-Package: javax.crypto,
  javax.security.auth.login,
  javax.security.sasl,
  javax.servlet,
- javax.servlet.http
+ javax.servlet.http,
+ sun.security.x509
 Import-Package: org.osgi.framework
