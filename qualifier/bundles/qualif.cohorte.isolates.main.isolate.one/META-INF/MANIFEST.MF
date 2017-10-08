@@ -11,27 +11,50 @@ Export-Package: qualif.cohorte.isolates.main.isolate.one
 Import-Package: org.apache.felix.ipojo;version="[1.12.1,2.0.0)", org.a
  pache.felix.ipojo.architecture;version="[1.12.1,2.0.0)", org.osgi.fra
  mework, org.osgi.service.cm;version=1.2, org.osgi.service.log;version
- =1.3, org.psem2m.isolates.base, org.psem2m.utilities.logging, qualif.
- cohorte.isolates.slf4j.tests
-iPOJO-Components: component { $name="qualifier-cohorte-isolates-main-i
- solate-one-factory" $classname="qualif.cohorte.isolates.main.isolate.
- one.impl.CCpntQualifierMainIsolateOne" provides { $specifications="{q
- ualif.cohorte.isolates.main.isolate.one.IQualifierMainIsolateOne}" }r
- equires { $field="pLogger" }requires { $field="pOcilAdapterQualifier"
-  }callback { $transition="invalidate" $method="invalidate" }callback 
- { $transition="validate" $method="validate" }manipulation { $classnam
+ =1.3, org.psem2m.isolates.base, org.psem2m.isolates.loggers, org.psem
+ 2m.utilities, org.psem2m.utilities.logging, qualif.cohorte.isolates.s
+ lf4j.tests
+iPOJO-Components: component { $name="qualifier-cohorte-isolates-logger
+ s-Factory" $classname="qualif.cohorte.isolates.main.isolate.one.impl.
+ CCpntQualifierLoggers" provides { $specifications="{qualif.cohorte.is
+ olates.main.isolate.one.impl.CCpntQualifierLoggers}" }requires { $fie
+ ld="pLogger" }requires { $field="pLoggerChannels" }requires { $field=
+ "pLoggingConditionsDefault" }requires { $field="pLoggingConditionsMan
+ ager" }callback { $transition="invalidate" $method="invalidate" }call
+ back { $transition="validate" $method="validate" }manipulation { $cla
+ ssname="qualif.cohorte.isolates.main.isolate.one.impl.CCpntQualifierL
+ oggers" field { $name="pLogChannel" $type="org.psem2m.isolates.logger
+ s.ILogChannelSvc" }field { $name="pLogger" $type="org.psem2m.isolates
+ .base.IIsolateLoggerSvc" }field { $name="pLoggerChannels" $type="org.
+ psem2m.isolates.loggers.ILogChannelsSvc" }field { $name="pLoggingCond
+ itionsDefault" $type="org.psem2m.isolates.loggers.ILoggingConditions"
+  }field { $name="pLoggingConditionsManager" $type="org.psem2m.isolate
+ s.loggers.ILoggingConditionsManager" }field { $name="pLoggingConditio
+ nsSpecific" $type="org.psem2m.isolates.loggers.ILoggingConditions" }m
+ ethod { $name="invalidate" }method { $name="logLoggingConditions" $ar
+ guments="{java.lang.String,org.psem2m.isolates.loggers.ILoggingCondit
+ ions}" $names="{aID,aLoggingConditions}" }method { $name="logLoggingC
+ onditionsManager" }method { $name="testChanneInvalidatel" }method { $
+ name="testChannelValidate" }method { $name="validate" }}}component { 
+ $name="qualifier-cohorte-isolates-main-isolate-one-factory" $classnam
  e="qualif.cohorte.isolates.main.isolate.one.impl.CCpntQualifierMainIs
- olateOne" interface { $name="qualif.cohorte.isolates.main.isolate.one
- .IQualifierMainIsolateOne" }field { $name="BANNER_LINE_FORMAT" $type=
- "java.lang.String" }field { $name="pBannerBundleUrl" $type="java.net.
- URL" }field { $name="pBundleContext" $type="org.osgi.framework.Bundle
- Context" }field { $name="pLogger" $type="org.psem2m.isolates.base.IIs
- olateLoggerSvc" }field { $name="pOcilAdapterQualifier" $type="qualif.
- cohorte.isolates.slf4j.tests.IOcilAdapterQualifier" }method { $name="
- buildBannerLine" $return="java.lang.String" }method { $name="buildBan
- nerLine" $return="java.lang.String" $arguments="{java.lang.String}" $
- names="{aLine}" }method { $name="buildBannerText" $return="java.lang.
- String" $arguments="{java.net.URL,java.lang.String}" $names="{wBanner
- FileUrl,aText}" }method { $name="buildBannerUrl" $return="java.net.UR
- L" }method { $name="invalidate" }method { $name="validate" }}}
+ olateOne" provides { $specifications="{qualif.cohorte.isolates.main.i
+ solate.one.IQualifierMainIsolateOne}" }requires { $field="pLogger" }r
+ equires { $field="pOcilAdapterQualifier" }callback { $transition="inv
+ alidate" $method="invalidate" }callback { $transition="validate" $met
+ hod="validate" }manipulation { $classname="qualif.cohorte.isolates.ma
+ in.isolate.one.impl.CCpntQualifierMainIsolateOne" interface { $name="
+ qualif.cohorte.isolates.main.isolate.one.IQualifierMainIsolateOne" }f
+ ield { $name="BANNER_LINE_FORMAT" $type="java.lang.String" }field { $
+ name="pBannerBundleUrl" $type="java.net.URL" }field { $name="pBundleC
+ ontext" $type="org.osgi.framework.BundleContext" }field { $name="pLog
+ ger" $type="org.psem2m.isolates.base.IIsolateLoggerSvc" }field { $nam
+ e="pOcilAdapterQualifier" $type="qualif.cohorte.isolates.slf4j.tests.
+ IOcilAdapterQualifier" }method { $name="buildBannerLine" $return="jav
+ a.lang.String" }method { $name="buildBannerLine" $return="java.lang.S
+ tring" $arguments="{java.lang.String}" $names="{aLine}" }method { $na
+ me="buildBannerText" $return="java.lang.String" $arguments="{java.net
+ .URL,java.lang.String}" $names="{wBannerFileUrl,aText}" }method { $na
+ me="buildBannerUrl" $return="java.net.URL" }method { $name="invalidat
+ e" }method { $name="validate" }}}
 

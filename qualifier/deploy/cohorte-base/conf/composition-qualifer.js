@@ -18,9 +18,14 @@
              "isolate" : "isolate-one"
            },
            {
+             "name" : "qualifier-cohorte-isolates-loggers",
+             "factory" : "qualifier-cohorte-isolates-loggers-Factory",
+             "isolate" : "isolate-one"
+           },
+           {
              "name" : "qualifier-cohorte-isolates-main-isolate-one",
-              "factory" : "qualifier-cohorte-isolates-main-isolate-one-factory",
-              "isolate" : "isolate-one"
+             "factory" : "qualifier-cohorte-isolates-main-isolate-one-factory",
+             "isolate" : "isolate-one"
            },
            
            /* *************************** Isolate TWO ************************* */  
