@@ -42,9 +42,9 @@ public class CCpntQualifierLoggers {
 
 	@Requires
 	ILoggingConditions pLoggingConditionsDefault;
-
 	@Requires
 	ILoggingConditionsManager pLoggingConditionsManager;
+
 	private ILoggingConditions pLoggingConditionsSpecific;
 
 	/**

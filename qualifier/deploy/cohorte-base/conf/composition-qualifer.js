@@ -23,6 +23,11 @@
              "isolate" : "isolate-one"
            },
            {
+               "name" : "qualifier-cohorte-isolates-geographic",
+               "factory" : "qualifier-cohorte-isolates-geographic-Factory",
+               "isolate" : "isolate-one"
+            },
+           {
              "name" : "qualifier-cohorte-isolates-main-isolate-one",
              "factory" : "qualifier-cohorte-isolates-main-isolate-one-factory",
              "isolate" : "isolate-one"
