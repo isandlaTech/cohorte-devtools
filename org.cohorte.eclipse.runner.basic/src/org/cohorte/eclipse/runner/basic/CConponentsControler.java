@@ -265,7 +265,7 @@ public class CConponentsControler implements ServiceListener {
 
 		for (int i = 0; i < wParentsComponents.length(); i++) {
 			wComposition.getJSONObject("root").getJSONArray("components")
-					.put(wParentsComponents.get(i));
+			.put(wParentsComponents.get(i));
 		}
 		return wComposition;
 	}
@@ -422,9 +422,16 @@ public class CConponentsControler implements ServiceListener {
 		return pCompositionFile != null;
 	}
 
+	/**
+	 * <pre>
+	 * -Dorg.cohorte.eclipse.runner.basic.jython.stdlib.path=${project_loc:org.cohorte.eclipse.runner.basic}/lib/Lib
+	 * </pre>
+	 * 
+	 * @see PROP_JYTHON_STD_LIB_PATH
+	 */
 	private void initJythonObject() {
 		try {
-			pLogger.logInfo(this, "initJythonObject");
+			pLogger.logInfo(this, "initJythonObject", "Begin");
 			// create finder and includer python object to resolve the
 			// configuration
 			// file
@@ -432,17 +439,20 @@ public class CConponentsControler implements ServiceListener {
 					.getPythonObjectFactory(PYTHON_FACTORY, Arrays
 							.asList(new String[] { pPlatformDirsSvc
 									.getPlatformHome().getAbsolutePath()
-									+ File.separatorChar + "repo" }));
+									+ File.separatorChar
+									+ IPlatformDirsSvc.DIRNAME_REPOSITORY }));
 
 			pFinder = (IFileFinder) wPythonFactory
 					.newInstance(IFileFinder.class);
-			pLogger.logInfo(this, "init IFileFinder ");
+			pLogger.logInfo(this, "initJythonObject", "init IFileFinder %s ",
+					pFinder);
 
 			// set cohorte base and data to the finder
 
 			pIncluder = (IFileIncluder) wPythonFactory
 					.newInstance(IFileIncluder.class);
-			pLogger.logInfo(this, "init IFileIncluder ");
+			pLogger.logInfo(this, "initJythonObject",
+					"init IFileIncluder : %s", pIncluder);
 
 			pFinder._set_roots(Arrays.asList(new String[] {
 					pPlatformDirsSvc.getNodeDataDir().getAbsolutePath(),
@@ -512,7 +522,7 @@ public class CConponentsControler implements ServiceListener {
 	 *
 	 */
 	private void instancaiateComponents() throws UnacceptableConfiguration,
-			MissingHandlerException, ConfigurationException {
+	MissingHandlerException, ConfigurationException {
 
 		final String wCurrentIsolateName = pPlatformDirsSvc.getIsolateName();
 
@@ -769,25 +779,25 @@ public class CConponentsControler implements ServiceListener {
 				if (wObj instanceof String) {
 					wStrValue = (String) wObj;
 				} else
-				//
-				if (wObj instanceof String[]) {
-					wStrValue = CXStringUtils
-							.stringTableToString((String[]) wObj);
-				} else
-				//
-				if (wObj instanceof PropertyDescription[]) {
-					final StringBuilder wSB = new StringBuilder();
-					for (final PropertyDescription wPropertyDescription : ((PropertyDescription[]) wObj)) {
-						wSB.append(String.format("%s=\"%s\" ",
-								wPropertyDescription.getName(),
-								wPropertyDescription.getCurrentValue()));
-					}
-					wStrValue = wSB.toString();
-				} else
-				//
-				{
-					wStrValue = String.valueOf(wObj);
-				}
+					//
+					if (wObj instanceof String[]) {
+						wStrValue = CXStringUtils
+								.stringTableToString((String[]) wObj);
+					} else
+						//
+						if (wObj instanceof PropertyDescription[]) {
+							final StringBuilder wSB = new StringBuilder();
+							for (final PropertyDescription wPropertyDescription : ((PropertyDescription[]) wObj)) {
+								wSB.append(String.format("%s=\"%s\" ",
+										wPropertyDescription.getName(),
+										wPropertyDescription.getCurrentValue()));
+							}
+							wStrValue = wSB.toString();
+						} else
+							//
+						{
+							wStrValue = String.valueOf(wObj);
+						}
 				if (wStrValue.indexOf('\n') > 0) {
 					wStrValue = wStrValue.replace('\n', '§');
 				}
@@ -846,7 +856,7 @@ public class CConponentsControler implements ServiceListener {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see
 	 * org.osgi.framework.ServiceListener#serviceChanged(org.osgi.framework.
 	 * ServiceEvent)
@@ -857,7 +867,7 @@ public class CConponentsControler implements ServiceListener {
 		try {
 			@SuppressWarnings("unchecked")
 			final ServiceReference<Factory> wFactoryServiceRef = (ServiceReference<Factory>) aServiceEvent
-					.getServiceReference();
+			.getServiceReference();
 
 			switch (aServiceEvent.getType()) {
 			case ServiceEvent.REGISTERED: {
@@ -972,7 +982,7 @@ public class CConponentsControler implements ServiceListener {
 						"There is no component to control in this isolate!");
 				logControlerState(wMustControlComponent);
 			} else
-			// else, if there is at least one component to control
+				// else, if there is at least one component to control
 			{
 				// instal 'Factory' service listener
 				registerFactoryServiceListener();

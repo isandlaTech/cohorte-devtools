@@ -138,21 +138,24 @@ iPOJO-Components: instance { $component="org.cohorte.eclipse.runner.ba
  orte.eclipse.runner.basic.jython.CCpntPythonBridge" $classname="org.c
  ohorte.eclipse.runner.basic.jython.CCpntPythonBridge" provides { $spe
  cifications="{org.cohorte.eclipse.runner.basic.jython.IPythonBridge}"
-  }requires { $field="pLogger" }requires { $field="pPlatformDirsSvc" }
- callback { $transition="invalidate" $method="inValidate" }callback { 
- $transition="validate" $method="validate" }manipulation { $classname=
- "org.cohorte.eclipse.runner.basic.jython.CCpntPythonBridge" interface
-  { $name="org.cohorte.eclipse.runner.basic.jython.IPythonBridge" }fie
- ld { $name="pContext" $type="org.osgi.framework.BundleContext" }field
-  { $name="pLogger" $type="org.psem2m.isolates.base.IIsolateLoggerSvc"
-  }field { $name="pMapFactory" $type="java.util.Map" }field { $name="p
- PlatformDirsSvc" $type="org.psem2m.isolates.services.dirs.IPlatformDi
- rsSvc" }field { $name="pStdLibPath" $type="java.lang.String" }method 
- { $name="getPythonObjectFactory" $return="org.cohorte.eclipse.runner.
- basic.jython.IPythonFactory" $arguments="{java.lang.String}" $names="
- {aId}" }method { $name="getPythonObjectFactory" $return="org.cohorte.
- eclipse.runner.basic.jython.IPythonFactory" $arguments="{java.lang.St
- ring,java.util.List}" $names="{aId,aPythonPath}" }method { $name="inV
- alidate" }method { $name="remove" $arguments="{java.lang.String}" $na
- mes="{aId}" }method { $name="validate" }}}
+  controller { $field="pServiceController" $value="false" }}requires {
+  $field="pLogger" }requires { $field="pPlatformDirsSvc" }callback { $
+ transition="invalidate" $method="inValidate" }callback { $transition=
+ "validate" $method="validate" }manipulation { $classname="org.cohorte
+ .eclipse.runner.basic.jython.CCpntPythonBridge" interface { $name="or
+ g.cohorte.eclipse.runner.basic.jython.IPythonBridge" }field { $name="
+ pBundleContext" $type="org.osgi.framework.BundleContext" }field { $na
+ me="pLogger" $type="org.psem2m.isolates.base.IIsolateLoggerSvc" }fiel
+ d { $name="pMapFactory" $type="java.util.Map" }field { $name="pPlatfo
+ rmDirsSvc" $type="org.psem2m.isolates.services.dirs.IPlatformDirsSvc"
+  }field { $name="pServiceController" $type="boolean" }field { $name="
+ pStdLibPath" $type="java.lang.String" }method { $name="getBundleConte
+ xt" $return="org.osgi.framework.BundleContext" }method { $name="getPy
+ thonObjectFactory" $return="org.cohorte.eclipse.runner.basic.jython.I
+ PythonFactory" $arguments="{java.lang.String}" $names="{aId}" }method
+  { $name="getPythonObjectFactory" $return="org.cohorte.eclipse.runner
+ .basic.jython.IPythonFactory" $arguments="{java.lang.String,java.util
+ .List}" $names="{aId,aPythonPath}" }method { $name="inValidate" }meth
+ od { $name="remove" $arguments="{java.lang.String}" $names="{aId}" }m
+ ethod { $name="validate" }}}
 
