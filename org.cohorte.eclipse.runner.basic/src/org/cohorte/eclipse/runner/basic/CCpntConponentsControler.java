@@ -6,11 +6,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.logging.Level;
 
 import javax.script.ScriptException;
@@ -44,6 +44,7 @@ import org.psem2m.utilities.files.CXFileUtf8;
 import org.psem2m.utilities.json.JSONArray;
 import org.psem2m.utilities.json.JSONException;
 import org.psem2m.utilities.json.JSONObject;
+import org.psem2m.utilities.logging.CXLoggerUtils;
 
 /**
  * This components simulates the node contôler, it instanciates all the
@@ -101,15 +102,15 @@ import org.psem2m.utilities.json.JSONObject;
  * @author ogattaz
  *
  */
-@Component
+@Component(name = "Cohorte-devtools-CConponentsControler-factory")
 @Instantiate
-public class CConponentsControler implements ServiceListener {
+public class CCpntConponentsControler implements ServiceListener {
 
 	static final String FMT_COMPOSITION_FILENAME = "composition%s.js";
 
+	static final String PROP_FACTORY_NAME = "factory.name";
+
 	/**
-	 * MOD_OG_20150916
-	 *
 	 * Define a file name suffix used to load alternate composition file as
 	 * "compositionSuffix.js" rather than the classic "composition.js" file.
 	 *
@@ -118,30 +119,37 @@ public class CConponentsControler implements ServiceListener {
 	 * </pre>
 	 *
 	 */
-	static final String PROP_COMPOSITION_FILENAME_SUFFIX = "org.cohorte.eclipse.runner.basic.composition.suffix";
+	static final String PROP_RUNNER_BASIC_COMPOSITION_FILENAME_SUFFIX = "org.cohorte.eclipse.runner.basic.composition.suffix";
 
-	static final String PROP_FACTORY_NAME = "factory.name";
+	/**
+	 * <pre>
+	 * -Dorg.cohorte.eclipse.runner.basic.loglevel=INFO
+	 * </pre>
+	 */
+	static final String PROP_RUNNER_BASIC_LOG_LEVEL = "org.cohorte.eclipse.runner.basic.loglevel";
 
 	/**
 	 * <pre>
 	 * -Dorg.cohorte.eclipse.runner.basic.logging.servicerefs.filter=com.cohorte*
-	 * -Dorg.cohorte.eclipse.runner.basic.composition.suffix=-app-oneisolate${COMPOSITION_SUFFIX}
-	 * -Dorg.cohorte.eclipse.runner.basic.jython.stdlib.path=${project_loc:org.cohorte.eclipse.runner.basic}/lib
 	 * </pre>
 	 */
-	static final String PROP_LOGGING_SERVICEREF_FILTER = "org.cohorte.eclipse.runner.basic.logging.servicerefs.filter";
+	static final String PROP_RUNNER_BASIC_LOGGING_SERVICEREF_FILTER = "org.cohorte.eclipse.runner.basic.logging.servicerefs.filter";
+
+	static final String[] PROPS_RUNNER_BASIC = { PROP_RUNNER_BASIC_LOG_LEVEL,
+			PROP_RUNNER_BASIC_LOGGING_SERVICEREF_FILTER,
+			PROP_RUNNER_BASIC_COMPOSITION_FILENAME_SUFFIX };
 
 	private static String PYTHON_FACTORY = "controller";
 
 	private final BundleContext pBundleContext;
 
 	// the map compnonent name => component infos
-	private final Map<String, CComponentInfos> pComponentInfos = new HashMap<String, CComponentInfos>();
+	private final Map<String, CComponentInfos> pComponentInfos = new TreeMap<String, CComponentInfos>();
 
 	private final CXFileUtf8 pCompositionFile = null;
 
 	// the map factory name => factory infos
-	private final Map<String, CFactoryInfos> pFactoriesInfos = new HashMap<String, CFactoryInfos>();
+	private final Map<String, CFactoryInfos> pFactoriesInfos = new TreeMap<String, CFactoryInfos>();
 
 	private IFileFinder pFinder;
 
@@ -166,11 +174,58 @@ public class CConponentsControler implements ServiceListener {
 	/**
 	 * @param aBundleContext
 	 */
-	public CConponentsControler(final BundleContext aBundleContext) {
+	public CCpntConponentsControler(final BundleContext aBundleContext) {
 		super();
 		pBundleContext = aBundleContext;
-		// System.out.printf("devtool-basic-runner: %50s | instanciated \n",
-		// this.getClass().getName());
+	}
+
+	/**
+	 * buil a generic message about a property
+	 *
+	 * @param aPropertyName
+	 *            eg.org.cohorte.eclipse.runner.basic.loglevel
+	 * @param aMessage
+	 *            eg. isn't defined
+	 * @return eg. "The  property [%s] of the Basic Runner isn't defined "
+	 */
+	private String buildBasicRunnerPropMessage(final String aPropertyName,
+			final String aMessage) {
+		return String.format("The  property [%s] of the Basic Runner %s",
+				aPropertyName, aMessage);
+	}
+
+	/**
+	 * <pre>
+	 * -Dorg.cohorte.eclipse.runner.basic.loglevel=INFO
+	 * -Dorg.cohorte.eclipse.runner.basic.service.filter=*iotpack*
+	 * -Dorg.cohorte.eclipse.runner.basic.composition.suffix=${COMPOSITION_SUFFIX}
+	 * -Djython.stdlib=${project_loc:org.cohorte.eclipse.runner.basic}/lib/Lib
+	 * </pre>
+	 */
+	private void checkBasicRunnerProperties() {
+
+		for (String wPropName : PROPS_RUNNER_BASIC) {
+
+			String wValue = System.getProperty(wPropName);
+			boolean wExists = (wValue != null && !wValue.isEmpty());
+			pLogger.logInfo(this, "checkRunnerProperties",
+					"PropName=[%-60s] Exixts=[%5s] value=[%s]", wPropName,
+					wExists, wValue);
+
+			if (!wExists) {
+				if (PROP_RUNNER_BASIC_LOG_LEVEL.equals(wPropName)) {
+
+					String wMessageBeginning = buildBasicRunnerPropMessage(
+							PROP_RUNNER_BASIC_LOG_LEVEL, "isn't defined.");
+					pLogger.logWarn(
+							this,
+							"checkRunnerProperties",
+							"%s => the log level still set to FINE during the validation of that component [%s].",
+							wMessageBeginning, getClass().getSimpleName());
+
+				}
+			}
+		}
 
 	}
 
@@ -183,6 +238,25 @@ public class CConponentsControler implements ServiceListener {
 			throws InvalidSyntaxException {
 
 		return pBundleContext.getServiceReferences(Factory.class, null);
+	}
+
+	/**
+	 * @return the log level ti use during the validation of that component
+	 */
+	private Level getBasicRunnerLogLevel() {
+		String wLevel = System.getProperty(PROP_RUNNER_BASIC_LOG_LEVEL, "FINE");
+		try {
+			return Level.parse(wLevel);
+		} catch (IllegalArgumentException e) {
+
+			String wMessageBeginning = buildBasicRunnerPropMessage(
+					PROP_RUNNER_BASIC_LOG_LEVEL, "contains a unparsable Level.");
+
+			pLogger.logSevere(this, "checkRunnerProperties",
+					"%s => wrong value=[%s] => use FINE", wMessageBeginning,
+					wLevel);
+			return Level.FINE;
+		}
 	}
 
 	/**
@@ -224,7 +298,7 @@ public class CConponentsControler implements ServiceListener {
 	private String getCompositionContent() {
 		if (pIncluder != null) {
 			final String wFileNameSuffix = pBundleContext
-					.getProperty(PROP_COMPOSITION_FILENAME_SUFFIX);
+					.getProperty(PROP_RUNNER_BASIC_COMPOSITION_FILENAME_SUFFIX);
 			final String wCompositionFileName = getCompositionFileName(wFileNameSuffix);
 			final Object wRes = pIncluder.get_content("conf"
 					+ File.separatorChar + wCompositionFileName, false);
@@ -265,7 +339,7 @@ public class CConponentsControler implements ServiceListener {
 
 		for (int i = 0; i < wParentsComponents.length(); i++) {
 			wComposition.getJSONObject("root").getJSONArray("components")
-			.put(wParentsComponents.get(i));
+					.put(wParentsComponents.get(i));
 		}
 		return wComposition;
 	}
@@ -289,7 +363,7 @@ public class CConponentsControler implements ServiceListener {
 		// Returns the value of the requested property, or null if the property
 		// is undefined.
 		final String wFileNameSuffix = pBundleContext
-				.getProperty(PROP_COMPOSITION_FILENAME_SUFFIX);
+				.getProperty(PROP_RUNNER_BASIC_COMPOSITION_FILENAME_SUFFIX);
 
 		return getCompositionFile(wConfDir, wFileNameSuffix);
 	}
@@ -340,7 +414,7 @@ public class CConponentsControler implements ServiceListener {
 		String wLdapFilter = null;
 
 		final String wFilter = System.getProperty(
-				PROP_LOGGING_SERVICEREF_FILTER, null);
+				PROP_RUNNER_BASIC_LOGGING_SERVICEREF_FILTER, null);
 
 		if (wFilter != null && !wFilter.isEmpty()) {
 			// @see
@@ -423,11 +497,10 @@ public class CConponentsControler implements ServiceListener {
 	}
 
 	/**
-	 * <pre>
-	 * -Dorg.cohorte.eclipse.runner.basic.jython.stdlib.path=${project_loc:org.cohorte.eclipse.runner.basic}/lib/Lib
-	 * </pre>
-	 * 
-	 * @see PROP_JYTHON_STD_LIB_PATH
+	 * Use IPythonBridge provided by CCpntPythonBridge.
+	 *
+	 * Note : it's the CCpntPythonBridge componenent which deals with the
+	 * JytonLibs
 	 */
 	private void initJythonObject() {
 		try {
@@ -471,6 +544,9 @@ public class CConponentsControler implements ServiceListener {
 	 * initialize the content of the "pFactoriesInfos" and "pComponentInfos"
 	 * maps.
 	 *
+	 * <pre>
+	 * </pre>
+	 *
 	 * MOD_OG_20150417 Manage explicitly the component flag "isInCurrentIsolate"
 	 * and the factory flag "isNeeded"
 	 *
@@ -508,7 +584,7 @@ public class CConponentsControler implements ServiceListener {
 			wFactoryInfos.setNeeded(wInCurrentIsolate);
 
 			pLogger.logInfo(this, "initMaps",
-					"FactoryName=[%70s] setNeeded=[%s]",
+					"FactoryName=[%-80s] setNeeded=[%s]",
 					wFactoryInfos.getName(), wInCurrentIsolate);
 
 			pComponentInfos.put(wComponentInfo.getName(), wComponentInfo);
@@ -522,7 +598,7 @@ public class CConponentsControler implements ServiceListener {
 	 *
 	 */
 	private void instancaiateComponents() throws UnacceptableConfiguration,
-	MissingHandlerException, ConfigurationException {
+			MissingHandlerException, ConfigurationException {
 
 		final String wCurrentIsolateName = pPlatformDirsSvc.getIsolateName();
 
@@ -570,33 +646,38 @@ public class CConponentsControler implements ServiceListener {
 					pLogger.logInfo(
 							this,
 							"instancaiateComponents",
-							"RawComponent(%d): name=[%s]  factory=[%s]  bundle=[%s][%s]",
+							"RawComponent(%3d): name=[%-80s] factory=[%-80s] bundle=[%s][%s]",
 							wRawCpnts.size(), wComponentInfos.getName(),
 							wRawCpt.getFactory(), wRawCpt.getBundle_name(),
 							wRawCpt.getBundle_version());
 				} else {
 					pLogger.logWarn(this, "instancaiateComponents",
-							"Component [%s] is already created!",
+							"--- Component [%s] is already created!",
 							wComponentInfos.getName());
 				}
 			} else {
 
-				pLogger.logDebug(this, "instancaiateComponents",
-						"Component [%s] explicitly in another Isolate => [%s]",
+				pLogger.logDebug(
+						this,
+						"instancaiateComponents",
+						"--- Component [%s] explicitly in another Isolate => [%s]",
 						wComponentInfos.getName(),
 						wComponentInfos.getIsolateName());
 			}
 			// }
 		}
-		final StringBuilder sb = new StringBuilder();
+		final StringBuilder wSB = new StringBuilder();
+		int wCpntIdx = 0;
 		for (final RawComponent rc : wRawCpnts) {
-			sb.append("- " + rc.getName() + ":" + rc.getFactory() + "\n");
+			wSB.append(String.format("\n -(%3d) : [%-80s] [%-80s]", wCpntIdx,
+					rc.getName(), rc.getFactory()));
 		}
-		pLogger.logDebug(
-				this,
+		pLogger.logDebug(this, "instancaiateComponents",
+				"List of components to instantiate: %s", wSB.toString());
+
+		CXLoggerUtils.logBanner(pLogger, Level.INFO, this,
 				"instancaiateComponents",
-				"Start instantiation...\nList of components to instantiate [%s]",
-				sb.toString());
+				"ISOLATE COMPOSER WILL START INSTANCIATION ...");
 
 		// order the isolate composer to instantiate the components.
 		pIsolateComposer.instantiate(wRawCpnts);
@@ -652,32 +733,26 @@ public class CConponentsControler implements ServiceListener {
 	 * </pre>
 	 *
 	 * <pre>
-	 * #################################################################################
-	 * #
-	 * # [org.cohorte.eclipse.runner.basic.CConponentsControler] in action [true]
-	 * #
-	 * # ## Component=[ASPOSE_LICENCE_MANAGER]
-	 * #    -           Created:[ true] TimeStamp=[2015-03-06T15:16:17.0000441+0100]
-	 * #    -      Factory.Name:[fr.agilium.services.converter.provider.CAsposeLicenceManager]
-	 * #    - Factory.available:[true]
-	 * #    -  Factory.instance:[org.apache.felix.ipojo.ComponentFactory@621316d0]
-	 * # ## Component=[AGILIUM_SERVICES_MAIN]
-	 * #    -           Created:[ true] TimeStamp=[2015-03-06T15:16:17.0000447+0100]
-	 * #    -      Factory.Name:[fr.agilium.services.main.CAgiliumServicesInfo]
-	 * #    - Factory.available:[true]
-	 * #    -  Factory.instance:[org.apache.felix.ipojo.ComponentFactory@2b7a6005]
-	 * # ## Component=[REST_SERVER]
-	 * #    -           Created:[ true] TimeStamp=[2015-03-06T15:16:17.0000463+0100]
-	 * #    -      Factory.Name:[fr.agilium.services.rest.server.CRestServer]
-	 * #    - Factory.available:[true]
-	 * #    -  Factory.instance:[org.apache.felix.ipojo.ComponentFactory@4ce6049b]
-	 * # ## Component=[ASPOSE_CONVERTER]
-	 * #    -           Created:[ true] TimeStamp=[2015-03-06T15:16:17.0000595+0100]
-	 * #    -      Factory.Name:[fr.agilium.services.converter.provider.CAsposeConverter]
-	 * #    - Factory.available:[true]
-	 * #    -  Factory.instance:[org.apache.felix.ipojo.ComponentFactory@66cb47ac]
-	 * #
-	 * #################################################################################
+	 *  logControlerState; #########################################################################################################################################################################################################
+	 *  logControlerState; #
+	 *  logControlerState; # [org.cohorte.eclipse.runner.basic.CConponentsControler] in action [true]
+	 *  logControlerState; #
+	 *  logControlerState; # ## Component=[IotPack-Aggregator-Core-Managers-CCpntAuthenticationManager                     ]   created:[ true] timeStamp=[2017-11-18T18:07:15.0000275+0100] isInCurrentIsolate=[ true]
+	 *  logControlerState; #    - Factory=[IotPack-Aggregator-Core-Managers-CCpntAuthenticationManager-Factory             ] available=[ true]  instance=[IotPack-Aggregator-Core-Managers-CCpntAuthenticationManager-Factory_2114186360  ]
+	 *  logControlerState; # ## Component=[IotPack-Aggregator-RestApi-CCpntSensors                                         ]   created:[ true] timeStamp=[2017-11-18T18:07:15.0000275+0100] isInCurrentIsolate=[ true]
+	 *  logControlerState; #    - Factory=[IotPack-Aggregator-RestApi-CCpntSensors-Factory                                 ] available=[ true]  instance=[IotPack-Aggregator-RestApi-CCpntSensors-Factory_1092639615                      ]
+	 *  logControlerState; # ## Component=[IotPack-Aggregator-Core-Internal-CCpntSubSystemsRealm                           ]   created:[ true] timeStamp=[2017-11-18T18:07:15.0000275+0100] isInCurrentIsolate=[ true]
+	 *  logControlerState; #    - Factory=[IotPack-Aggregator-Core-Internal-CCpntSubSystemsRealm-Factory                   ] available=[ true]  instance=[IotPack-Aggregator-Core-Internal-CCpntSubSystemsRealm-Factory_99111414          ]
+	 * 
+	 *  ...
+	 * 
+	 *  logControlerState; # ## Component=[IotPack-Aggregator-RestApi-CCpntModules                                         ]   created:[ true] timeStamp=[2017-11-18T18:07:15.0000278+0100] isInCurrentIsolate=[ true]
+	 *  logControlerState; #    - Factory=[IotPack-Aggregator-RestApi-CCpntModules-Factory                                 ] available=[ true]  instance=[IotPack-Aggregator-RestApi-CCpntModules-Factory_393947289                       ]
+	 *  logControlerState; # ## Component=[IotPack-RawData-CCpntLoraUdpListenerLoggerFile                                  ]   created:[ true] timeStamp=[2017-11-18T18:07:15.0000278+0100] isInCurrentIsolate=[ true]
+	 *  logControlerState; #    - Factory=[IotPack-RawData-CCpntLoraUdpListenerLoggerFile-factory                          ] available=[ true]  instance=[IotPack-RawData-CCpntLoraUdpListenerLoggerFile-factory_2046127282               ]
+	 *  logControlerState; #
+	 *  logControlerState; #########################################################################################################################################################################################################
+	 *           validate; validated. InAction=[true] isAllNeededFactoriesAvailable=[true] CompositionFile=[null] remainingFactories=[]
 	 * </pre>
 	 *
 	 * @param aInAction
@@ -685,7 +760,7 @@ public class CConponentsControler implements ServiceListener {
 	private void logControlerState(final boolean aInAction) {
 
 		final StringBuilder wSB = new StringBuilder();
-		wSB.append(String.format("\n#%s", CXStringUtils.strFromChar('#', 80)));
+		wSB.append(String.format("\n#%s", CXStringUtils.strFromChar('#', 200)));
 		wSB.append("\n#");
 		wSB.append(String.format("\n# [%s] in action [%s]", getClass()
 				.getName(), aInAction));
@@ -708,27 +783,23 @@ public class CConponentsControler implements ServiceListener {
 						|| pLogger.isLoggable(Level.FINER);
 
 				if (wLogComponent) {
-					wSB.append(String.format("\n# ## Component=[%s]",
-							wComponentInfos.getName()));
-					wSB.append(String.format(
-							"\n#    -isInCurrentIsolate=[%5s]",
-							wComponentInfos.isInCurrentIsolate()));
-					wSB.append(String.format(
-							"\n#    -           Created:[%5s] TimeStamp=[%s]",
-							wComponentInfos.isCreated(),
-							wComponentInfos.getCreationTimeStamp()));
-					wSB.append(String.format("\n#    -      Factory.Name=[%s]",
-							wFactoryInfos.getName()));
-					wSB.append(String.format(
-							"\n#    - Factory.available=[%5s]",
-							wFactoryInfos.hasFactoryServiceRef()));
-					wSB.append(String.format("\n#    -  Factory.instance=[%s]",
-							wFactoryInfos.getFactoryServiceInfos()));
+					wSB.append(String
+							.format("\n# ## Component=[%-80s]   created:[%5s] timeStamp=[%s] isInCurrentIsolate=[%5s]",
+									wComponentInfos.getName(),
+									wComponentInfos.isCreated(),
+									wComponentInfos.getCreationTimeStamp(),
+									wComponentInfos.isInCurrentIsolate()));
+
+					wSB.append(String
+							.format("\n#    - Factory=[%-80s] available=[%5s]  instance=[%-80s]",
+									wFactoryInfos.getName(),
+									wFactoryInfos.hasFactoryServiceRef(),
+									wFactoryInfos.getFactoryServiceInfos()));
 				}
 			}
 		}
 		wSB.append("\n#");
-		wSB.append(String.format("\n#%s", CXStringUtils.strFromChar('#', 80)));
+		wSB.append(String.format("\n#%s", CXStringUtils.strFromChar('#', 200)));
 
 		for (final String wLine : wSB.toString().split("\n")) {
 			pLogger.logInfo(this, "logControlerState", wLine);
@@ -736,29 +807,33 @@ public class CConponentsControler implements ServiceListener {
 	}
 
 	/**
+	 * ====> ONLY IF LOG LEVEL IS FINER
 	 *
 	 * <pre>
-	 *  org.apache.felix.framework.ServiceRegistrationImpl$ServiceReferenceImpl_481588007
-	 *   -                          component.class=[fr.agilium.services.converter.provider.CAsposeConverter]
-	 *   -                    component.description=[factory name="fr.agilium.services.converter.provider.CAsposeConverter"
-	 *                                               bundle="51"
-	 *                                               state="valid"
-	 *                                               implementation-class="fr.agilium.services.converter.provider.CAsposeConverter"
-	 *                                               requiredhandlers list="[org.apache.felix.ipojo:requires,
-	 *                                                                       org.apache.felix.ipojo:callback,
-	 *                                                                       org.apache.felix.ipojo:provides,
-	 *                                                                       org.apache.felix.ipojo:architecture]"
-	 *                                               missinghandlers list="[]"
-	 *                                               provides specification="fr.agilium.services.converter.IConverter"
-	 *                                               inherited interfaces="[fr.agilium.services.converter.IConverter]"
-	 *                                               superclasses="[]"]
-	 *   -                     component.properties=[]
-	 *   -  component.providedServiceSpecifications=[fr.agilium.services.converter.IConverter]
-	 *   -                             factory.name=[fr.agilium.services.converter.provider.CAsposeConverter]
-	 *   -                            factory.state=[1]
-	 *   -                              objectClass=[org.apache.felix.ipojo.Factory]
-	 *   -                               service.id=[192]
-	 *   -                              service.pid=[fr.agilium.services.converter.provider.CAsposeConverter]
+	 *  logFactoryServiceRef; ServiceReferenceImpl_1345167917
+	 *  logFactoryServiceRef;  |  0)                          component.class=[com.cohorte.iot.aggregator.core.managers.CCpntStartersManager]
+	 *  logFactoryServiceRef;  |  1)                    component.description=[factory name="IotPack-Aggregator-Core-Managers-CCpntStartersManager-Factory" bundle="62" state="valid" requiredhandlers list="[org.apache.felix.ipojo:requires, org.apache.felix.ipojo:callback, org.apache.felix.ipojo:provides, org.apache.felix.ipojo:architecture]"§	missinghandlers list="[]"§	provides com.cohorte.iot.api.managers.IDataManager, com.cohorte.iot.aggregator.core.internal.ISubSystem, com.cohorte.iot.api.managers.system.IModelController, com.cohorte.iot.api.managers.IManager, com.cohorte.iot.api.managers.IStartersManager, r.core.internal.manager.CAbstractManager, com.cohorte.iot.aggregator.core.internal.manager.CAbstractModelManager, com.cohorte.iot.aggregator.core.api.CAbstractComponentBase,
+	 *  logFactoryServiceRef;  |  2)                     component.properties=[]
+	 *  logFactoryServiceRef;  |  3)  component.providedServiceSpecifications=[com.cohorte.iot.api.managers.IStartersManager]
+	 *  logFactoryServiceRef;  |  4)                             factory.name=[IotPack-Aggregator-Core-Managers-CCpntStartersManager-Factory]
+	 *  logFactoryServiceRef;  |  5)                            factory.state=[1]
+	 *  logFactoryServiceRef;  |  6)                              objectClass=[org.apache.felix.ipojo.Factory]
+	 *  logFactoryServiceRef;  |  7)                         service.bundleid=[62]
+	 *  logFactoryServiceRef;  |  8)                               service.id=[370]
+	 *  logFactoryServiceRef;  |  9)                              service.pid=[IotPack-Aggregator-Core-Managers-CCpntStartersManager-Factory]
+	 *  logFactoryServiceRef;  | 10)                            service.scope=[singleton]
+	 *  logFactoryServiceRef; ServiceReferenceImpl_1004428252
+	 *  logFactoryServiceRef;  |  0)                          component.class=[com.cohorte.iot.aggregator.core.internal.session.CCpntDefaultSessionManager]
+	 *  logFactoryServiceRef;  |  1)                    component.description=[factory name="IotPack-Aggregator-Core-Internal-CCpntDefaultSessionManager-Factory" bundle="62" state="valid" sionManager"§	requiredhandlers list="[org.apache.felix.ipojo:callback, org.apache.felix.ipojo:provides, org.apache.felix.ipojo:architecture]"§	missinghandlers list="[]"§	provides erited interfaces="[com.cohorte.iot.aggregator.core.internal.IInternalSessionManager]" superclasses="[]"]
+	 *  logFactoryServiceRef;  |  2)                     component.properties=[]
+	 *  logFactoryServiceRef;  |  3)  component.providedServiceSpecifications=[com.cohorte.iot.aggregator.core.internal.IInternalSessionManager]
+	 *  logFactoryServiceRef;  |  4)                             factory.name=[IotPack-Aggregator-Core-Internal-CCpntDefaultSessionManager-Factory]
+	 *  logFactoryServiceRef;  |  5)                            factory.state=[1]
+	 *  logFactoryServiceRef;  |  6)                              objectClass=[org.apache.felix.ipojo.Factory]
+	 *  logFactoryServiceRef;  |  7)                         service.bundleid=[62]
+	 *  logFactoryServiceRef;  |  8)                               service.id=[331]
+	 *  logFactoryServiceRef;  |  9)                              service.pid=[IotPack-Aggregator-Core-Internal-CCpntDefaultSessionManager-Factory]
+	 *  logFactoryServiceRef;  | 10)                            service.scope=[singleton]
 	 * </pre>
 	 *
 	 * @param wfactorySRef
@@ -766,11 +841,16 @@ public class CConponentsControler implements ServiceListener {
 	private void logFactoryServiceRef(
 			final ServiceReference<Factory> wfactorySRef) {
 
+		if (!pLogger.isLoggable(Level.FINER)) {
+			return;
+		}
+
 		final String[] wPropertyKeys = wfactorySRef.getPropertyKeys();
 
-		pLogger.logInfo(this, "logFactoryServiceRef", "%s_%s", wfactorySRef
-				.getClass().getSimpleName(), wfactorySRef.hashCode(),
-				wPropertyKeys.length);
+		pLogger.log(Level.FINER, this, "logFactoryServiceRef", "%s_%s",
+				wfactorySRef.getClass().getSimpleName(),
+				wfactorySRef.hashCode(), wPropertyKeys.length);
+
 		int wIdx = 0;
 		for (final String wKey : wPropertyKeys) {
 			String wStrValue = null;
@@ -779,31 +859,31 @@ public class CConponentsControler implements ServiceListener {
 				if (wObj instanceof String) {
 					wStrValue = (String) wObj;
 				} else
-					//
-					if (wObj instanceof String[]) {
-						wStrValue = CXStringUtils
-								.stringTableToString((String[]) wObj);
-					} else
-						//
-						if (wObj instanceof PropertyDescription[]) {
-							final StringBuilder wSB = new StringBuilder();
-							for (final PropertyDescription wPropertyDescription : ((PropertyDescription[]) wObj)) {
-								wSB.append(String.format("%s=\"%s\" ",
-										wPropertyDescription.getName(),
-										wPropertyDescription.getCurrentValue()));
-							}
-							wStrValue = wSB.toString();
-						} else
-							//
-						{
-							wStrValue = String.valueOf(wObj);
-						}
+				//
+				if (wObj instanceof String[]) {
+					wStrValue = CXStringUtils
+							.stringTableToString((String[]) wObj);
+				} else
+				//
+				if (wObj instanceof PropertyDescription[]) {
+					final StringBuilder wSB = new StringBuilder();
+					for (final PropertyDescription wPropertyDescription : ((PropertyDescription[]) wObj)) {
+						wSB.append(String.format("%s=\"%s\" ",
+								wPropertyDescription.getName(),
+								wPropertyDescription.getCurrentValue()));
+					}
+					wStrValue = wSB.toString();
+				} else
+				//
+				{
+					wStrValue = String.valueOf(wObj);
+				}
 				if (wStrValue.indexOf('\n') > 0) {
 					wStrValue = wStrValue.replace('\n', '§');
 				}
 			}
-			pLogger.logInfo(this, "logFactoryServiceRef", " | %2d) %40s=[%s]",
-					wIdx, wKey, wStrValue);
+			pLogger.log(Level.FINER, this, "logFactoryServiceRef",
+					" | %2d) %40s=[%s]", wIdx, wKey, wStrValue);
 			wIdx++;
 		}
 	}
@@ -833,12 +913,20 @@ public class CConponentsControler implements ServiceListener {
 	 */
 	private void logNeededFactoriesUnavailable() {
 
+		StringBuilder wSB = new StringBuilder();
+
+		int wIdx = 0;
 		for (final CFactoryInfos wDef : pFactoriesInfos.values()) {
 			if (wDef.isNeeded() && !wDef.hasFactoryServiceRef()) {
-				pLogger.logWarn(this, "logNeededFactoriesUnavailable",
-						"Unavailable Factory=[%s] ", wDef.getName());
+				wIdx++;
+				wSB.append(String.format("\n - Factory (%3d) : [%-80s] ", wIdx,
+						wDef.getName()));
+
 			}
 		}
+
+		pLogger.logSevere(this, "logNeededFactoriesUnavailable",
+				"List of the unabled factories: %s", wSB);
 	}
 
 	/**
@@ -856,7 +944,7 @@ public class CConponentsControler implements ServiceListener {
 
 	/*
 	 * (non-Javadoc)
-	 *
+	 * 
 	 * @see
 	 * org.osgi.framework.ServiceListener#serviceChanged(org.osgi.framework.
 	 * ServiceEvent)
@@ -867,7 +955,7 @@ public class CConponentsControler implements ServiceListener {
 		try {
 			@SuppressWarnings("unchecked")
 			final ServiceReference<Factory> wFactoryServiceRef = (ServiceReference<Factory>) aServiceEvent
-			.getServiceReference();
+					.getServiceReference();
 
 			switch (aServiceEvent.getType()) {
 			case ServiceEvent.REGISTERED: {
@@ -917,7 +1005,7 @@ public class CConponentsControler implements ServiceListener {
 			pLogger.logInfo(
 					this,
 					"setFactoryServiceRefAvaibility",
-					"FactoryName=[%70s] Registered=[%b] FactoryServiceRef=[%s]",
+					"FactoryName=[%-80s] Registered=[%5s] FactoryServiceRef=[%s]",
 					wFactoryName,
 					wRegistered,
 					wRegistered ? wFactoryServiceRef.toString()
@@ -958,12 +1046,29 @@ public class CConponentsControler implements ServiceListener {
 	}
 
 	/**
+	 * <pre>
+	 * 2017/11/18; 20:11:30:998; INFO   ;          Timer-0; pntConponentsControler_5277;                  validate; Validating...
+	 * 2017/11/18; 20:11:30:998; INFO   ;          Timer-0; pntConponentsControler_5277;                  validate;
+	 * 
+	 * --------------------------------------------------------------------------------------------------------------------------------------------
+	 * COHORTE Basic Runner for Eclipse :  Component Controler starting...
+	 * --------------------------------------------------------------------------------------------------------------------------------------------
 	 *
+	 * </pre>
 	 */
 	@Validate
 	public void validate() {
 
 		pLogger.logInfo(this, "validate", "Validating...");
+
+		CXLoggerUtils
+				.logBanner(pLogger, Level.INFO, this, "validate", '-', false,
+						"COHORTE Basic Runner for Eclipse : Component Controler starting...");
+
+		checkBasicRunnerProperties();
+
+		Level wCurrentLogLevel = pLogger.getLevel();
+		pLogger.setLevel(getBasicRunnerLogLevel());
 
 		boolean wMustControlComponent = false;
 
@@ -982,7 +1087,7 @@ public class CConponentsControler implements ServiceListener {
 						"There is no component to control in this isolate!");
 				logControlerState(wMustControlComponent);
 			} else
-				// else, if there is at least one component to control
+			// else, if there is at least one component to control
 			{
 				// instal 'Factory' service listener
 				registerFactoryServiceListener();
@@ -991,22 +1096,36 @@ public class CConponentsControler implements ServiceListener {
 				logFactoryServiceRefs();
 
 				// update the availability of the waited 'Factory' services in
-				// the
-				// data model
+				// the data model
 				setFactoryServiceRefsAvaibility();
 
 				// if all the needed 'Factory' services are available,
 				// instanciates the wanted components
 				if (isAllNeededFactoriesAvailable()) {
-					pLogger.logInfo(this, "validate",
-							"All Needed Factories are Available, proceed to components instantiation...");
+
+					CXLoggerUtils
+							.logBanner(
+									pLogger,
+									Level.INFO,
+									this,
+									"validate",
+									'-',
+									false,
+									"COHORTE Basic Runner for Eclipse : All Needed Factories are Available => proceed to the instantiation of the components.");
+
 					instancaiateComponents();
 				} else {
-					// MOD_OG_20160906 Basic Runner log enhancement
-					pLogger.logWarn(
-							this,
-							"validate",
-							"All Needed Factories are NOT Available, the components will not be instantiated!");
+
+					CXLoggerUtils
+							.logBanner(
+									pLogger,
+									Level.INFO,
+									this,
+									"validate",
+									'-',
+									false,
+									"COHORTE Basic Runner for Eclipse : All Needed Factories are NOT Available => the components will NOT be instantiated.");
+
 					logNeededFactoriesUnavailable();
 				}
 			}
@@ -1015,8 +1134,13 @@ public class CConponentsControler implements ServiceListener {
 			pLogger.logSevere(this, "validate", "Error: %s", e);
 			e.printStackTrace();
 			pShutDownCommand.shutdown();
-		}
 
+		} finally {
+
+			// reset
+			pLogger.setLevel(wCurrentLogLevel);
+
+		}
 		pLogger.logInfo(
 				this,
 				"validate",

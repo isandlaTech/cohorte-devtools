@@ -25,7 +25,7 @@ import org.psem2m.utilities.CXException;
  * @author apisu
  *
  */
-@Component
+@Component(name = "Cohorte-devtools-CCpntPythonBridge-factory")
 @Instantiate
 @Provides(specifications = IPythonBridge.class)
 public class CCpntPythonBridge implements IPythonBridge {
@@ -73,7 +73,7 @@ public class CCpntPythonBridge implements IPythonBridge {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see
 	 * org.cohorte.eclipse.runner.basic.jython.IPythonBridge#getPythonObjectFactory
 	 * (java.lang.String)
@@ -85,7 +85,7 @@ public class CCpntPythonBridge implements IPythonBridge {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see
 	 * org.cohorte.eclipse.runner.basic.jython.IPythonBridge#getPythonObjectFactory
 	 * (java.lang.String, java.util.List)
@@ -125,7 +125,7 @@ public class CCpntPythonBridge implements IPythonBridge {
 
 	/*
 	 * (non-Javadoc)
-	 *
+	 * 
 	 * @see
 	 * org.cohorte.eclipse.runner.basic.jython.IPythonBridge#remove(java.lang
 	 * .String)
@@ -151,10 +151,13 @@ public class CCpntPythonBridge implements IPythonBridge {
 
 			pStdLibPath = System.getProperty(PROP_JYTHON_STD_LIB_PATH);
 
+			pLogger.logInfo(this, "validate", "	Jython Std Lib Path=[%s]",
+					pStdLibPath);
+
 			if (pStdLibPath == null || !new File(pStdLibPath).exists()) {
 				throw new Exception(
 						String.format(
-								"jython standard librarie can't be found in path [%s]. @See [-D%s=...]",
+								"jython standard librarie can't be found in path [%s]. Look at the value uo give [-D%s=...]",
 								pStdLibPath, PROP_JYTHON_STD_LIB_PATH));
 			}
 
