@@ -9,7 +9,9 @@ import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
+import org.apache.felix.ipojo.annotations.ServiceProperty;
 import org.apache.felix.ipojo.annotations.Validate;
+import org.cohorte.remote.IRemoteServicesConstants;
 import org.osgi.framework.BundleContext;
 import org.psem2m.isolates.base.IIsolateLoggerSvc;
 
@@ -53,6 +55,13 @@ public class CCpntQualifierMainIsolateOne implements IQualifierMainIsolateOne {
 	// file.
 	final URL pBannerBundleUrl;
 
+	/**
+	 * The "pelix.remote.export.reject" property limits the remote export of the
+	 * service
+	 */
+	@ServiceProperty(name = IRemoteServicesConstants.PROP_EXPORT_REJECT, immutable = true)
+	private final String pBaseXShellCommandsNotRemote = IQualifierMainIsolateOne.class.getName();
+
 	private final BundleContext pBundleContext;
 
 	@Requires
@@ -95,14 +104,13 @@ public class CCpntQualifierMainIsolateOne implements IQualifierMainIsolateOne {
 	/**
 	 * @throws Exception
 	 */
-	private String buildBannerText(final URL wBannerFileUrl, final String aText)
-			throws Exception {
+	private String buildBannerText(final URL wBannerFileUrl, final String aText) throws Exception {
 
 		// This url should be handled by the specific
 		// URLHandlersBundleStreamHandler, you can look up details in
 		// BundleRevisionImpl.createURL(int port,String path)
-		final BufferedReader br = new BufferedReader(new InputStreamReader(
-				wBannerFileUrl.openConnection().getInputStream()));
+		final BufferedReader br = new BufferedReader(
+				new InputStreamReader(wBannerFileUrl.openConnection().getInputStream()));
 		final StringBuilder wSB = new StringBuilder();
 		// begin by a empty line !
 		while (br.ready()) {
@@ -129,19 +137,15 @@ public class CCpntQualifierMainIsolateOne implements IQualifierMainIsolateOne {
 	 */
 	private URL buildBannerUrl() {
 
-		final String wBannerFilePath = getClass().getName().replace('.', '/')
-				+ BANNER_FILENAME_SUFFIX;
+		final String wBannerFilePath = getClass().getName().replace('.', '/') + BANNER_FILENAME_SUFFIX;
 
 		// BannerFilePath=[com/cohorte/iot/lora/core/impl/CCpntLoRaBootstrap-banner.txt]
-		pLogger.logInfo(this, "buildBannerUrl", "BannerFilePath=[%s]",
-				wBannerFilePath);
+		pLogger.logInfo(this, "buildBannerUrl", "BannerFilePath=[%s]", wBannerFilePath);
 
-		final URL wBannerFileUrl = pBundleContext.getBundle().getResource(
-				wBannerFilePath);
+		final URL wBannerFileUrl = pBundleContext.getBundle().getResource(wBannerFilePath);
 
 		pLogger.logInfo(this, "buildBannerUrl", "BannerFileUrl=[%s]",
-				(wBannerFileUrl != null) ? wBannerFileUrl.toExternalForm()
-						: "null");
+				(wBannerFileUrl != null) ? wBannerFileUrl.toExternalForm() : "null");
 
 		return wBannerFileUrl;
 	}

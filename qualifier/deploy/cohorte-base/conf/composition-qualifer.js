@@ -32,6 +32,17 @@
              "factory" : "qualifier-cohorte-isolates-main-isolate-one-factory",
              "isolate" : "isolate-one"
            },
+           {
+               "name" : "qualifier-cohorte-isolates-scripts",
+               "factory" : "qualifier-cohorte-isolates-scripts-Factory",
+               "isolate" : "isolate-one"
+           },
+           {
+               "name" : "qualifier-cohorte-isolates-scripts-gogocommand",
+               "factory" : "qualifier-cohorte-isolates-scripts-gogocommand-Factory",
+               "isolate" : "isolate-one"
+           },
+
            
            /* *************************** Isolate TWO ************************* */  
            {

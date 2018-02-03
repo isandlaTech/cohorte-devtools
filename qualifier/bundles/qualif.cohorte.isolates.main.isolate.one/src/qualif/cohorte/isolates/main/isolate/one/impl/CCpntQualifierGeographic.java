@@ -9,7 +9,10 @@ import java.util.TreeMap;
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
+import org.apache.felix.ipojo.annotations.ServiceProperty;
 import org.apache.felix.ipojo.annotations.Validate;
+import org.cohorte.extra.jsrhino.IJsRhinoRunner;
+import org.cohorte.remote.IRemoteServicesConstants;
 import org.psem2m.isolates.base.IIsolateLoggerSvc;
 import org.psem2m.isolates.services.dirs.IPlatformDirsSvc;
 import org.psem2m.utilities.CXException;
@@ -115,6 +118,13 @@ public class CCpntQualifierGeographic {
 	private JSONObject pDepartementDefs;
 
 	final Map<String, JSONObject> pDepGeometriesMap = new TreeMap<String, JSONObject>();
+	
+	/**
+	 * The "pelix.remote.export.reject" property limits the remote export of the
+	 * service
+	 */
+	@ServiceProperty(name = IRemoteServicesConstants.PROP_EXPORT_REJECT, immutable = true)
+	private final String pBaseXShellCommandsNotRemote = CCpntQualifierGeographic.class.getName();
 
 	@Requires
 	private IIsolateLoggerSvc pLogger;
