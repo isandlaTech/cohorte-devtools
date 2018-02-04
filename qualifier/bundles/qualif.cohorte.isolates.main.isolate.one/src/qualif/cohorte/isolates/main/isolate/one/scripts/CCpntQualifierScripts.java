@@ -31,7 +31,8 @@ public class CCpntQualifierScripts {
 	 * service
 	 */
 	@ServiceProperty(name = IRemoteServicesConstants.PROP_EXPORT_REJECT, immutable = true)
-	private final String pBaseXShellCommandsNotRemote = CCpntQualifierScripts.class.getName();
+	private final String pBaseXShellCommandsNotRemote = CCpntQualifierScripts.class
+			.getName();
 
 	@Requires
 	private IIsolateLoggerSvc pIsolateLogger;
@@ -105,14 +106,18 @@ public class CCpntQualifierScripts {
 	 * @return
 	 * @throws Exception
 	 */
-	public IXJsRuningReply runScript(final String aScriptUri, final Map<String, Object> aVariablesMap)
-			throws Exception {
+	public IXJsRuningReply runScript(final String aScriptUri,
+			final Map<String, Object> aVariablesMap) throws Exception {
 
-		Map<String, Object> wScriptVariablesMap = (aVariablesMap != null) ? aVariablesMap : new LinkedHashMap<>();
+		Map<String, Object> wScriptVariablesMap = (aVariablesMap != null) ? aVariablesMap
+				: new LinkedHashMap<>();
 
 		wScriptVariablesMap.put("gPlatformDirsSvc", pPlatformDirsSvc);
 
-		return pJsManager.runScript(aScriptUri, wScriptVariablesMap);
+		// The given activity logger can be a contextual one (eg.
+		// pInternalSystem.getActivityLogger() => see IoT Pack)
+		return pJsManager.runScript(pIsolateLogger, aScriptUri,
+				wScriptVariablesMap);
 	}
 
 	/**
@@ -125,35 +130,48 @@ public class CCpntQualifierScripts {
 		try {
 
 			// .../cohorte_base/scripts
-			pScriptsBaseDir = new CXFileDir(pPlatformDirsSvc.getPlatformBase(), SCRIPTS_DIR_NAME);
+			pScriptsBaseDir = new CXFileDir(pPlatformDirsSvc.getPlatformBase(),
+					SCRIPTS_DIR_NAME);
 
-			pLogger.logInfo(this, "validate", "ScriptsBaseDir=[%s]", pScriptsBaseDir.getAbsolutePath());
-			pLogger.logInfo(this, "validate", "ScriptsBaseDir.exists=[%b]", pScriptsBaseDir.exists());
+			pLogger.logInfo(this, "validate", "ScriptsBaseDir=[%s]",
+					pScriptsBaseDir.getAbsolutePath());
+			pLogger.logInfo(this, "validate", "ScriptsBaseDir.exists=[%b]",
+					pScriptsBaseDir.exists());
 
 			// .../cohorte_data/scripts
-			pScriptsDataDir = new CXFileDir(pPlatformDirsSvc.getNodeDataDir(), SCRIPTS_DIR_NAME);
+			pScriptsDataDir = new CXFileDir(pPlatformDirsSvc.getNodeDataDir(),
+					SCRIPTS_DIR_NAME);
 
-			pLogger.logInfo(this, "validate", "ScriptsDataDir=[%s]", pScriptsDataDir.getAbsolutePath());
-			pLogger.logInfo(this, "validate", "ScriptsDataDir.exists=[%b]", pScriptsDataDir.exists());
+			pLogger.logInfo(this, "validate", "ScriptsDataDir=[%s]",
+					pScriptsDataDir.getAbsolutePath());
+			pLogger.logInfo(this, "validate", "ScriptsDataDir.exists=[%b]",
+					pScriptsDataDir.exists());
 
-			ScriptEngineManager wScriptEngineManager = pJsRhinoRunner.getManager();
+			ScriptEngineManager wScriptEngineManager = pJsRhinoRunner
+					.getManager();
 
 			pLogger.logInfo(this, "validate", "Available engines:\n%s",
 					CXJsManager.dumpAvailableEngines(wScriptEngineManager));
 
-			pJsManager = new CXJsManager(pIsolateLogger, wScriptEngineManager, IJsRhinoRunner.JS_RHINO_NAME);
+			pJsManager = new CXJsManager(pIsolateLogger, wScriptEngineManager,
+					IJsRhinoRunner.JS_RHINO_NAME);
 
 			// TODO : to read in properties
 			boolean wMustCheckTimeStamp = true;
 			pJsManager.setCheckTimeStamp(wMustCheckTimeStamp);
 
-			pJsManager.addProvider("ScriptsBaseDir",
-					new CXRsrcProviderFile(pScriptsBaseDir, Charset.forName(CXBytesUtils.ENCODING_UTF_8)));
+			pJsManager.addProvider(
+					"ScriptsBaseDir",
+					new CXRsrcProviderFile(pScriptsBaseDir, Charset
+							.forName(CXBytesUtils.ENCODING_UTF_8)));
 
-			pJsManager.addProvider("ScriptsDataDir",
-					new CXRsrcProviderFile(pScriptsDataDir, Charset.forName(CXBytesUtils.ENCODING_UTF_8)));
+			pJsManager.addProvider(
+					"ScriptsDataDir",
+					new CXRsrcProviderFile(pScriptsDataDir, Charset
+							.forName(CXBytesUtils.ENCODING_UTF_8)));
 
-			pLogger.logInfo(this, "validate", "JsManager:\n%s", pJsManager.toDescription());
+			pLogger.logInfo(this, "validate", "JsManager:\n%s",
+					pJsManager.toDescription());
 
 		} catch (Exception | Error e) {
 			pLogger.logSevere(this, "validate", "ERROR: %s", e);
