@@ -218,7 +218,9 @@ try{
 	
 	testBuffer( testDumpBindings() );
 
-	gScriptRun.logEndStep("run. duration=[%s]",wTimer.getDurationStrMicroSec());
+	var wDuration = wTimer.getDurationStrMicroSec();
+	testBuffer(sprintf("*** End of script OK *** duration=[%s]",wDuration));
+	gScriptRun.logEndStep("run. duration=[%s]",wDuration);
 }catch(e){
 	gScriptRun.logSevere("run",e,"Error during  exec [%s]",gScriptRun.getId() );
 }

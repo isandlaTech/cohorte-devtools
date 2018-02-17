@@ -146,7 +146,6 @@ public class CCpntQualifierScripts {
 					pScriptsDataDir.getAbsolutePath());
 			pLogger.logInfo(this, "validate", "ScriptsDataDir.exists=[%b]",
 					pScriptsDataDir.exists());
-
 			ScriptEngineManager wScriptEngineManager = pJsRhinoRunner
 					.getManager();
 
@@ -179,5 +178,4 @@ public class CCpntQualifierScripts {
 
 		pLogger.logInfo(this, "validate", "valdated");
 	}
-
 }

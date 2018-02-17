@@ -130,11 +130,11 @@ public class CCpntScriptsCommands extends CAbstractGoGoCommand implements
 		List<String> wScriptList = new ArrayList<>();
 		int wScriptIdx = 0;
 
-		List<CXRsrcProvider> wProviders = pQualifierScripts.getJsManager()
-				.getProviders();
+		CXRsrcProvider wProvider = pQualifierScripts.getJsManager()
+				.getRsrcProviderChain();
 		int wIdx = 0;
-		for (CXRsrcProvider wProfider : wProviders) {
-			String wUrlPath = wProfider.getDefDirectory().getUrlPath();
+		while (wProvider != null) {
+			String wUrlPath = wProvider.getDefDirectory().getUrlPath();
 			CXFileDir wProviderDir = new CXFileDir(wUrlPath);
 			if (aWithTrace) {
 				logTwiceInfo("slist",
@@ -155,6 +155,7 @@ public class CCpntScriptsCommands extends CAbstractGoGoCommand implements
 				wScriptIdx++;
 			}
 			wIdx++;
+			wProvider = (wProvider.hasNext()) ? wProvider.next() : null;
 		}
 		return wScriptList;
 	}
