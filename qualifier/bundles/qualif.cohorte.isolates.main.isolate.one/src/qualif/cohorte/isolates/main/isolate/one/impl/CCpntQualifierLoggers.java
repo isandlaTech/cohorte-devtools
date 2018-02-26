@@ -6,7 +6,9 @@ import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
+import org.apache.felix.ipojo.annotations.ServiceProperty;
 import org.apache.felix.ipojo.annotations.Validate;
+import org.cohorte.remote.IRemoteServicesConstants;
 import org.psem2m.isolates.base.IIsolateLoggerSvc;
 import org.psem2m.isolates.loggers.CLogChannelException;
 import org.psem2m.isolates.loggers.ILogChannelSvc;
@@ -28,9 +30,15 @@ import org.psem2m.isolates.loggers.ILoggingConditionsManager;
 public class CCpntQualifierLoggers {
 
 	private static String CHANNEL_ID = "QUALIF";
-
 	private static String CONDITION_ONE_ID = "Condition-One";
 	private static String CONDITION_SPECIFIC_ID = "Condition-Specific";
+
+	/**
+	 * The "pelix.remote.export.reject" property limits the remote export of the
+	 * service
+	 */
+	@ServiceProperty(name = IRemoteServicesConstants.PROP_EXPORT_REJECT, immutable = true)
+	private final String pBaseXShellCommandsNotRemote = CCpntQualifierLoggers.class.getName();
 
 	private ILogChannelSvc pLogChannel;
 
@@ -68,10 +76,8 @@ public class CCpntQualifierLoggers {
 	 * @param aID
 	 * @param aLoggingConditions
 	 */
-	private void logLoggingConditions(final String aID,
-			final ILoggingConditions aLoggingConditions) {
-		pLogChannel.logInfo(this, "logLoggingConditions",
-				"LoggingCondition [%s] usage OK : %s ", aID,
+	private void logLoggingConditions(final String aID, final ILoggingConditions aLoggingConditions) {
+		pLogChannel.logInfo(this, "logLoggingConditions", "LoggingCondition [%s] usage OK : %s ", aID,
 				aLoggingConditions.toDescription());
 	}
 
@@ -79,8 +85,7 @@ public class CCpntQualifierLoggers {
 	 *
 	 */
 	private void logLoggingConditionsManager() {
-		pLogChannel.logInfo(this, "logLoggingConditionsManager",
-				"LoggingConditionsManager: %s",
+		pLogChannel.logInfo(this, "logLoggingConditionsManager", "LoggingConditionsManager: %s",
 				pLoggingConditionsManager.toDescription());
 	}
 
@@ -89,9 +94,8 @@ public class CCpntQualifierLoggers {
 	 */
 	private void testChanneInvalidatel() throws CLogChannelException {
 
-		pLogChannel.logInfo(this, "testChanneInvalidatel",
-				"Channel usage OK (Level=[%s])", pLogChannel.getLevel()
-						.getName());
+		pLogChannel.logInfo(this, "testChanneInvalidatel", "Channel usage OK (Level=[%s])",
+				pLogChannel.getLevel().getName());
 
 		if (pLoggingConditionsDefault.isOn(CONDITION_ONE_ID, Level.INFO)) {
 
@@ -100,8 +104,7 @@ public class CCpntQualifierLoggers {
 
 		if (pLoggingConditionsSpecific.isOn(CONDITION_SPECIFIC_ID, Level.INFO)) {
 
-			logLoggingConditions(CONDITION_SPECIFIC_ID,
-					pLoggingConditionsSpecific);
+			logLoggingConditions(CONDITION_SPECIFIC_ID, pLoggingConditionsSpecific);
 		}
 
 	}
@@ -129,17 +132,15 @@ public class CCpntQualifierLoggers {
 		// ------------------------------------------------------------------------------------------
 
 		// use the log channel
-		pLogChannel.logInfo(this, "testChannelValidate",
-				"Channel [%s] usage OK (Level=[%s])", CHANNEL_ID, pLogChannel
-						.getLevel().getName());
+		pLogChannel.logInfo(this, "testChannelValidate", "Channel [%s] usage OK (Level=[%s])", CHANNEL_ID,
+				pLogChannel.getLevel().getName());
 
 		// add the logging contiton CONDITION_ONE_ID in the DEFAULT
 		// LoggingConditions
-		pLoggingConditionsDefault.newLoggingCondition(CONDITION_ONE_ID,
-				Level.INFO, "Logging condition %s", CONDITION_ONE_ID);
+		pLoggingConditionsDefault.newLoggingCondition(CONDITION_ONE_ID, Level.INFO, "Logging condition %s",
+				CONDITION_ONE_ID);
 
-		pLogChannel.logInfo(this, "testChannelValidate",
-				"LoggingCondition: add condition=[%s] in [%s]",
+		pLogChannel.logInfo(this, "testChannelValidate", "LoggingCondition: add condition=[%s] in [%s]",
 				CONDITION_ONE_ID, "pLoggingConditionsDefault");
 
 		if (pLoggingConditionsDefault.isOn(CONDITION_ONE_ID, Level.INFO)) {
@@ -155,20 +156,17 @@ public class CCpntQualifierLoggers {
 		// ------------------------------------------------------------------------------------------
 
 		// new Logging conditions associated to the channel
-		pLoggingConditionsSpecific = pLoggingConditionsManager
-				.newLoggingConditions(CHANNEL_ID);
+		pLoggingConditionsSpecific = pLoggingConditionsManager.newLoggingConditions(CHANNEL_ID);
 
-		pLoggingConditionsSpecific.newLoggingCondition(CONDITION_SPECIFIC_ID,
-				Level.FINE, "Logging condition %s", CONDITION_SPECIFIC_ID);
+		pLoggingConditionsSpecific.newLoggingCondition(CONDITION_SPECIFIC_ID, Level.FINE, "Logging condition %s",
+				CONDITION_SPECIFIC_ID);
 
-		pLogChannel.logInfo(this, "testChannelValidate",
-				"LoggingCondition: add condition=[%s] in [%s]",
+		pLogChannel.logInfo(this, "testChannelValidate", "LoggingCondition: add condition=[%s] in [%s]",
 				CONDITION_SPECIFIC_ID, "pLoggingConditionsSpecific");
 
 		if (pLoggingConditionsSpecific.isOn(CONDITION_SPECIFIC_ID, Level.INFO)) {
 
-			logLoggingConditions(CONDITION_SPECIFIC_ID,
-					pLoggingConditionsSpecific);
+			logLoggingConditions(CONDITION_SPECIFIC_ID, pLoggingConditionsSpecific);
 
 		}
 
@@ -184,8 +182,7 @@ public class CCpntQualifierLoggers {
 		pLogger.logInfo(this, "validate", "validating...");
 
 		try {
-			pLogger.logInfo(this, "validate", "LoggerChannels.Ids=[%s]",
-					pLoggerChannels.getChannelsIds());
+			pLogger.logInfo(this, "validate", "LoggerChannels.Ids=[%s]", pLoggerChannels.getChannelsIds());
 			pLogger.logInfo(this, "validate", "LoggingConditionsManager=[%s]",
 					pLoggingConditionsManager.toDescription());
 
