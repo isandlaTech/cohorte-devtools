@@ -109,7 +109,7 @@ public class CPythonFactory implements IPythonFactory {
 			wLevel = "INFO";
 		}
 		pInterpreter.exec(String.format("logging.basicConfig(level=logging.%s)",wLevel));
-		setEnvironnementVariable();
+		initEnvironnementVariable();
 
 		if (aPythonPath != null) {
 			addPythonPath(aPythonPath);
@@ -118,8 +118,19 @@ public class CPythonFactory implements IPythonFactory {
 		pMapProxy = new HashMap<Integer, WeakReference<Object>>();
 	}
 	
-	private void setEnvironnementVariable() {
+	private void setEnvironnementVariable(String aKey, String aValue) {
+	// read relevant environment variable 
+			pInterpreter.exec(String.format("os.environ['%s']='%s'",aKey,aValue));
+			pInterpreter.exec(String.format("os.environ['env:%s']='%s'",aKey,aValue));
+	}
+	private void initEnvironnementVariable() {
 		String wEnvToAdd  = System.getProperty(PROP_JYTHON_ENV);
+		
+		// read relevant environment variable 
+		setEnvironnementVariable("COHORTE_HOME",System.getProperty("cohorte.home"));
+		setEnvironnementVariable("COHORTE_DEV",System.getProperty("org.cohorte.eclipse.runner.basic.cohorte.dev"));
+		setEnvironnementVariable("COHORTE_BASE",System.getProperty("cohorte.base"));
+		setEnvironnementVariable("data-dir",System.getProperty("cohorte.node.data.dir"));
 
 		//TODO add cohorte_home....
 		//set cohorte-dev environment variable 
@@ -128,8 +139,7 @@ public class CPythonFactory implements IPythonFactory {
 			wSplitEnv.stream().forEach(wEnv->{
 				if( wEnv != null && wEnv.contains("=") ) {
 					String[] wEnvSpl = wEnv.split("=");
-					pInterpreter.exec(String.format("os.environ['%s']='%s'",wEnvSpl[0],wEnvSpl[1]));
-					pInterpreter.exec(String.format("os.environ['env:%s']='%s'",wEnvSpl[0],wEnvSpl[1]));
+					setEnvironnementVariable(wEnvSpl[0],wEnvSpl[1]);
 				}
 				
 			});

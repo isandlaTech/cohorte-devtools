@@ -135,6 +135,15 @@ public class CCpntConponentsControler implements ServiceListener {
 	 */
 	static final String PROP_RUNNER_BASIC_LOGGING_SERVICEREF_FILTER = "org.cohorte.eclipse.runner.basic.logging.servicerefs.filter";
 
+	/**
+	 * <pre>
+	 * -Dorg.cohorte.eclipse.runner.basic.cohorte.dev=${project_loc:cohorte-dev}
+	 * </pre>
+	 */
+	static final String PROP_RUNNER_BASIC_COHORTE_DEV = "cohorte.dev";
+
+	
+	
 	static final String[] PROPS_RUNNER_BASIC = { PROP_RUNNER_BASIC_LOG_LEVEL,
 			PROP_RUNNER_BASIC_LOGGING_SERVICEREF_FILTER, PROP_RUNNER_BASIC_COMPOSITION_FILENAME_SUFFIX };
 
@@ -511,9 +520,16 @@ public class CCpntConponentsControler implements ServiceListener {
 
 			pIncluder = (IFileIncluder) wPythonFactory.newInstance(IFileIncluder.class);
 			pIsolateLogger.logInfo(this, "initJythonObject", "init IFileIncluder : %s", pIncluder);
-
-			pFinder._set_roots(Arrays.asList(new String[] { pPlatformDirsSvc.getNodeDataDir().getAbsolutePath(),
-					pPlatformDirsSvc.getPlatformBase().getAbsolutePath() }));
+			String wCohorteDev = System.getProperty(PROP_RUNNER_BASIC_COHORTE_DEV);
+			if( wCohorteDev != null ) {
+				// set the roots for the finder and add cohorte-dev
+				pFinder._set_roots(Arrays.asList(new String[] { wCohorteDev, pPlatformDirsSvc.getNodeDataDir().getAbsolutePath(),
+						pPlatformDirsSvc.getPlatformBase().getAbsolutePath() }));
+			}else {
+				pFinder._set_roots(Arrays.asList(new String[] { pPlatformDirsSvc.getNodeDataDir().getAbsolutePath(),
+						pPlatformDirsSvc.getPlatformBase().getAbsolutePath() }));
+			}
+		
 			pIncluder.set_finder(pFinder);
 
 		} catch (final Exception e) {
