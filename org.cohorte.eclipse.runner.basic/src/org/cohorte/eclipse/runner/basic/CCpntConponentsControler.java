@@ -136,20 +136,19 @@ public class CCpntConponentsControler implements ServiceListener {
 	static final String PROP_RUNNER_BASIC_LOGGING_SERVICEREF_FILTER = "org.cohorte.eclipse.runner.basic.logging.servicerefs.filter";
 
 	static final String[] PROPS_RUNNER_BASIC = { PROP_RUNNER_BASIC_LOG_LEVEL,
-			PROP_RUNNER_BASIC_LOGGING_SERVICEREF_FILTER,
-			PROP_RUNNER_BASIC_COMPOSITION_FILENAME_SUFFIX };
+			PROP_RUNNER_BASIC_LOGGING_SERVICEREF_FILTER, PROP_RUNNER_BASIC_COMPOSITION_FILENAME_SUFFIX };
 
 	private static String PYTHON_FACTORY = "controller";
 
 	private final BundleContext pBundleContext;
 
 	// the map compnonent name => component infos
-	private final Map<String, CComponentInfos> pComponentInfos = new TreeMap<String, CComponentInfos>();
+	private final Map<String, CComponentInfos> pComponentInfos = new TreeMap<>();
 
 	private final CXFileUtf8 pCompositionFile = null;
 
 	// the map factory name => factory infos
-	private final Map<String, CFactoryInfos> pFactoriesInfos = new TreeMap<String, CFactoryInfos>();
+	private final Map<String, CFactoryInfos> pFactoriesInfos = new TreeMap<>();
 
 	private IFileFinder pFinder;
 
@@ -186,12 +185,10 @@ public class CCpntConponentsControler implements ServiceListener {
 	 *            eg.org.cohorte.eclipse.runner.basic.loglevel
 	 * @param aMessage
 	 *            eg. isn't defined
-	 * @return eg. "The  property [%s] of the Basic Runner isn't defined "
+	 * @return eg. "The property [%s] of the Basic Runner isn't defined "
 	 */
-	private String buildBasicRunnerPropMessage(final String aPropertyName,
-			final String aMessage) {
-		return String.format("The  property [%s] of the Basic Runner %s",
-				aPropertyName, aMessage);
+	private String buildBasicRunnerPropMessage(final String aPropertyName, final String aMessage) {
+		return String.format("The  property [%s] of the Basic Runner %s", aPropertyName, aMessage);
 	}
 
 	/**
@@ -208,22 +205,17 @@ public class CCpntConponentsControler implements ServiceListener {
 
 			String wValue = System.getProperty(wPropName);
 			boolean wExists = (wValue != null && !wValue.isEmpty());
-			pIsolateLogger.logInfo(this, "checkRunnerProperties",
-					"PropName=[%-60s] Exixts=[%5s] value=[%s]", wPropName,
+			pIsolateLogger.logInfo(this, "checkRunnerProperties", "PropName=[%-60s] Exixts=[%5s] value=[%s]", wPropName,
 					wExists, wValue);
 
 			if (!wExists) {
 				if (PROP_RUNNER_BASIC_LOG_LEVEL.equals(wPropName)) {
 
-					String wMessageBeginning = buildBasicRunnerPropMessage(
-							PROP_RUNNER_BASIC_LOG_LEVEL, "isn't defined.");
-					pIsolateLogger
-							.logWarn(
-									this,
-									"checkRunnerProperties",
-									"%s => the log level still set to FINE during the validation of that component [%s].",
-									wMessageBeginning, getClass()
-											.getSimpleName());
+					String wMessageBeginning = buildBasicRunnerPropMessage(PROP_RUNNER_BASIC_LOG_LEVEL,
+							"isn't defined.");
+					pIsolateLogger.logWarn(this, "checkRunnerProperties",
+							"%s => the log level still set to FINE during the validation of that component [%s].",
+							wMessageBeginning, getClass().getSimpleName());
 
 				}
 			}
@@ -247,8 +239,7 @@ public class CCpntConponentsControler implements ServiceListener {
 		for (final CFactoryInfos wDef : pFactoriesInfos.values()) {
 			if (wDef.isNeeded() && !wDef.hasFactoryServiceRef()) {
 				wIdx++;
-				wSB.append(String.format("\n - Factory (%3d) : [%-80s] ", wIdx,
-						wDef.getName()));
+				wSB.append(String.format("\n - Factory (%3d) : [%-80s] ", wIdx, wDef.getName()));
 
 			}
 		}
@@ -256,12 +247,11 @@ public class CCpntConponentsControler implements ServiceListener {
 	}
 
 	/**
-	 * @return the collection af all the Factory services available in the
-	 *         service registry.
+	 * @return the collection af all the Factory services available in the service
+	 *         registry.
 	 * @throws InvalidSyntaxException
 	 */
-	private Collection<ServiceReference<Factory>> getAllFactoryServiceRefs()
-			throws InvalidSyntaxException {
+	private Collection<ServiceReference<Factory>> getAllFactoryServiceRefs() throws InvalidSyntaxException {
 
 		return pBundleContext.getServiceReferences(Factory.class, null);
 	}
@@ -275,12 +265,11 @@ public class CCpntConponentsControler implements ServiceListener {
 			return Level.parse(wLevel);
 		} catch (IllegalArgumentException e) {
 
-			String wMessageBeginning = buildBasicRunnerPropMessage(
-					PROP_RUNNER_BASIC_LOG_LEVEL, "contains a unparsable Level.");
+			String wMessageBeginning = buildBasicRunnerPropMessage(PROP_RUNNER_BASIC_LOG_LEVEL,
+					"contains a unparsable Level.");
 
-			pIsolateLogger.logSevere(this, "checkRunnerProperties",
-					"%s => wrong value=[%s] => use FINE", wMessageBeginning,
-					wLevel);
+			pIsolateLogger.logSevere(this, "checkRunnerProperties", "%s => wrong value=[%s] => use FINE",
+					wMessageBeginning, wLevel);
 			return Level.FINE;
 		}
 	}
@@ -308,8 +297,7 @@ public class CCpntConponentsControler implements ServiceListener {
 	 * @return
 	 * @throws JSONException
 	 */
-	private JSONArray getComponentDefs(final JSONObject aCompositionDef)
-			throws JSONException {
+	private JSONArray getComponentDefs(final JSONObject aCompositionDef) throws JSONException {
 
 		return aCompositionDef.getJSONObject("root").getJSONArray("components");
 	}
@@ -323,11 +311,9 @@ public class CCpntConponentsControler implements ServiceListener {
 	 */
 	private String getCompositionContent() {
 		if (pIncluder != null) {
-			final String wFileNameSuffix = pBundleContext
-					.getProperty(PROP_RUNNER_BASIC_COMPOSITION_FILENAME_SUFFIX);
+			final String wFileNameSuffix = pBundleContext.getProperty(PROP_RUNNER_BASIC_COMPOSITION_FILENAME_SUFFIX);
 			final String wCompositionFileName = getCompositionFileName(wFileNameSuffix);
-			final Object wRes = pIncluder.get_content("conf"
-					+ File.separatorChar + wCompositionFileName, false);
+			final Object wRes = pIncluder.get_content("conf" + File.separatorChar + wCompositionFileName, false);
 
 			pPythonBridge.remove(PYTHON_FACTORY);
 			return wRes.toString();
@@ -336,8 +322,7 @@ public class CCpntConponentsControler implements ServiceListener {
 	}
 
 	/**
-	 * Convert the content of the "base/conf/composituion.js" file in a json
-	 * object.
+	 * Convert the content of the "base/conf/composituion.js" file in a json object.
 	 *
 	 * @param aCompositionFile
 	 *            The "base/conf/composituion.js" file
@@ -347,14 +332,12 @@ public class CCpntConponentsControler implements ServiceListener {
 	 */
 	private JSONObject getCompositionDef() throws JSONException, IOException {
 
-		pIsolateLogger.logInfo(this, "getCompositionDef",
-				"call python includer");
+		pIsolateLogger.logInfo(this, "getCompositionDef", "call python includer");
 		String wCompositionStr = getCompositionContent();
 
 		// using jython doesn't work. means object can't be use or jython failed
 		if (wCompositionStr == null) {
-			pIsolateLogger.logInfo(this, "getCompositionDef",
-					"python includer failed or not initialize, read file");
+			pIsolateLogger.logInfo(this, "getCompositionDef", "python includer failed or not initialize, read file");
 
 			final CXFileUtf8 wCompositionFile = getCompositionFile();
 			wCompositionStr = wCompositionFile.readAll();
@@ -365,8 +348,7 @@ public class CCpntConponentsControler implements ServiceListener {
 		final JSONArray wParentsComponents = getParentsComponents(wComposition);
 
 		for (int i = 0; i < wParentsComponents.length(); i++) {
-			wComposition.getJSONObject("root").getJSONArray("components")
-					.put(wParentsComponents.get(i));
+			wComposition.getJSONObject("root").getJSONArray("components").put(wParentsComponents.get(i));
 		}
 		return wComposition;
 	}
@@ -379,18 +361,15 @@ public class CCpntConponentsControler implements ServiceListener {
 	 */
 	private CXFileUtf8 getCompositionFile() throws IOException {
 
-		final CXFileDir wConfDir = new CXFileDir(
-				pPlatformDirsSvc.getPlatformBase(), "conf");
+		final CXFileDir wConfDir = new CXFileDir(pPlatformDirsSvc.getPlatformBase(), "conf");
 		if (!wConfDir.exists()) {
-			throw new IOException(String.format(
-					"The cohorte 'conf' directory [%s] doesn't exist",
-					wConfDir.getAbsolutePath()));
+			throw new IOException(
+					String.format("The cohorte 'conf' directory [%s] doesn't exist", wConfDir.getAbsolutePath()));
 		}
 
 		// Returns the value of the requested property, or null if the property
 		// is undefined.
-		final String wFileNameSuffix = pBundleContext
-				.getProperty(PROP_RUNNER_BASIC_COMPOSITION_FILENAME_SUFFIX);
+		final String wFileNameSuffix = pBundleContext.getProperty(PROP_RUNNER_BASIC_COMPOSITION_FILENAME_SUFFIX);
 
 		return getCompositionFile(wConfDir, wFileNameSuffix);
 	}
@@ -401,24 +380,20 @@ public class CCpntConponentsControler implements ServiceListener {
 	 * @return
 	 * @throws IOException
 	 */
-	private CXFileUtf8 getCompositionFile(final CXFileDir aConfDir,
-			final String aFileNameSuffix) throws IOException {
+	private CXFileUtf8 getCompositionFile(final CXFileDir aConfDir, final String aFileNameSuffix) throws IOException {
 
 		final String wFileName = getCompositionFileName(aFileNameSuffix);
 
 		final CXFileUtf8 wCompositionFile = new CXFileUtf8(aConfDir, wFileName);
 
-		pIsolateLogger.logInfo(this, "getCompositionFile",
-				"Suffix=[%s] FileName=[%s] Exists=[%b] path=[%s]",
-				aFileNameSuffix, wFileName, wCompositionFile.exists(),
-				wCompositionFile);
+		pIsolateLogger.logInfo(this, "getCompositionFile", "Suffix=[%s] FileName=[%s] Exists=[%b] path=[%s]",
+				aFileNameSuffix, wFileName, wCompositionFile.exists(), wCompositionFile);
 
 		// if the composition file doesn't exist => Exception
 		if (!wCompositionFile.exists()) {
 
-			final String wMessage = String
-					.format("The cohorte composition file [%s] doesn't exist. path=[%s]",
-							wFileName, wCompositionFile.getAbsolutePath());
+			final String wMessage = String.format("The cohorte composition file [%s] doesn't exist. path=[%s]",
+					wFileName, wCompositionFile.getAbsolutePath());
 
 			throw new IOException(wMessage);
 
@@ -427,21 +402,18 @@ public class CCpntConponentsControler implements ServiceListener {
 	}
 
 	private String getCompositionFileName(final String aFileNameSuffix) {
-		return String.format(FMT_COMPOSITION_FILENAME,
-				(aFileNameSuffix != null) ? aFileNameSuffix : "");
+		return String.format(FMT_COMPOSITION_FILENAME, (aFileNameSuffix != null) ? aFileNameSuffix : "");
 	}
 
 	/**
 	 * @return
 	 * @throws InvalidSyntaxException
 	 */
-	private Collection<ServiceReference<Factory>> getFilteredFactoryServiceRefs()
-			throws InvalidSyntaxException {
+	private Collection<ServiceReference<Factory>> getFilteredFactoryServiceRefs() throws InvalidSyntaxException {
 
 		String wLdapFilter = null;
 
-		final String wFilter = System.getProperty(
-				PROP_RUNNER_BASIC_LOGGING_SERVICEREF_FILTER, null);
+		final String wFilter = System.getProperty(PROP_RUNNER_BASIC_LOGGING_SERVICEREF_FILTER, null);
 
 		if (wFilter != null && !wFilter.isEmpty()) {
 			// @see
@@ -450,8 +422,7 @@ public class CCpntConponentsControler implements ServiceListener {
 			// eg. (factory.name=fr.agilium.*
 			wLdapFilter = String.format("(%s=%s)", PROP_FACTORY_NAME, wFilter);
 
-			pIsolateLogger.logInfo(this, "getFilteredFactoryServiceRefs",
-					"Current ldap filter=[%s]", wLdapFilter);
+			pIsolateLogger.logInfo(this, "getFilteredFactoryServiceRefs", "Current ldap filter=[%s]", wLdapFilter);
 
 		}
 		return pBundleContext.getServiceReferences(Factory.class, wLdapFilter);
@@ -461,8 +432,7 @@ public class CCpntConponentsControler implements ServiceListener {
 	/*
 	 * MOD_BD_20161202
 	 */
-	private JSONArray getParentsComponents(final JSONObject aComposition)
-			throws JSONException, IOException {
+	private JSONArray getParentsComponents(final JSONObject aComposition) throws JSONException, IOException {
 		final JSONArray wResult = new JSONArray();
 		final JSONObject wRoot = aComposition.getJSONObject("root");
 		if (wRoot != null) {
@@ -470,14 +440,11 @@ public class CCpntConponentsControler implements ServiceListener {
 			if (wImportFiles != null) {
 				for (int i = 0; i < wImportFiles.length(); i++) {
 
-					final CXFileDir wConfDir = new CXFileDir(
-							pPlatformDirsSvc.getPlatformBase(), "conf");
+					final CXFileDir wConfDir = new CXFileDir(pPlatformDirsSvc.getPlatformBase(), "conf");
 					final String wImportFile = wImportFiles.getString(i);
-					final CXFileUtf8 wParentCompositionFile = new CXFileUtf8(
-							wConfDir, wImportFile);
+					final CXFileUtf8 wParentCompositionFile = new CXFileUtf8(wConfDir, wImportFile);
 
-					final JSONObject wParentComposition = new JSONObject(
-							wParentCompositionFile.readAll());
+					final JSONObject wParentComposition = new JSONObject(wParentCompositionFile.readAll());
 
 					final JSONArray wParentComponents = getParentsComponents(wParentComposition);
 					if (wParentComponents != null) {
@@ -486,9 +453,8 @@ public class CCpntConponentsControler implements ServiceListener {
 						}
 					}
 					if (wParentComposition.has("root")) {
-						final JSONArray wComponents = wParentComposition
-								.optJSONObject("root").optJSONArray(
-										"components");
+						final JSONArray wComponents = wParentComposition.optJSONObject("root")
+								.optJSONArray("components");
 						if (wComponents != null) {
 							for (int j = 0; j < wComponents.length(); j++) {
 								wResult.put(wComponents.get(j));
@@ -507,7 +473,7 @@ public class CCpntConponentsControler implements ServiceListener {
 	 * @return list of remaining not available factories
 	 */
 	private List<String> getRemainingFactoriesList() {
-		final List<String> wResult = new ArrayList<String>();
+		final List<String> wResult = new ArrayList<>();
 		for (final CFactoryInfos wDef : pFactoriesInfos.values()) {
 			if (wDef.isNeeded() && !wDef.hasFactoryServiceRef()) {
 				wResult.add(wDef.getName());
@@ -526,8 +492,7 @@ public class CCpntConponentsControler implements ServiceListener {
 	/**
 	 * Use IPythonBridge provided by CCpntPythonBridge.
 	 *
-	 * Note : it's the CCpntPythonBridge componenent which deals with the
-	 * JytonLibs
+	 * Note : it's the CCpntPythonBridge componenent which deals with the JytonLibs
 	 */
 	private void initJythonObject() {
 		try {
@@ -535,47 +500,37 @@ public class CCpntConponentsControler implements ServiceListener {
 			// create finder and includer python object to resolve the
 			// configuration
 			// file
-			final IPythonFactory wPythonFactory = pPythonBridge
-					.getPythonObjectFactory(PYTHON_FACTORY, Arrays
-							.asList(new String[] { pPlatformDirsSvc
-									.getPlatformHome().getAbsolutePath()
-									+ File.separatorChar
-									+ IPlatformDirsSvc.DIRNAME_REPOSITORY }));
+			final IPythonFactory wPythonFactory = pPythonBridge.getPythonObjectFactory(PYTHON_FACTORY,
+					Arrays.asList(new String[] { pPlatformDirsSvc.getPlatformHome().getAbsolutePath()
+							+ File.separatorChar + IPlatformDirsSvc.DIRNAME_REPOSITORY }));
 
-			pFinder = (IFileFinder) wPythonFactory
-					.newInstance(IFileFinder.class);
-			pIsolateLogger.logInfo(this, "initJythonObject",
-					"init IFileFinder %s ", pFinder);
+			pFinder = (IFileFinder) wPythonFactory.newInstance(IFileFinder.class);
+			pIsolateLogger.logInfo(this, "initJythonObject", "init IFileFinder %s ", pFinder);
 
 			// set cohorte base and data to the finder
 
-			pIncluder = (IFileIncluder) wPythonFactory
-					.newInstance(IFileIncluder.class);
-			pIsolateLogger.logInfo(this, "initJythonObject",
-					"init IFileIncluder : %s", pIncluder);
+			pIncluder = (IFileIncluder) wPythonFactory.newInstance(IFileIncluder.class);
+			pIsolateLogger.logInfo(this, "initJythonObject", "init IFileIncluder : %s", pIncluder);
 
-			pFinder._set_roots(Arrays.asList(new String[] {
-					pPlatformDirsSvc.getNodeDataDir().getAbsolutePath(),
+			pFinder._set_roots(Arrays.asList(new String[] { pPlatformDirsSvc.getNodeDataDir().getAbsolutePath(),
 					pPlatformDirsSvc.getPlatformBase().getAbsolutePath() }));
 			pIncluder.set_finder(pFinder);
 
 		} catch (final Exception e) {
 			e.printStackTrace();
 
-			pIsolateLogger.logSevere(this, "initJythonObject",
-					"can't init Jython object %d", e);
+			pIsolateLogger.logSevere(this, "initJythonObject", "can't init Jython object %d", e);
 		}
 	}
 
 	/**
-	 * initialize the content of the "pFactoriesInfos" and "pComponentInfos"
-	 * maps.
+	 * initialize the content of the "pFactoriesInfos" and "pComponentInfos" maps.
 	 *
 	 * <pre>
 	 * </pre>
 	 *
-	 * MOD_OG_20150417 Manage explicitly the component flag "isInCurrentIsolate"
-	 * and the factory flag "isNeeded"
+	 * MOD_OG_20150417 Manage explicitly the component flag "isInCurrentIsolate" and
+	 * the factory flag "isNeeded"
 	 *
 	 * @throws JSONException
 	 * @throws IOException
@@ -584,35 +539,30 @@ public class CCpntConponentsControler implements ServiceListener {
 
 		final String wCurrentIsolateName = pPlatformDirsSvc.getIsolateName();
 
-		pIsolateLogger.logInfo(this, "initMaps", "CurrentIsolateName={%s]",
-				wCurrentIsolateName);
+		pIsolateLogger.logInfo(this, "initMaps", "CurrentIsolateName={%s]", wCurrentIsolateName);
 
 		final JSONArray wComponentDefArray = getComponentDefs(getCompositionDef());
 
 		for (int wIdx = 0; wIdx < wComponentDefArray.length(); wIdx++) {
 
 			final JSONObject wDef = wComponentDefArray.getJSONObject(wIdx);
-			final String wfactoryName = wDef
-					.getString(CComponentInfos.PROP_FACTORY);
+			final String wfactoryName = wDef.getString(CComponentInfos.PROP_FACTORY);
 
 			CFactoryInfos wFactoryInfos = pFactoriesInfos.get(wfactoryName);
 			if (wFactoryInfos == null) {
 				wFactoryInfos = new CFactoryInfos(wfactoryName);
 				pFactoriesInfos.put(wfactoryName, wFactoryInfos);
 			}
-			final CComponentInfos wComponentInfo = new CComponentInfos(wDef,
-					wFactoryInfos);
+			final CComponentInfos wComponentInfo = new CComponentInfos(wDef, wFactoryInfos);
 
 			// MOD_OG_20150417
-			final boolean wInCurrentIsolate = wComponentInfo
-					.initIsInCurrentIsolate(wCurrentIsolateName);
+			final boolean wInCurrentIsolate = wComponentInfo.initIsInCurrentIsolate(wCurrentIsolateName);
 
 			// MOD_OG_20150417
 			wFactoryInfos.setNeeded(wInCurrentIsolate);
 
-			pIsolateLogger.logInfo(this, "initMaps",
-					"FactoryName=[%-80s] setNeeded=[%s]",
-					wFactoryInfos.getName(), wInCurrentIsolate);
+			pIsolateLogger.logInfo(this, "initMaps", "FactoryName=[%-80s] setNeeded=[%s]", wFactoryInfos.getName(),
+					wInCurrentIsolate);
 
 			pComponentInfos.put(wComponentInfo.getName(), wComponentInfo);
 		}
@@ -624,15 +574,14 @@ public class CCpntConponentsControler implements ServiceListener {
 	 * @throws UnacceptableConfiguration
 	 *
 	 */
-	private void instancaiateComponents() throws UnacceptableConfiguration,
-			MissingHandlerException, ConfigurationException {
+	private void instancaiateComponents()
+			throws UnacceptableConfiguration, MissingHandlerException, ConfigurationException {
 
 		final String wCurrentIsolateName = pPlatformDirsSvc.getIsolateName();
 
-		pIsolateLogger.logInfo(this, "instancaiateComponents",
-				"CurrentIsolateName=[%s]", wCurrentIsolateName);
+		pIsolateLogger.logInfo(this, "instancaiateComponents", "CurrentIsolateName=[%s]", wCurrentIsolateName);
 
-		final Set<RawComponent> wRawCpnts = new LinkedHashSet<RawComponent>();
+		final Set<RawComponent> wRawCpnts = new LinkedHashSet<>();
 
 		for (final CComponentInfos wComponentInfos : pComponentInfos.values()) {
 
@@ -646,54 +595,39 @@ public class CCpntConponentsControler implements ServiceListener {
 
 					// MOD_BD_20150629 using of Cohorte's Isolate Composer
 					// to instantiate components
-					final RawComponent wRawCpt = new RawComponent(
-							wComponentInfos.getFactoryName(),
+					final RawComponent wRawCpt = new RawComponent(wComponentInfos.getFactoryName(),
 							wComponentInfos.getName());
 
 					// MOD_OG_20160906 Addition of the managment of the
 					// component properties
 					if (wComponentInfos.hasProperties()) {
-						wRawCpt.setProperties(wComponentInfos
-								.getPropertiesMap());
+						wRawCpt.setProperties(wComponentInfos.getPropertiesMap());
 					}
 					wRawCpnts.add(wRawCpt);
 
 					/*
 					 * Properties wComponentProps = new Properties();
-					 * wComponentProps.put("instance.name",
-					 * wComponentInfos.getName()); wComponentProps.put(
-					 * Constants.SERVICE_EXPORTED_INTERFACES, "*");
-					 * wComponentProps.put("toto", "lolo"); ComponentInstance
-					 * wComponentInstance = wComponentInfos
-					 * .getFactoryInfos().getFactory()
+					 * wComponentProps.put("instance.name", wComponentInfos.getName());
+					 * wComponentProps.put( Constants.SERVICE_EXPORTED_INTERFACES, "*");
+					 * wComponentProps.put("toto", "lolo"); ComponentInstance wComponentInstance =
+					 * wComponentInfos .getFactoryInfos().getFactory()
 					 * .createComponentInstance(wComponentProps);
 					 */
 					wComponentInfos.setCreated();
 
-					pIsolateLogger
-							.logInfo(
-									this,
-									"instancaiateComponents",
-									"RawComponent(%3d): name=[%-80s] factory=[%-80s] bundle=[%s][%s]",
-									wRawCpnts.size(),
-									wComponentInfos.getName(),
-									wRawCpt.getFactory(),
-									wRawCpt.getBundle_name(),
-									wRawCpt.getBundle_version());
+					pIsolateLogger.logInfo(this, "instancaiateComponents",
+							"RawComponent(%3d): name=[%-80s] factory=[%-80s] bundle=[%s][%s]", wRawCpnts.size(),
+							wComponentInfos.getName(), wRawCpt.getFactory(), wRawCpt.getBundle_name(),
+							wRawCpt.getBundle_version());
 				} else {
-					pIsolateLogger.logWarn(this, "instancaiateComponents",
-							"--- Component [%s] is already created!",
+					pIsolateLogger.logWarn(this, "instancaiateComponents", "--- Component [%s] is already created!",
 							wComponentInfos.getName());
 				}
 			} else {
 
-				pIsolateLogger
-						.logDebug(
-								this,
-								"instancaiateComponents",
-								"--- Component [%s] explicitly in another Isolate => [%s]",
-								wComponentInfos.getName(),
-								wComponentInfos.getIsolateName());
+				pIsolateLogger.logDebug(this, "instancaiateComponents",
+						"--- Component [%s] explicitly in another Isolate => [%s]", wComponentInfos.getName(),
+						wComponentInfos.getIsolateName());
 			}
 			// }
 		}
@@ -701,21 +635,18 @@ public class CCpntConponentsControler implements ServiceListener {
 		int wCpntIdx = 0;
 		for (final RawComponent rc : wRawCpnts) {
 			wCpntIdx++;
-			wSB.append(String.format("\n -(%3d) : [%-80s] [%-80s]", wCpntIdx,
-					rc.getName(), rc.getFactory()));
+			wSB.append(String.format("\n -(%3d) : [%-80s] [%-80s]", wCpntIdx, rc.getName(), rc.getFactory()));
 		}
 
-		pIsolateLogger.logDebug(this, "instancaiateComponents",
-				"List of components to instantiate: %s", wSB.toString());
+		pIsolateLogger.logDebug(this, "instancaiateComponents", "List of components to instantiate: %s",
+				wSB.toString());
 
-		CXLoggerUtils.logBanner(pIsolateLogger, Level.INFO, this,
-				"instancaiateComponents",
+		CXLoggerUtils.logBanner(pIsolateLogger, Level.INFO, this, "instancaiateComponents",
 				"ISOLATE COMPOSER WILL START INSTANCIATION ...");
 
 		// order the isolate composer to instantiate the components.
 		pIsolateComposer.instantiate(wRawCpnts);
-		pIsolateLogger.logDebug(this, "instancaiateComponents",
-				"End instantiation");
+		pIsolateLogger.logDebug(this, "instancaiateComponents", "End instantiation");
 		logControlerState();
 	}
 
@@ -796,39 +727,30 @@ public class CCpntConponentsControler implements ServiceListener {
 		final StringBuilder wSB = new StringBuilder();
 		wSB.append(String.format("\n#%s", CXStringUtils.strFromChar('#', 200)));
 		wSB.append("\n#");
-		wSB.append(String.format("\n# [%s] in action [%s]", getClass()
-				.getName(), aInAction));
+		wSB.append(String.format("\n# [%s] in action [%s]", getClass().getName(), aInAction));
 		wSB.append("\n#");
 
 		if (!aInAction) {
-			wSB.append(String
-					.format("\n# UNABLE TO INSTANCIATE THE COMPONENTS OF THE COMPOSITION [%s]",
-							pCompositionFile));
+			wSB.append(String.format("\n# UNABLE TO INSTANCIATE THE COMPONENTS OF THE COMPOSITION [%s]",
+					pCompositionFile));
 		} else {
-			for (final CComponentInfos wComponentInfos : pComponentInfos
-					.values()) {
-				final CFactoryInfos wFactoryInfos = wComponentInfos
-						.getFactoryInfos();
+			for (final CComponentInfos wComponentInfos : pComponentInfos.values()) {
+				final CFactoryInfos wFactoryInfos = wComponentInfos.getFactoryInfos();
 
 				// log all the components only if the level is FINER ( higher
 				// than DEBUG )
-				final boolean wLogComponent = wComponentInfos
-						.isInCurrentIsolate()
+				final boolean wLogComponent = wComponentInfos.isInCurrentIsolate()
 						|| pIsolateLogger.isLoggable(Level.FINER);
 
 				if (wLogComponent) {
-					wSB.append(String
-							.format("\n# ## Component=[%-80s]   created:[%5s] timeStamp=[%s] isInCurrentIsolate=[%5s]",
-									wComponentInfos.getName(),
-									wComponentInfos.isCreated(),
-									wComponentInfos.getCreationTimeStamp(),
-									wComponentInfos.isInCurrentIsolate()));
+					wSB.append(String.format(
+							"\n# ## Component=[%-80s]   created:[%5s] timeStamp=[%s] isInCurrentIsolate=[%5s]",
+							wComponentInfos.getName(), wComponentInfos.isCreated(),
+							wComponentInfos.getCreationTimeStamp(), wComponentInfos.isInCurrentIsolate()));
 
-					wSB.append(String
-							.format("\n#    - Factory=[%-80s] available=[%5s]  instance=[%-80s]",
-									wFactoryInfos.getName(),
-									wFactoryInfos.hasFactoryServiceRef(),
-									wFactoryInfos.getFactoryServiceInfos()));
+					wSB.append(String.format("\n#    - Factory=[%-80s] available=[%5s]  instance=[%-80s]",
+							wFactoryInfos.getName(), wFactoryInfos.hasFactoryServiceRef(),
+							wFactoryInfos.getFactoryServiceInfos()));
 				}
 			}
 		}
@@ -872,8 +794,7 @@ public class CCpntConponentsControler implements ServiceListener {
 	 *
 	 * @param wfactorySRef
 	 */
-	private void logFactoryServiceRef(
-			final ServiceReference<Factory> wfactorySRef) {
+	private void logFactoryServiceRef(final ServiceReference<Factory> wfactorySRef) {
 
 		if (!pIsolateLogger.isLoggable(Level.FINER)) {
 			return;
@@ -881,8 +802,7 @@ public class CCpntConponentsControler implements ServiceListener {
 
 		final String[] wPropertyKeys = wfactorySRef.getPropertyKeys();
 
-		pIsolateLogger.log(Level.FINER, this, "logFactoryServiceRef", "%s_%s",
-				wfactorySRef.getClass().getSimpleName(),
+		pIsolateLogger.log(Level.FINER, this, "logFactoryServiceRef", "%s_%s", wfactorySRef.getClass().getSimpleName(),
 				wfactorySRef.hashCode(), wPropertyKeys.length);
 
 		int wIdx = 0;
@@ -895,15 +815,13 @@ public class CCpntConponentsControler implements ServiceListener {
 				} else
 				//
 				if (wObj instanceof String[]) {
-					wStrValue = CXStringUtils
-							.stringTableToString((String[]) wObj);
+					wStrValue = CXStringUtils.stringTableToString((String[]) wObj);
 				} else
 				//
 				if (wObj instanceof PropertyDescription[]) {
 					final StringBuilder wSB = new StringBuilder();
 					for (final PropertyDescription wPropertyDescription : ((PropertyDescription[]) wObj)) {
-						wSB.append(String.format("%s=\"%s\" ",
-								wPropertyDescription.getName(),
+						wSB.append(String.format("%s=\"%s\" ", wPropertyDescription.getName(),
 								wPropertyDescription.getCurrentValue()));
 					}
 					wStrValue = wSB.toString();
@@ -916,8 +834,7 @@ public class CCpntConponentsControler implements ServiceListener {
 					wStrValue = wStrValue.replace('\n', '§');
 				}
 			}
-			pIsolateLogger.log(Level.FINER, this, "logFactoryServiceRef",
-					" | %2d) %40s=[%s]", wIdx, wKey, wStrValue);
+			pIsolateLogger.log(Level.FINER, this, "logFactoryServiceRef", " | %2d) %40s=[%s]", wIdx, wKey, wStrValue);
 			wIdx++;
 		}
 	}
@@ -946,15 +863,14 @@ public class CCpntConponentsControler implements ServiceListener {
 		final String wFilter = "(objectclass=" + Factory.class.getName() + ")";
 		pBundleContext.addServiceListener(this, wFilter);
 
-		pIsolateLogger.logInfo(this, "registerFactoryServiceListener",
-				"Registered=[%b] FactoryServiceListener=[%s]", true, this);
+		pIsolateLogger.logInfo(this, "registerFactoryServiceListener", "Registered=[%b] FactoryServiceListener=[%s]",
+				true, this);
 	}
 
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * org.osgi.framework.ServiceListener#serviceChanged(org.osgi.framework.
+	 * @see org.osgi.framework.ServiceListener#serviceChanged(org.osgi.framework.
 	 * ServiceEvent)
 	 */
 	@Override
@@ -967,13 +883,11 @@ public class CCpntConponentsControler implements ServiceListener {
 
 			switch (aServiceEvent.getType()) {
 			case ServiceEvent.REGISTERED: {
-				setFactoryServiceRefAvaibility(wFactoryServiceRef,
-						ServiceEvent.REGISTERED);
+				setFactoryServiceRefAvaibility(wFactoryServiceRef, ServiceEvent.REGISTERED);
 				break;
 			}
 			case ServiceEvent.UNREGISTERING: {
-				setFactoryServiceRefAvaibility(wFactoryServiceRef,
-						ServiceEvent.UNREGISTERING);
+				setFactoryServiceRefAvaibility(wFactoryServiceRef, ServiceEvent.UNREGISTERING);
 				break;
 			}
 			}
@@ -992,36 +906,25 @@ public class CCpntConponentsControler implements ServiceListener {
 	 * @param aServiceEvent
 	 * @throws Exception
 	 */
-	private void setFactoryServiceRefAvaibility(
-			final ServiceReference<Factory> wFactoryServiceRef,
+	private void setFactoryServiceRefAvaibility(final ServiceReference<Factory> wFactoryServiceRef,
 			final int aServiceEvent) throws Exception {
 
-		final String wFactoryName = (String) wFactoryServiceRef
-				.getProperty(PROP_FACTORY_NAME);
+		final String wFactoryName = (String) wFactoryServiceRef.getProperty(PROP_FACTORY_NAME);
 		if (wFactoryName == null) {
-			throw new Exception(String.format(
-					"Unable to find '%s' property in a Factory service",
-					PROP_FACTORY_NAME));
+			throw new Exception(String.format("Unable to find '%s' property in a Factory service", PROP_FACTORY_NAME));
 		}
 
 		final CFactoryInfos wFactoryInfos = pFactoriesInfos.get(wFactoryName);
 		if (wFactoryInfos != null) {
 			final boolean wRegistered = (ServiceEvent.REGISTERED == aServiceEvent);
-			wFactoryInfos.setFactoryServiceRef(wRegistered ? wFactoryServiceRef
-					: null);
+			wFactoryInfos.setFactoryServiceRef(wRegistered ? wFactoryServiceRef : null);
 
-			pIsolateLogger
-					.logInfo(
-							this,
-							"setFactoryServiceRefAvaibility",
-							"FactoryName=[%-80s] Registered=[%5s] FactoryServiceRef=[%s]",
-							wFactoryName,
-							wRegistered,
-							wRegistered ? wFactoryServiceRef.toString()
-									+ '_'
-									+ CXStringUtils.strAdjustRight(
-											wFactoryServiceRef.hashCode(), 5)
-									: null);
+			pIsolateLogger.logInfo(this, "setFactoryServiceRefAvaibility",
+					"FactoryName=[%-80s] Registered=[%5s] FactoryServiceRef=[%s]", wFactoryName, wRegistered,
+					wRegistered
+							? wFactoryServiceRef.toString() + '_'
+									+ CXStringUtils.strAdjustRight(wFactoryServiceRef.hashCode(), 5)
+							: null);
 		}
 	}
 
@@ -1035,13 +938,12 @@ public class CCpntConponentsControler implements ServiceListener {
 
 		final Collection<ServiceReference<Factory>> wFactoryServiceRefs = getAllFactoryServiceRefs();
 
-		pIsolateLogger.logInfo(this, "setFactoryServiceRefsAvaibility",
-				"NbAvalaibleServicefactory=[%d]", wFactoryServiceRefs.size());
+		pIsolateLogger.logInfo(this, "setFactoryServiceRefsAvaibility", "NbAvalaibleServicefactory=[%d]",
+				wFactoryServiceRefs.size());
 
 		for (final ServiceReference<Factory> wFactoryServiceRef : wFactoryServiceRefs) {
 
-			setFactoryServiceRefAvaibility(wFactoryServiceRef,
-					ServiceEvent.REGISTERED);
+			setFactoryServiceRefAvaibility(wFactoryServiceRef, ServiceEvent.REGISTERED);
 		}
 	}
 
@@ -1071,10 +973,8 @@ public class CCpntConponentsControler implements ServiceListener {
 
 		pIsolateLogger.logInfo(this, "validate", "Validating...");
 
-		CXLoggerUtils
-				.logBanner(pIsolateLogger, Level.INFO, this, "validate", '-',
-						false,
-						"COHORTE Basic Runner for Eclipse : Component Controler starting...");
+		CXLoggerUtils.logBanner(pIsolateLogger, Level.INFO, this, "validate", '-', false,
+				"COHORTE Basic Runner for Eclipse : Component Controler starting...");
 
 		checkBasicRunnerProperties();
 
@@ -1094,8 +994,7 @@ public class CCpntConponentsControler implements ServiceListener {
 
 			// if there's no component to control
 			if (!wMustControlComponent) {
-				pIsolateLogger.logSevere(this, "validate",
-						"There is no component to control in this isolate!");
+				pIsolateLogger.logSevere(this, "validate", "There is no component to control in this isolate!");
 				logControlerState(wMustControlComponent);
 			} else
 			// else, if there is at least one component to control
@@ -1114,15 +1013,8 @@ public class CCpntConponentsControler implements ServiceListener {
 				// instanciates the wanted components
 				if (isAllNeededFactoriesAvailable()) {
 
-					CXLoggerUtils
-							.logBanner(
-									pIsolateLogger,
-									Level.INFO,
-									this,
-									"validate",
-									'-',
-									false,
-									"COHORTE Basic Runner for Eclipse : All the needed factories are Available => proceed to the instantiation of the components.");
+					CXLoggerUtils.logBanner(pIsolateLogger, Level.INFO, this, "validate", '-', false,
+							"COHORTE Basic Runner for Eclipse : All the needed factories are Available => proceed to the instantiation of the components.");
 
 					instancaiateComponents();
 				}
@@ -1137,12 +1029,11 @@ public class CCpntConponentsControler implements ServiceListener {
 					wText.append("\nList of the unavailabled factories:");
 					wText.append(dumpUnavailableFactories());
 
-					CXLoggerUtils.logBanner(pIsolateLogger, Level.SEVERE, this,
-							"validate", '-', false, wText.toString());
+					CXLoggerUtils.logBanner(pIsolateLogger, Level.SEVERE, this, "validate", '-', false,
+							wText.toString());
 
 					// in the Eclipse console !
-					System.out.println(CXLoggerUtils.buildBanner('-', false,
-							wText.toString()));
+					System.out.println(CXLoggerUtils.buildBanner('-', false, wText.toString()));
 
 					pShutDownCommand.shutdown();
 
@@ -1160,16 +1051,10 @@ public class CCpntConponentsControler implements ServiceListener {
 			pIsolateLogger.setLevel(wCurrentLogLevel);
 
 		}
-		pIsolateLogger
-				.logInfo(
-						this,
-						"validate",
-						"validated. InAction=[%b] isAllNeededFactoriesAvailable=[%b] CompositionFile=[%s] remainingFactories=[%s]",
-						wMustControlComponent,
-						isAllNeededFactoriesAvailable(),
-						pCompositionFile,
-						CXStringUtils
-								.stringListToString(getRemainingFactoriesList()));
+		pIsolateLogger.logInfo(this, "validate",
+				"validated. InAction=[%b] isAllNeededFactoriesAvailable=[%b] CompositionFile=[%s] remainingFactories=[%s]",
+				wMustControlComponent, isAllNeededFactoriesAvailable(), pCompositionFile,
+				CXStringUtils.stringListToString(getRemainingFactoriesList()));
 
 	}
 }

@@ -12,6 +12,7 @@ import java.lang.ref.WeakReference;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +27,14 @@ import org.python.core.PyString;
 import org.python.util.PythonInterpreter;
 
 public class CPythonFactory implements IPythonFactory {
+	/**
+	 * <pre>
+	 * define the level of the log for python call by default INFO
+	 * -Dorg.cohorte.eclipse.runner.basic.jython.level=INFO
+	 * </pre>
+	 */
+	static final String PROP_JYTHON_LEVEL = "org.cohorte.eclipse.runner.basic.jython.level";
+	static final String PROP_JYTHON_ENV = "org.cohorte.eclipse.runner.basic.jython.env";
 
 	public static PyObject getPyObject(final Object aJavaObj) {
 		if (aJavaObj instanceof List<?>) {
@@ -93,7 +102,28 @@ public class CPythonFactory implements IPythonFactory {
 		pInterpreter = new PythonInterpreter();
 		pInterpreter.exec("import sys");
 		pInterpreter.exec("import logging");
-		pInterpreter.exec("logging.basicConfig(level=logging.DEBUG)");
+		pInterpreter.exec("import os");
+		String wEnvToAdd  = System.getProperty(PROP_JYTHON_ENV);
+	
+		String wLevel = System.getProperty(PROP_JYTHON_LEVEL);
+		if( wLevel == null || wLevel.isEmpty() ) {
+			wLevel = "INFO";
+		}
+		pInterpreter.exec(String.format("logging.basicConfig(level=logging.%s)",wLevel));
+		// set cohorte-dev environment variable 
+		if( wEnvToAdd != null && !wEnvToAdd.isEmpty()) {
+			List<String> wSplitEnv = Arrays.asList(wEnvToAdd.split(";"));
+			wSplitEnv.stream().forEach(wEnv->{
+				if( wEnv != null && wEnv.contains("=") ) {
+					String[] wEnvSpl = wEnv.split("=");
+					pInterpreter.exec(String.format("os.environ['%s']='%s'",wEnvSpl[0],wEnvSpl[1]));
+					pInterpreter.exec(String.format("os.environ['env:%s']='%s'",wEnvSpl[0],wEnvSpl[1]));
+				}
+				
+			});
+			
+
+		}
 
 		if (aPythonPath != null) {
 			addPythonPath(aPythonPath);
