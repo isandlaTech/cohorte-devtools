@@ -103,14 +103,26 @@ public class CPythonFactory implements IPythonFactory {
 		pInterpreter.exec("import sys");
 		pInterpreter.exec("import logging");
 		pInterpreter.exec("import os");
-		String wEnvToAdd  = System.getProperty(PROP_JYTHON_ENV);
 	
 		String wLevel = System.getProperty(PROP_JYTHON_LEVEL);
 		if( wLevel == null || wLevel.isEmpty() ) {
 			wLevel = "INFO";
 		}
 		pInterpreter.exec(String.format("logging.basicConfig(level=logging.%s)",wLevel));
-		// set cohorte-dev environment variable 
+		setEnvironnementVariable();
+
+		if (aPythonPath != null) {
+			addPythonPath(aPythonPath);
+		}
+		pMapHashCode = new HashMap<Integer, Integer>();
+		pMapProxy = new HashMap<Integer, WeakReference<Object>>();
+	}
+	
+	private void setEnvironnementVariable() {
+		String wEnvToAdd  = System.getProperty(PROP_JYTHON_ENV);
+
+		//TODO add cohorte_home....
+		//set cohorte-dev environment variable 
 		if( wEnvToAdd != null && !wEnvToAdd.isEmpty()) {
 			List<String> wSplitEnv = Arrays.asList(wEnvToAdd.split(";"));
 			wSplitEnv.stream().forEach(wEnv->{
@@ -124,12 +136,6 @@ public class CPythonFactory implements IPythonFactory {
 			
 
 		}
-
-		if (aPythonPath != null) {
-			addPythonPath(aPythonPath);
-		}
-		pMapHashCode = new HashMap<Integer, Integer>();
-		pMapProxy = new HashMap<Integer, WeakReference<Object>>();
 	}
 
 	@Override
