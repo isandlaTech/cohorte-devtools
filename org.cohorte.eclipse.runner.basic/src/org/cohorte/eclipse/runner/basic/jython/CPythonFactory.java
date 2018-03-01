@@ -246,8 +246,11 @@ public class CPythonFactory implements IPythonFactory {
 			throws IOException {
 		PythonClass wAnn = aInterface.getAnnotation(PythonClass.class);
 		if (wAnn != null) {
-			String wmodulePath = wAnn.modulepath().replaceAll("\\.",
-					File.separatorChar + "")
+			String wSepPath = "/";
+			if (File.separatorChar == '\\') {
+				wSepPath = "\\";
+			}
+			String wmodulePath = wAnn.modulepath().replaceAll("\\.", wSepPath)
 					+ ".py";
 			String className = wAnn.classname();
 			PyObject wPyClass = classForName(wmodulePath, className);
