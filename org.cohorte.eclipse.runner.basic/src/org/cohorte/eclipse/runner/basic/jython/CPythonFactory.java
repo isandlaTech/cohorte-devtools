@@ -27,6 +27,7 @@ import org.python.core.PyString;
 import org.python.util.PythonInterpreter;
 
 public class CPythonFactory implements IPythonFactory {
+	static final String PROP_JYTHON_ENV = "org.cohorte.eclipse.runner.basic.jython.env";
 	/**
 	 * <pre>
 	 * define the level of the log for python call by default INFO
@@ -34,7 +35,6 @@ public class CPythonFactory implements IPythonFactory {
 	 * </pre>
 	 */
 	static final String PROP_JYTHON_LEVEL = "org.cohorte.eclipse.runner.basic.jython.level";
-	static final String PROP_JYTHON_ENV = "org.cohorte.eclipse.runner.basic.jython.env";
 
 	public static PyObject getPyObject(final Object aJavaObj) {
 		if (aJavaObj instanceof List<?>) {
@@ -90,7 +90,7 @@ public class CPythonFactory implements IPythonFactory {
 
 	public CPythonFactory(final List<String> aPythonPath, final String aLib) {
 		pBaseDirs = aPythonPath;
-		pLoadedFile = new ArrayList<String>();
+		pLoadedFile = new ArrayList<>();
 		Properties wProps = new Properties();
 		wProps.put("python.home", aLib);
 		wProps.put("python.console.encoding", "UTF-8");
@@ -103,49 +103,20 @@ public class CPythonFactory implements IPythonFactory {
 		pInterpreter.exec("import sys");
 		pInterpreter.exec("import logging");
 		pInterpreter.exec("import os");
-	
+
 		String wLevel = System.getProperty(PROP_JYTHON_LEVEL);
-		if( wLevel == null || wLevel.isEmpty() ) {
+		if (wLevel == null || wLevel.isEmpty()) {
 			wLevel = "INFO";
 		}
-		pInterpreter.exec(String.format("logging.basicConfig(level=logging.%s)",wLevel));
+		pInterpreter.exec(String.format(
+				"logging.basicConfig(level=logging.%s)", wLevel));
 		initEnvironnementVariable();
 
 		if (aPythonPath != null) {
 			addPythonPath(aPythonPath);
 		}
-		pMapHashCode = new HashMap<Integer, Integer>();
-		pMapProxy = new HashMap<Integer, WeakReference<Object>>();
-	}
-	
-	private void setEnvironnementVariable(String aKey, String aValue) {
-	// read relevant environment variable 
-			pInterpreter.exec(String.format("os.environ['%s']='%s'",aKey,aValue));
-			pInterpreter.exec(String.format("os.environ['env:%s']='%s'",aKey,aValue));
-	}
-	private void initEnvironnementVariable() {
-		String wEnvToAdd  = System.getProperty(PROP_JYTHON_ENV);
-		
-		// read relevant environment variable 
-		setEnvironnementVariable("COHORTE_HOME",System.getProperty("cohorte.home"));
-		setEnvironnementVariable("COHORTE_DEV",System.getProperty("org.cohorte.eclipse.runner.basic.cohorte.dev"));
-		setEnvironnementVariable("COHORTE_BASE",System.getProperty("cohorte.base"));
-		setEnvironnementVariable("data-dir",System.getProperty("cohorte.node.data.dir"));
-
-		//TODO add cohorte_home....
-		//set cohorte-dev environment variable 
-		if( wEnvToAdd != null && !wEnvToAdd.isEmpty()) {
-			List<String> wSplitEnv = Arrays.asList(wEnvToAdd.split(";"));
-			wSplitEnv.stream().forEach(wEnv->{
-				if( wEnv != null && wEnv.contains("=") ) {
-					String[] wEnvSpl = wEnv.split("=");
-					setEnvironnementVariable(wEnvSpl[0],wEnvSpl[1]);
-				}
-				
-			});
-			
-
-		}
+		pMapHashCode = new HashMap<>();
+		pMapProxy = new HashMap<>();
 	}
 
 	@Override
@@ -206,7 +177,7 @@ public class CPythonFactory implements IPythonFactory {
 
 	public PyObject[] convertToPyObject(final Object[] aObjects) {
 		if (aObjects != null && aObjects.length > 0) {
-			List<PyObject> wListArg = new ArrayList<PyObject>();
+			List<PyObject> wListArg = new ArrayList<>();
 			for (Object wArg : aObjects) {
 				wListArg.add(getPyObject(wArg));
 			}
@@ -241,12 +212,42 @@ public class CPythonFactory implements IPythonFactory {
 		}
 	}
 
+	private void initEnvironnementVariable() {
+		String wEnvToAdd = System.getProperty(PROP_JYTHON_ENV);
+
+		// read relevant environment variable
+		setEnvironnementVariable("COHORTE_HOME",
+				System.getProperty("cohorte.home"));
+		setEnvironnementVariable(
+				"COHORTE_DEV",
+				System.getProperty("org.cohorte.eclipse.runner.basic.cohorte.dev"));
+		setEnvironnementVariable("COHORTE_BASE",
+				System.getProperty("cohorte.base"));
+		setEnvironnementVariable("data-dir",
+				System.getProperty("cohorte.node.data.dir"));
+
+		// TODO add cohorte_home....
+		// set cohorte-dev environment variable
+		if (wEnvToAdd != null && !wEnvToAdd.isEmpty()) {
+			List<String> wSplitEnv = Arrays.asList(wEnvToAdd.split(";"));
+			wSplitEnv.stream().forEach(wEnv -> {
+				if (wEnv != null && wEnv.contains("=")) {
+					String[] wEnvSpl = wEnv.split("=");
+					setEnvironnementVariable(wEnvSpl[0], wEnvSpl[1]);
+				}
+
+			});
+
+		}
+	}
+
 	@Override
 	public Object newInstance(final Class<?> aInterface, final Object... aArgs)
 			throws IOException {
 		PythonClass wAnn = aInterface.getAnnotation(PythonClass.class);
 		if (wAnn != null) {
-			String wmodulePath = wAnn.modulepath().replaceAll("\\.", "/")
+			String wmodulePath = wAnn.modulepath().replaceAll("\\.",
+					File.separatorChar + "")
 					+ ".py";
 			String className = wAnn.classname();
 			PyObject wPyClass = classForName(wmodulePath, className);
@@ -256,8 +257,7 @@ public class CPythonFactory implements IPythonFactory {
 					new CPyObjectHandler(wPyObject, this));
 			// assign the hasCode betwwen proxy and pyObject
 			pMapHashCode.put(wPyObject.hashCode(), wInstance.hashCode());
-			pMapProxy.put(wInstance.hashCode(), new WeakReference<Object>(
-					wInstance));
+			pMapProxy.put(wInstance.hashCode(), new WeakReference<>(wInstance));
 			return wInstance;
 		}
 		return null;
@@ -275,5 +275,12 @@ public class CPythonFactory implements IPythonFactory {
 		}
 
 		return wPythonObject;
+	}
+
+	private void setEnvironnementVariable(final String aKey, final String aValue) {
+		// read relevant environment variable
+		pInterpreter.exec(String.format("os.environ['%s']='%s'", aKey, aValue));
+		pInterpreter.exec(String.format("os.environ['env:%s']='%s'", aKey,
+				aValue));
 	}
 }
