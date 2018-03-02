@@ -15,22 +15,76 @@
 		<dependency>
 			<groupId>org.cohorte.utilities</groupId>
 			<artifactId>org.cohorte.utilities</artifactId>
-			<version>1.0.9</version>
+			<version>1.0.20</version>
 		</dependency>
 		<dependency>
 			<groupId>org.cohorte.utilities</groupId>
 			<artifactId>org.cohorte.utilities.json</artifactId>
-			<version>1.0.0</version>
+			<version>1.0.5</version>
 		</dependency> 
 		<dependency>
 			<groupId>org.cohorte.utilities</groupId>
 			<artifactId>org.cohorte.libs.com.github.fge.jsonschema</artifactId>
-			<version>1.0.0</version>
+			<version>1.0.1</version>
 		</dependency>
-		
-		
+				
 	</dependencies>
-
+ <repositories>
+    	 <repository>
+            <id>cohorte_p2</id>
+            <url>http://nrm.cohorte.tech/repository/cohorte-p2-${cohorte-version}/</url>
+            <layout>p2</layout>
+        </repository>
+         <repository>
+            <id>utilities_extra_p2</id>
+            <url>http://nrm.cohorte.tech/repository/utilities-extra-p2-1.0.0/</url>
+            <layout>p2</layout>
+        </repository>
+		<repository>
+            <id>cohorte.snapshots</id>
+            <name>Cohorte Snapshot Repository</name>
+            <url>http://nrm.cohorte.tech/repository/cohorte-snapshots</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>cohorte.releases</id>
+            <name>Cohorte Releases Repository</name>
+            <url>http://nrm.cohorte.tech/repository/cohorte-releases</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        	<repository>
+            <id>utilities.extra.snapshots</id>
+            <name>utilities.extra. Snapshot Repository</name>
+            <url>http://nrm.cohorte.tech/repository/utilities-extra-snapshots</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>utilities.extra.releases</id>
+            <name>utilities.extra. Releases Repository</name>
+            <url>http://nrm.cohorte.tech/repository/utilities-extra-releases</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+	</repositories>
 	<build>
 		<plugins>
 			<plugin>
