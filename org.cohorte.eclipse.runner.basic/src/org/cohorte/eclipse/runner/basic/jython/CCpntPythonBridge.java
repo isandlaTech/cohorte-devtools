@@ -147,7 +147,7 @@ public class CCpntPythonBridge implements IPythonBridge {
 			// add stdLibPath
 
 			pStdLibPath = System.getProperty(PROP_JYTHON_STD_LIB_PATH);
-
+		
 			pLogger.logInfo(this, "validate", "	Jython Std Lib Path=[%s]", pStdLibPath);
 
 			if (pStdLibPath == null || !new File(pStdLibPath).exists()) {

@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.psem2m.utilities.files.CXFile;
+import org.psem2m.utilities.files.CXFileDir;
 import org.python.core.PyBoolean;
 import org.python.core.PyFloat;
 import org.python.core.PyInteger;
@@ -122,8 +124,10 @@ public class CPythonFactory implements IPythonFactory {
 	@Override
 	public void addPythonPath(final List<String> aPythonPath) {
 		for (String wPath : aPythonPath) {
-			String wAppend = "sys.path.append('" + wPath + "')";
+			String wAppend = "sys.path.append('"
+					+ wPath.replaceAll("\\\\", "\\\\\\\\") + "')";
 			pInterpreter.exec(wAppend);
+
 		}
 	}
 
@@ -142,7 +146,8 @@ public class CPythonFactory implements IPythonFactory {
 		// check existance of the file
 		for (int i = 0; i < pBaseDirs.size() && wFoundFullPath == null; i++) {
 			String wBaseDir = pBaseDirs.get(i);
-			String path = wBaseDir + File.separatorChar + aModuleName;
+			String path = new CXFile(new CXFileDir(wBaseDir), aModuleName)
+					.getAbsolutePath();
 			if (new File(path).exists()) {
 				wFoundFullPath = path;
 			}
@@ -246,14 +251,26 @@ public class CPythonFactory implements IPythonFactory {
 			throws IOException {
 		PythonClass wAnn = aInterface.getAnnotation(PythonClass.class);
 		if (wAnn != null) {
-			String wSepPath = "/";
-			if (File.separatorChar == '\\') {
-				wSepPath = "\\";
+			CXFile wPythonFile = null;
+			String wModulePath = wAnn.modulepath();
+			if (wModulePath.contains(".")) {
+				String[] wSplitModulePath = wModulePath.split("\\.");
+
+				if (wSplitModulePath.length > 1) {
+					String[] wDirModulePython = Arrays.copyOfRange(
+							wSplitModulePath, 1, wSplitModulePath.length - 1);
+					String wFile = wSplitModulePath[wSplitModulePath.length - 1];
+					wPythonFile = new CXFile(new CXFileDir(wSplitModulePath[0],
+							wDirModulePython), wFile + ".py");
+				} else {
+					wPythonFile = new CXFile(wModulePath + ".py");
+
+				}
+
 			}
-			String wmodulePath = wAnn.modulepath().replaceAll("\\.", wSepPath)
-					+ ".py";
+
 			String className = wAnn.classname();
-			PyObject wPyClass = classForName(wmodulePath, className);
+			PyObject wPyClass = classForName(wPythonFile.getPath(), className);
 			PyObject wPyObject = newInstance(wPyClass, aArgs);
 			Object wInstance = Proxy.newProxyInstance(
 					aInterface.getClassLoader(), new Class[] { aInterface },

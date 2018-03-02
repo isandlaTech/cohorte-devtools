@@ -39,6 +39,7 @@ import org.osgi.framework.ServiceReference;
 import org.psem2m.isolates.base.IIsolateLoggerSvc;
 import org.psem2m.isolates.services.dirs.IPlatformDirsSvc;
 import org.psem2m.utilities.CXStringUtils;
+import org.psem2m.utilities.files.CXFile;
 import org.psem2m.utilities.files.CXFileDir;
 import org.psem2m.utilities.files.CXFileUtf8;
 import org.psem2m.utilities.json.JSONArray;
@@ -141,7 +142,7 @@ public class CCpntConponentsControler implements ServiceListener {
 	 * </pre>
 	 */
 	static final String PROP_RUNNER_BASIC_COHORTE_DEV = "cohorte.dev";
-
+	static final String PROP_RUNNER_BASIC_COHORTE_HOME = "cohorte.home";
 	
 	
 	static final String[] PROPS_RUNNER_BASIC = { PROP_RUNNER_BASIC_LOG_LEVEL,
@@ -509,9 +510,11 @@ public class CCpntConponentsControler implements ServiceListener {
 			// create finder and includer python object to resolve the
 			// configuration
 			// file
+			// windows separator issue 
+			CXFile wCohorteHome =  new CXFile(pPlatformDirsSvc.getPlatformHome(),IPlatformDirsSvc.DIRNAME_REPOSITORY);
+		
 			final IPythonFactory wPythonFactory = pPythonBridge.getPythonObjectFactory(PYTHON_FACTORY,
-					Arrays.asList(new String[] { pPlatformDirsSvc.getPlatformHome().getAbsolutePath()
-							+ File.separatorChar + IPlatformDirsSvc.DIRNAME_REPOSITORY }));
+					Arrays.asList(new String[] { wCohorteHome.getAbsolutePath() }));
 
 			pFinder = (IFileFinder) wPythonFactory.newInstance(IFileFinder.class);
 			pIsolateLogger.logInfo(this, "initJythonObject", "init IFileFinder %s ", pFinder);
