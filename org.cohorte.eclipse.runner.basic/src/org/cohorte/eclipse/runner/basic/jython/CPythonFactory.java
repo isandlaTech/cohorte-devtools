@@ -114,20 +114,28 @@ public class CPythonFactory implements IPythonFactory {
 				"logging.basicConfig(level=logging.%s)", wLevel));
 		initEnvironnementVariable();
 
+		// add default path extension
+		addPythonPath(aLib + File.separatorChar + "extensions_jython");
+
 		if (aPythonPath != null) {
-			addPythonPath(aPythonPath);
+			addPythonPaths(aPythonPath);
 		}
 		pMapHashCode = new HashMap<>();
 		pMapProxy = new HashMap<>();
 	}
 
 	@Override
-	public void addPythonPath(final List<String> aPythonPath) {
-		for (String wPath : aPythonPath) {
-			String wAppend = "sys.path.append('"
-					+ wPath.replaceAll("\\\\", "\\\\\\\\") + "')";
-			pInterpreter.exec(wAppend);
+	public void addPythonPath(final String aPythonPath) {
+		String wAppend = "sys.path.append('"
+				+ aPythonPath.replaceAll("\\\\", "\\\\\\\\") + "')";
+		pInterpreter.exec(wAppend);
 
+	}
+
+	@Override
+	public void addPythonPaths(final List<String> aPythonPath) {
+		for (String wPath : aPythonPath) {
+			addPythonPath(wPath);
 		}
 	}
 
@@ -223,15 +231,20 @@ public class CPythonFactory implements IPythonFactory {
 		// read relevant environment variable
 		setEnvironnementVariable("COHORTE_HOME",
 				System.getProperty("cohorte.home"));
-		setEnvironnementVariable(
-				"COHORTE_DEV",
-				System.getProperty("org.cohorte.eclipse.runner.basic.cohorte.dev"));
+		setEnvironnementVariable("COHORTE_DEV_BASE",
+				System.getProperty("cohorte.dev.base"));
+		setEnvironnementVariable("COHORTE_DEV_DATA",
+				System.getProperty("cohorte.dev.data"));
 		setEnvironnementVariable("COHORTE_BASE",
 				System.getProperty("cohorte.base"));
 		setEnvironnementVariable("data-dir",
 				System.getProperty("cohorte.node.data.dir"));
 
-		// TODO add cohorte_home....
+		/*
+		 * / TODO add cohorte_home.... for (Object wProp :
+		 * System.getProperties().keySet()) { setEnvironnementVariable((String)
+		 * wProp, System.getProperties() .getProperty((String) wProp)); }
+		 */
 		// set cohorte-dev environment variable
 		if (wEnvToAdd != null && !wEnvToAdd.isEmpty()) {
 			List<String> wSplitEnv = Arrays.asList(wEnvToAdd.split(";"));
@@ -299,8 +312,12 @@ public class CPythonFactory implements IPythonFactory {
 
 	private void setEnvironnementVariable(final String aKey, final String aValue) {
 		// read relevant environment variable
-		pInterpreter.exec(String.format("os.environ['%s']='%s'", aKey, aValue));
-		pInterpreter.exec(String.format("os.environ['env:%s']='%s'", aKey,
-				aValue));
+		if (aKey != null && !aKey.isEmpty() && aValue != null
+				&& !aValue.isEmpty()) {
+			pInterpreter.exec(String.format("os.environ['%s']='%s'", aKey,
+					aValue));
+			pInterpreter.exec(String.format("os.environ['env:%s']='%s'", aKey,
+					aValue));
+		}
 	}
 }

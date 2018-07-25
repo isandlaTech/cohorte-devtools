@@ -91,12 +91,14 @@ public class CCpntPythonBridge implements IPythonBridge {
 	 * (java.lang.String, java.util.List)
 	 */
 	@Override
-	public IPythonFactory getPythonObjectFactory(final String aId, final List<String> aPythonPath) {
+	public IPythonFactory getPythonObjectFactory(final String aId,
+			final List<String> aPythonPath) {
 		// need to add issue jython http://bugs.jython.org/issue2355
 		synchronized (pMapFactory) {
 
 			if (pMapFactory.get(aId) == null) {
-				pMapFactory.put(aId, new CPythonFactory(aPythonPath, pStdLibPath));
+				pMapFactory.put(aId, new CPythonFactory(aPythonPath,
+						pStdLibPath));
 			}
 		}
 		return pMapFactory.get(aId);
@@ -124,7 +126,8 @@ public class CCpntPythonBridge implements IPythonBridge {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see org.cohorte.eclipse.runner.basic.jython.IPythonBridge#remove(java.lang
+	 * @see
+	 * org.cohorte.eclipse.runner.basic.jython.IPythonBridge#remove(java.lang
 	 * .String)
 	 */
 	@Override
@@ -147,13 +150,15 @@ public class CCpntPythonBridge implements IPythonBridge {
 			// add stdLibPath
 
 			pStdLibPath = System.getProperty(PROP_JYTHON_STD_LIB_PATH);
-		
-			pLogger.logInfo(this, "validate", "	Jython Std Lib Path=[%s]", pStdLibPath);
+
+			pLogger.logInfo(this, "validate", "	Jython Std Lib Path=[%s]",
+					pStdLibPath);
 
 			if (pStdLibPath == null || !new File(pStdLibPath).exists()) {
-				throw new Exception(String.format(
-						"jython standard librarie can't be found in path [%s]. Look at the value uo give [-D%s=...]",
-						pStdLibPath, PROP_JYTHON_STD_LIB_PATH));
+				throw new Exception(
+						String.format(
+								"jython standard librarie can't be found in path [%s]. Look at the value uo give [-D%s=...]",
+								pStdLibPath, PROP_JYTHON_STD_LIB_PATH));
 			}
 
 			// Service published if all OK
@@ -163,9 +168,13 @@ public class CCpntPythonBridge implements IPythonBridge {
 			pLogger.logSevere(this, "validate", "ERROR %s", e);
 
 			final StringBuilder wMess = new StringBuilder();
-			wMess.append('\n').append("The component 'CCpntPythonBridge' isn't validated.");
-			wMess.append('\n').append("The service 'IPythonBridge' isn't registred.");
-			wMess.append('\n').append(String.format("ERROR: %s", CXException.eCauseMessagesInString(e)));
+			wMess.append('\n').append(
+					"The component 'CCpntPythonBridge' isn't validated.");
+			wMess.append('\n').append(
+					"The service 'IPythonBridge' isn't registred.");
+			wMess.append('\n').append(
+					String.format("ERROR: %s",
+							CXException.eCauseMessagesInString(e)));
 			wMess.append('\n').append("The OSGi framework is stopping.");
 
 			CXRunnerUtils.stopIsolate(pBundleContext, wMess.toString());

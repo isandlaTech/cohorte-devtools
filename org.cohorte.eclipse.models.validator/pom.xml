@@ -30,20 +30,10 @@
 				
 	</dependencies>
  <repositories>
-    	 <repository>
-            <id>cohorte_p2</id>
-            <url>http://nrm.cohorte.tech/repository/cohorte-p2-${cohorte-version}/</url>
-            <layout>p2</layout>
-        </repository>
-         <repository>
-            <id>utilities_extra_p2</id>
-            <url>http://nrm.cohorte.tech/repository/utilities-extra-p2-1.0.0/</url>
-            <layout>p2</layout>
-        </repository>
-		<repository>
+	<repository>
             <id>cohorte.snapshots</id>
             <name>Cohorte Snapshot Repository</name>
-            <url>http://nrm.cohorte.tech/repository/cohorte-snapshots</url>
+            <url>http://nexus:8081/repository/cohorte-snapshots</url>
             <releases>
                 <enabled>false</enabled>
             </releases>
@@ -54,7 +44,7 @@
         <repository>
             <id>cohorte.releases</id>
             <name>Cohorte Releases Repository</name>
-            <url>http://nrm.cohorte.tech/repository/cohorte-releases</url>
+            <url>http://nexus:8081/repository/cohorte-releases</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
@@ -65,7 +55,7 @@
         	<repository>
             <id>utilities.extra.snapshots</id>
             <name>utilities.extra. Snapshot Repository</name>
-            <url>http://nrm.cohorte.tech/repository/utilities-extra-snapshots</url>
+            <url>http://nexus:8081/repository/utilities-extra-snapshots</url>
             <releases>
                 <enabled>false</enabled>
             </releases>
@@ -76,7 +66,7 @@
         <repository>
             <id>utilities.extra.releases</id>
             <name>utilities.extra. Releases Repository</name>
-            <url>http://nrm.cohorte.tech/repository/utilities-extra-releases</url>
+            <url>http://nexus:8081/repository/utilities-extra-releases</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
