@@ -8,7 +8,8 @@ Bundle-SymbolicName: org.cohorte.eclipse.runner.basic
 Bundle-Vendor: Cohorte Technologies
 Bundle-Version: 1.1.1
 Created-By: iPOJO 1.12.0
-Export-Package: org.cohorte.eclipse.runner.basic
+Export-Package: org.cohorte.eclipse.runner.basic,org.python.jline.inte
+ rnal
 Import-Package: javax.net, org.apache.felix.ipojo, org.apache.felix.ip
  ojo.architecture, org.cohorte.composer.api, org.cohorte.herald, org.c
  ohorte.remote, org.osgi.framework, org.osgi.service.cm;version=1.2, o
