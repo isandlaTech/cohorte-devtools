@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.psem2m.isolates.base.IIsolateLoggerSvc;
 import org.psem2m.utilities.files.CXFile;
 import org.psem2m.utilities.files.CXFileDir;
 import org.python.core.PyBoolean;
@@ -56,7 +57,7 @@ public class CPythonFactory implements IPythonFactory {
 			return (PyObject) aJavaObj;
 		} else {
 			// to to get an invocation handler
-			InvocationHandler wHandler = Proxy.getInvocationHandler(aJavaObj);
+			final InvocationHandler wHandler = Proxy.getInvocationHandler(aJavaObj);
 			if (wHandler instanceof CPyObjectHandler) {
 				return ((CPyObjectHandler) wHandler).getPyObject();
 			}
@@ -86,14 +87,12 @@ public class CPythonFactory implements IPythonFactory {
 
 	private final Map<Integer, WeakReference<Object>> pMapProxy;
 
-	public CPythonFactory() {
-		this(null, null);
-	}
-
-	public CPythonFactory(final List<String> aPythonPath, final String aLib) {
+	IIsolateLoggerSvc pLogger;
+	public CPythonFactory(IIsolateLoggerSvc aLogger, final List<String> aPythonPath, final String aLib) {
 		pBaseDirs = aPythonPath;
+		pLogger = aLogger;
 		pLoadedFile = new ArrayList<>();
-		Properties wProps = new Properties();
+		final Properties wProps = new Properties();
 		wProps.put("python.home", aLib);
 		wProps.put("python.console.encoding", "UTF-8");
 		wProps.put("python.security.respectJavaAccessibility", "false");
@@ -126,15 +125,16 @@ public class CPythonFactory implements IPythonFactory {
 
 	@Override
 	public void addPythonPath(final String aPythonPath) {
-		String wAppend = "sys.path.append('"
+		final String wAppend = "sys.path.append('"
 				+ aPythonPath.replaceAll("\\\\", "\\\\\\\\") + "')";
+		pLogger.logInfo(this,"addPythonPath","add sys.path [%s]",wAppend);
 		pInterpreter.exec(wAppend);
 
 	}
 
 	@Override
 	public void addPythonPaths(final List<String> aPythonPath) {
-		for (String wPath : aPythonPath) {
+		for (final String wPath : aPythonPath) {
 			addPythonPath(wPath);
 		}
 	}
@@ -148,13 +148,13 @@ public class CPythonFactory implements IPythonFactory {
 
 	public PyObject classForName(final String aModuleName,
 			final String aClassName, final Object... aArguments)
-			throws IOException {
+					throws IOException {
 		// import module
 		String wFoundFullPath = null;
 		// check existance of the file
 		for (int i = 0; i < pBaseDirs.size() && wFoundFullPath == null; i++) {
-			String wBaseDir = pBaseDirs.get(i);
-			String path = new CXFile(new CXFileDir(wBaseDir), aModuleName)
+			final String wBaseDir = pBaseDirs.get(i);
+			final String path = new CXFile(new CXFileDir(wBaseDir), aModuleName)
 					.getAbsolutePath();
 			if (new File(path).exists()) {
 				wFoundFullPath = path;
@@ -190,12 +190,12 @@ public class CPythonFactory implements IPythonFactory {
 
 	public PyObject[] convertToPyObject(final Object[] aObjects) {
 		if (aObjects != null && aObjects.length > 0) {
-			List<PyObject> wListArg = new ArrayList<>();
-			for (Object wArg : aObjects) {
+			final List<PyObject> wListArg = new ArrayList<>();
+			for (final Object wArg : aObjects) {
 				wListArg.add(getPyObject(wArg));
 			}
 			// get the class
-			PyObject[] wPyObjectArr = new PyObject[wListArg.size()];
+			final PyObject[] wPyObjectArr = new PyObject[wListArg.size()];
 			wListArg.toArray(wPyObjectArr);
 			return wPyObjectArr;
 		}
@@ -216,7 +216,7 @@ public class CPythonFactory implements IPythonFactory {
 
 		} else {
 			if (pMapHashCode.get(aPyObject.hashCode()) != null) {
-				WeakReference<Object> wRef = pMapProxy.get(pMapHashCode
+				final WeakReference<Object> wRef = pMapProxy.get(pMapHashCode
 						.get(aPyObject.hashCode()));
 				return wRef.get();
 			}
@@ -226,7 +226,7 @@ public class CPythonFactory implements IPythonFactory {
 	}
 
 	private void initEnvironnementVariable() {
-		String wEnvToAdd = System.getProperty(PROP_JYTHON_ENV);
+		final String wEnvToAdd = System.getProperty(PROP_JYTHON_ENV);
 
 		// read relevant environment variable
 		setEnvironnementVariable("COHORTE_HOME",
@@ -247,10 +247,10 @@ public class CPythonFactory implements IPythonFactory {
 		 */
 		// set cohorte-dev environment variable
 		if (wEnvToAdd != null && !wEnvToAdd.isEmpty()) {
-			List<String> wSplitEnv = Arrays.asList(wEnvToAdd.split(";"));
+			final List<String> wSplitEnv = Arrays.asList(wEnvToAdd.split(";"));
 			wSplitEnv.stream().forEach(wEnv -> {
 				if (wEnv != null && wEnv.contains("=")) {
-					String[] wEnvSpl = wEnv.split("=");
+					final String[] wEnvSpl = wEnv.split("=");
 					setEnvironnementVariable(wEnvSpl[0], wEnvSpl[1]);
 				}
 
@@ -262,17 +262,17 @@ public class CPythonFactory implements IPythonFactory {
 	@Override
 	public Object newInstance(final Class<?> aInterface, final Object... aArgs)
 			throws IOException {
-		PythonClass wAnn = aInterface.getAnnotation(PythonClass.class);
+		final PythonClass wAnn = aInterface.getAnnotation(PythonClass.class);
 		if (wAnn != null) {
 			CXFile wPythonFile = null;
-			String wModulePath = wAnn.modulepath();
+			final String wModulePath = wAnn.modulepath();
 			if (wModulePath.contains(".")) {
-				String[] wSplitModulePath = wModulePath.split("\\.");
+				final String[] wSplitModulePath = wModulePath.split("\\.");
 
 				if (wSplitModulePath.length > 1) {
-					String[] wDirModulePython = Arrays.copyOfRange(
+					final String[] wDirModulePython = Arrays.copyOfRange(
 							wSplitModulePath, 1, wSplitModulePath.length - 1);
-					String wFile = wSplitModulePath[wSplitModulePath.length - 1];
+					final String wFile = wSplitModulePath[wSplitModulePath.length - 1];
 					wPythonFile = new CXFile(new CXFileDir(wSplitModulePath[0],
 							wDirModulePython), wFile + ".py");
 				} else {
@@ -282,10 +282,10 @@ public class CPythonFactory implements IPythonFactory {
 
 			}
 
-			String className = wAnn.classname();
-			PyObject wPyClass = classForName(wPythonFile.getPath(), className);
-			PyObject wPyObject = newInstance(wPyClass, aArgs);
-			Object wInstance = Proxy.newProxyInstance(
+			final String className = wAnn.classname();
+			final PyObject wPyClass = classForName(wPythonFile.getPath(), className);
+			final PyObject wPyObject = newInstance(wPyClass, aArgs);
+			final Object wInstance = Proxy.newProxyInstance(
 					aInterface.getClassLoader(), new Class[] { aInterface },
 					new CPyObjectHandler(wPyObject, this));
 			// assign the hasCode betwwen proxy and pyObject
@@ -300,7 +300,7 @@ public class CPythonFactory implements IPythonFactory {
 			final Object... aArguments) {
 
 		PyObject wPythonObject;
-		PyObject[] wPyObjectArr = convertToPyObject(aArguments);
+		final PyObject[] wPyObjectArr = convertToPyObject(aArguments);
 		if (wPyObjectArr != null && wPyObjectArr.length > 0) {
 			wPythonObject = aPythonClass.__call__(wPyObjectArr);
 		} else {

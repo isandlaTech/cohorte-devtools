@@ -5,13 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.annotations.Instantiate;
-import org.apache.felix.ipojo.annotations.Invalidate;
-import org.apache.felix.ipojo.annotations.Provides;
-import org.apache.felix.ipojo.annotations.Requires;
-import org.apache.felix.ipojo.annotations.ServiceController;
-import org.apache.felix.ipojo.annotations.Validate;
 import org.cohorte.eclipse.runner.basic.CXRunnerUtils;
 import org.osgi.framework.BundleContext;
 import org.psem2m.isolates.base.IIsolateLoggerSvc;
@@ -25,11 +18,27 @@ import org.psem2m.utilities.CXException;
  * @author apisu
  *
  */
-@Component(name = "Cohorte-devtools-CCpntPythonBridge-factory")
-@Instantiate
-@Provides(specifications = IPythonBridge.class)
-public class CCpntPythonBridge implements IPythonBridge {
 
+public class CPythonBridge implements IPythonBridge {
+
+	private static CPythonBridge pPythonBridge;
+	public static IPythonBridge newSingleton(final BundleContext aBundleContext) {
+		if( pPythonBridge == null ) {
+			pPythonBridge = new CPythonBridge(aBundleContext);
+
+		}
+		return pPythonBridge;
+	}
+	public static IPythonBridge getSingleton(IIsolateLoggerSvc aLogger,IPlatformDirsSvc aPlatformDirsSvc) {
+		if( pPythonBridge != null ) {
+			if( pPythonBridge.pLogger == null ) {
+				pPythonBridge.pLogger = aLogger;
+				pPythonBridge.pPlatformDirsSvc = aPlatformDirsSvc;
+				pPythonBridge.validate();
+			}
+		}
+		return pPythonBridge;
+	}
 	/**
 	 * <pre>
 	 * -Dorg.cohorte.eclipse.runner.basic.jython.stdlib=${project_loc:org.cohorte.eclipse.runner.basic}/lib
@@ -39,7 +48,7 @@ public class CCpntPythonBridge implements IPythonBridge {
 
 	private final BundleContext pBundleContext;
 
-	@Requires
+
 	IIsolateLoggerSvc pLogger;
 
 	/**
@@ -47,21 +56,19 @@ public class CCpntPythonBridge implements IPythonBridge {
 	 */
 	Map<String, IPythonFactory> pMapFactory;
 
-	@Requires
+
 	IPlatformDirsSvc pPlatformDirsSvc;
 
-	// Service not published by default
-	@ServiceController(value = false)
-	private boolean pServiceController;
 
 	private String pStdLibPath;
 
 	/**
 	 * @param aContext
 	 */
-	public CCpntPythonBridge(final BundleContext aBundleContext) {
+	private CPythonBridge(final BundleContext aBundleContext) {
 		pMapFactory = new HashMap<>();
 		pBundleContext = aBundleContext;
+
 	}
 
 	/**
@@ -97,7 +104,7 @@ public class CCpntPythonBridge implements IPythonBridge {
 		synchronized (pMapFactory) {
 
 			if (pMapFactory.get(aId) == null) {
-				pMapFactory.put(aId, new CPythonFactory(aPythonPath,
+				pMapFactory.put(aId, new CPythonFactory(pLogger,aPythonPath,
 						pStdLibPath));
 			}
 		}
@@ -107,7 +114,6 @@ public class CCpntPythonBridge implements IPythonBridge {
 	/**
 	 *
 	 */
-	@Invalidate
 	public void inValidate() {
 		pLogger.logInfo(this, "inValidate", "inValidating...");
 		// clean all factory
@@ -142,7 +148,6 @@ public class CCpntPythonBridge implements IPythonBridge {
 	/**
 	 *
 	 */
-	@Validate
 	public void validate() {
 		pLogger.logInfo(this, "validate", "validating...");
 		// check existance of
@@ -150,6 +155,8 @@ public class CCpntPythonBridge implements IPythonBridge {
 			// add stdLibPath
 
 			pStdLibPath = System.getProperty(PROP_JYTHON_STD_LIB_PATH);
+
+
 
 			pLogger.logInfo(this, "validate", "	Jython Std Lib Path=[%s]",
 					pStdLibPath);
@@ -162,7 +169,6 @@ public class CCpntPythonBridge implements IPythonBridge {
 			}
 
 			// Service published if all OK
-			pServiceController = true;
 
 		} catch (final Exception e) {
 			pLogger.logSevere(this, "validate", "ERROR %s", e);

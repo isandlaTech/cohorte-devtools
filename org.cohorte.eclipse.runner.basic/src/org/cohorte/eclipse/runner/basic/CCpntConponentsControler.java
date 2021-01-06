@@ -27,6 +27,7 @@ import org.apache.felix.ipojo.annotations.Validate;
 import org.apache.felix.ipojo.architecture.PropertyDescription;
 import org.cohorte.composer.api.IIsolateComposer;
 import org.cohorte.composer.api.RawComponent;
+import org.cohorte.eclipse.runner.basic.jython.CPythonBridge;
 import org.cohorte.eclipse.runner.basic.jython.IFileFinder;
 import org.cohorte.eclipse.runner.basic.jython.IFileIncluder;
 import org.cohorte.eclipse.runner.basic.jython.IPythonBridge;
@@ -175,7 +176,6 @@ public class CCpntConponentsControler implements ServiceListener {
 	@Requires
 	private IPlatformDirsSvc pPlatformDirsSvc;
 
-	@Requires
 	IPythonBridge pPythonBridge;
 
 	@Requires
@@ -187,6 +187,7 @@ public class CCpntConponentsControler implements ServiceListener {
 	public CCpntConponentsControler(final BundleContext aBundleContext) {
 		super();
 		pBundleContext = aBundleContext;
+		pPythonBridge = CPythonBridge.getSingleton(pIsolateLogger, pPlatformDirsSvc);
 	}
 
 	/**
@@ -214,10 +215,10 @@ public class CCpntConponentsControler implements ServiceListener {
 	 */
 	private void checkBasicRunnerProperties() {
 
-		for (String wPropName : PROPS_RUNNER_BASIC) {
+		for (final String wPropName : PROPS_RUNNER_BASIC) {
 
-			String wValue = System.getProperty(wPropName);
-			boolean wExists = (wValue != null && !wValue.isEmpty());
+			final String wValue = System.getProperty(wPropName);
+			final boolean wExists = (wValue != null && !wValue.isEmpty());
 			pIsolateLogger.logInfo(this, "checkRunnerProperties",
 					"PropName=[%-60s] Exixts=[%5s] value=[%s]", wPropName,
 					wExists, wValue);
@@ -225,15 +226,15 @@ public class CCpntConponentsControler implements ServiceListener {
 			if (!wExists) {
 				if (PROP_RUNNER_BASIC_LOG_LEVEL.equals(wPropName)) {
 
-					String wMessageBeginning = buildBasicRunnerPropMessage(
+					final String wMessageBeginning = buildBasicRunnerPropMessage(
 							PROP_RUNNER_BASIC_LOG_LEVEL, "isn't defined.");
 					pIsolateLogger
-							.logWarn(
-									this,
-									"checkRunnerProperties",
-									"%s => the log level still set to FINE during the validation of that component [%s].",
-									wMessageBeginning, getClass()
-											.getSimpleName());
+					.logWarn(
+							this,
+							"checkRunnerProperties",
+							"%s => the log level still set to FINE during the validation of that component [%s].",
+							wMessageBeginning, getClass()
+							.getSimpleName());
 
 				}
 			}
@@ -251,7 +252,7 @@ public class CCpntConponentsControler implements ServiceListener {
 	 */
 	private String dumpUnavailableFactories() {
 
-		StringBuilder wSB = new StringBuilder();
+		final StringBuilder wSB = new StringBuilder();
 
 		int wIdx = 0;
 		for (final CFactoryInfos wDef : pFactoriesInfos.values()) {
@@ -280,12 +281,12 @@ public class CCpntConponentsControler implements ServiceListener {
 	 * @return the log level ti use during the validation of that component
 	 */
 	private Level getBasicRunnerLogLevel() {
-		String wLevel = System.getProperty(PROP_RUNNER_BASIC_LOG_LEVEL, "FINE");
+		final String wLevel = System.getProperty(PROP_RUNNER_BASIC_LOG_LEVEL, "FINE");
 		try {
 			return Level.parse(wLevel);
-		} catch (IllegalArgumentException e) {
+		} catch (final IllegalArgumentException e) {
 
-			String wMessageBeginning = buildBasicRunnerPropMessage(
+			final String wMessageBeginning = buildBasicRunnerPropMessage(
 					PROP_RUNNER_BASIC_LOG_LEVEL, "contains a unparsable Level.");
 
 			pIsolateLogger.logSevere(this, "checkRunnerProperties",
@@ -376,7 +377,7 @@ public class CCpntConponentsControler implements ServiceListener {
 
 		for (int i = 0; i < wParentsComponents.length(); i++) {
 			wComposition.getJSONObject("root").getJSONArray("components")
-					.put(wParentsComponents.get(i));
+			.put(wParentsComponents.get(i));
 		}
 		return wComposition;
 	}
@@ -546,7 +547,7 @@ public class CCpntConponentsControler implements ServiceListener {
 			// configuration
 			// file
 			// windows separator issue
-			CXFile wCohorteHome = new CXFile(
+			final CXFile wCohorteHome = new CXFile(
 					pPlatformDirsSvc.getPlatformHome(),
 					IPlatformDirsSvc.DIRNAME_REPOSITORY);
 
@@ -566,7 +567,7 @@ public class CCpntConponentsControler implements ServiceListener {
 					.newInstance(IFileIncluder.class);
 			pIsolateLogger.logInfo(this, "initJythonObject",
 					"init IFileIncluder : %s", pIncluder);
-			String wCohorteDev = System
+			final String wCohorteDev = System
 					.getProperty(PROP_RUNNER_BASIC_COHORTE_DEV);
 			if (wCohorteDev != null) {
 				// set the roots for the finder and add cohorte-dev
@@ -585,7 +586,7 @@ public class CCpntConponentsControler implements ServiceListener {
 			e.printStackTrace();
 
 			pIsolateLogger.logSevere(this, "initJythonObject",
-					"can't init Jython object %d", e);
+					"can't init Jython object %s", e);
 		}
 	}
 
@@ -647,7 +648,7 @@ public class CCpntConponentsControler implements ServiceListener {
 	 *
 	 */
 	private void instancaiateComponents() throws UnacceptableConfiguration,
-			MissingHandlerException, ConfigurationException {
+	MissingHandlerException, ConfigurationException {
 
 		final String wCurrentIsolateName = pPlatformDirsSvc.getIsolateName();
 
@@ -693,15 +694,15 @@ public class CCpntConponentsControler implements ServiceListener {
 					wComponentInfos.setCreated();
 
 					pIsolateLogger
-							.logInfo(
-									this,
-									"instancaiateComponents",
-									"RawComponent(%3d): name=[%-80s] factory=[%-80s] bundle=[%s][%s]",
-									wRawCpnts.size(),
-									wComponentInfos.getName(),
-									wRawCpt.getFactory(),
-									wRawCpt.getBundle_name(),
-									wRawCpt.getBundle_version());
+					.logInfo(
+							this,
+							"instancaiateComponents",
+							"RawComponent(%3d): name=[%-80s] factory=[%-80s] bundle=[%s][%s]",
+							wRawCpnts.size(),
+							wComponentInfos.getName(),
+							wRawCpt.getFactory(),
+							wRawCpt.getBundle_name(),
+							wRawCpt.getBundle_version());
 				} else {
 					pIsolateLogger.logWarn(this, "instancaiateComponents",
 							"--- Component [%s] is already created!",
@@ -710,12 +711,12 @@ public class CCpntConponentsControler implements ServiceListener {
 			} else {
 
 				pIsolateLogger
-						.logDebug(
-								this,
-								"instancaiateComponents",
-								"--- Component [%s] explicitly in another Isolate => [%s]",
-								wComponentInfos.getName(),
-								wComponentInfos.getIsolateName());
+				.logDebug(
+						this,
+						"instancaiateComponents",
+						"--- Component [%s] explicitly in another Isolate => [%s]",
+						wComponentInfos.getName(),
+						wComponentInfos.getIsolateName());
 			}
 			// }
 		}
@@ -799,9 +800,9 @@ public class CCpntConponentsControler implements ServiceListener {
 	 *  logControlerState; #    - Factory=[IotPack-Aggregator-RestApi-CCpntSensors-Factory                                 ] available=[ true]  instance=[IotPack-Aggregator-RestApi-CCpntSensors-Factory_1092639615                      ]
 	 *  logControlerState; # ## Component=[IotPack-Aggregator-Core-Internal-CCpntSubSystemsRealm                           ]   created:[ true] timeStamp=[2017-11-18T18:07:15.0000275+0100] isInCurrentIsolate=[ true]
 	 *  logControlerState; #    - Factory=[IotPack-Aggregator-Core-Internal-CCpntSubSystemsRealm-Factory                   ] available=[ true]  instance=[IotPack-Aggregator-Core-Internal-CCpntSubSystemsRealm-Factory_99111414          ]
-	 * 
+	 *
 	 *  ...
-	 * 
+	 *
 	 *  logControlerState; # ## Component=[IotPack-Aggregator-RestApi-CCpntModules                                         ]   created:[ true] timeStamp=[2017-11-18T18:07:15.0000278+0100] isInCurrentIsolate=[ true]
 	 *  logControlerState; #    - Factory=[IotPack-Aggregator-RestApi-CCpntModules-Factory                                 ] available=[ true]  instance=[IotPack-Aggregator-RestApi-CCpntModules-Factory_393947289                       ]
 	 *  logControlerState; # ## Component=[IotPack-RawData-CCpntLoraUdpListenerLoggerFile                                  ]   created:[ true] timeStamp=[2017-11-18T18:07:15.0000278+0100] isInCurrentIsolate=[ true]
@@ -915,25 +916,25 @@ public class CCpntConponentsControler implements ServiceListener {
 				if (wObj instanceof String) {
 					wStrValue = (String) wObj;
 				} else
-				//
-				if (wObj instanceof String[]) {
-					wStrValue = CXStringUtils
-							.stringTableToString((String[]) wObj);
-				} else
-				//
-				if (wObj instanceof PropertyDescription[]) {
-					final StringBuilder wSB = new StringBuilder();
-					for (final PropertyDescription wPropertyDescription : ((PropertyDescription[]) wObj)) {
-						wSB.append(String.format("%s=\"%s\" ",
-								wPropertyDescription.getName(),
-								wPropertyDescription.getCurrentValue()));
-					}
-					wStrValue = wSB.toString();
-				} else
-				//
-				{
-					wStrValue = String.valueOf(wObj);
-				}
+					//
+					if (wObj instanceof String[]) {
+						wStrValue = CXStringUtils
+								.stringTableToString((String[]) wObj);
+					} else
+						//
+						if (wObj instanceof PropertyDescription[]) {
+							final StringBuilder wSB = new StringBuilder();
+							for (final PropertyDescription wPropertyDescription : ((PropertyDescription[]) wObj)) {
+								wSB.append(String.format("%s=\"%s\" ",
+										wPropertyDescription.getName(),
+										wPropertyDescription.getCurrentValue()));
+							}
+							wStrValue = wSB.toString();
+						} else
+							//
+						{
+							wStrValue = String.valueOf(wObj);
+						}
 				if (wStrValue.indexOf('\n') > 0) {
 					wStrValue = wStrValue.replace('\n', '§');
 				}
@@ -974,7 +975,7 @@ public class CCpntConponentsControler implements ServiceListener {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see
 	 * org.osgi.framework.ServiceListener#serviceChanged(org.osgi.framework.
 	 * ServiceEvent)
@@ -985,7 +986,7 @@ public class CCpntConponentsControler implements ServiceListener {
 		try {
 			@SuppressWarnings("unchecked")
 			final ServiceReference<Factory> wFactoryServiceRef = (ServiceReference<Factory>) aServiceEvent
-					.getServiceReference();
+			.getServiceReference();
 
 			switch (aServiceEvent.getType()) {
 			case ServiceEvent.REGISTERED: {
@@ -1033,17 +1034,17 @@ public class CCpntConponentsControler implements ServiceListener {
 					: null);
 
 			pIsolateLogger
-					.logInfo(
-							this,
-							"setFactoryServiceRefAvaibility",
-							"FactoryName=[%-80s] Registered=[%5s] FactoryServiceRef=[%s]",
-							wFactoryName,
-							wRegistered,
-							wRegistered ? wFactoryServiceRef.toString()
-									+ '_'
-									+ CXStringUtils.strAdjustRight(
-											wFactoryServiceRef.hashCode(), 5)
-									: null);
+			.logInfo(
+					this,
+					"setFactoryServiceRefAvaibility",
+					"FactoryName=[%-80s] Registered=[%5s] FactoryServiceRef=[%s]",
+					wFactoryName,
+					wRegistered,
+					wRegistered ? wFactoryServiceRef.toString()
+							+ '_'
+							+ CXStringUtils.strAdjustRight(
+									wFactoryServiceRef.hashCode(), 5)
+							: null);
 		}
 	}
 
@@ -1081,7 +1082,7 @@ public class CCpntConponentsControler implements ServiceListener {
 	 * <pre>
 	 * 2017/11/18; 20:11:30:998; INFO   ;          Timer-0; pntConponentsControler_5277;                  validate; Validating...
 	 * 2017/11/18; 20:11:30:998; INFO   ;          Timer-0; pntConponentsControler_5277;                  validate;
-	 * 
+	 *
 	 * --------------------------------------------------------------------------------------------------------------------------------------------
 	 * COHORTE Basic Runner for Eclipse :  Component Controler starting...
 	 * --------------------------------------------------------------------------------------------------------------------------------------------
@@ -1094,13 +1095,13 @@ public class CCpntConponentsControler implements ServiceListener {
 		pIsolateLogger.logInfo(this, "validate", "Validating...");
 
 		CXLoggerUtils
-				.logBanner(pIsolateLogger, Level.INFO, this, "validate", '-',
-						false,
-						"COHORTE Basic Runner for Eclipse : Component Controler starting...");
+		.logBanner(pIsolateLogger, Level.INFO, this, "validate", '-',
+				false,
+				"COHORTE Basic Runner for Eclipse : Component Controler starting...");
 
 		checkBasicRunnerProperties();
 
-		Level wCurrentLogLevel = pIsolateLogger.getLevel();
+		final Level wCurrentLogLevel = pIsolateLogger.getLevel();
 		pIsolateLogger.setLevel(getBasicRunnerLogLevel());
 
 		boolean wMustControlComponent = false;
@@ -1120,7 +1121,7 @@ public class CCpntConponentsControler implements ServiceListener {
 						"There is no component to control in this isolate!");
 				logControlerState(wMustControlComponent);
 			} else
-			// else, if there is at least one component to control
+				// else, if there is at least one component to control
 			{
 				// instal 'Factory' service listener
 				registerFactoryServiceListener();
@@ -1137,21 +1138,21 @@ public class CCpntConponentsControler implements ServiceListener {
 				if (isAllNeededFactoriesAvailable()) {
 
 					CXLoggerUtils
-							.logBanner(
-									pIsolateLogger,
-									Level.INFO,
-									this,
-									"validate",
-									'-',
-									false,
-									"COHORTE Basic Runner for Eclipse : All the needed factories are Available => proceed to the instantiation of the components.");
+					.logBanner(
+							pIsolateLogger,
+							Level.INFO,
+							this,
+							"validate",
+							'-',
+							false,
+							"COHORTE Basic Runner for Eclipse : All the needed factories are Available => proceed to the instantiation of the components.");
 
 					instancaiateComponents();
 				}
 
 				// All the needed factories are NOT available
 				else {
-					StringBuilder wText = new StringBuilder();
+					final StringBuilder wText = new StringBuilder();
 
 					wText.append("COHORTE Basic Runner for Eclipse :");
 					wText.append("\nAll the needed factories are NOT Available.");
@@ -1183,15 +1184,15 @@ public class CCpntConponentsControler implements ServiceListener {
 
 		}
 		pIsolateLogger
-				.logInfo(
-						this,
-						"validate",
-						"validated. InAction=[%b] isAllNeededFactoriesAvailable=[%b] CompositionFile=[%s] remainingFactories=[%s]",
-						wMustControlComponent,
-						isAllNeededFactoriesAvailable(),
-						pCompositionFile,
-						CXStringUtils
-								.stringListToString(getRemainingFactoriesList()));
+		.logInfo(
+				this,
+				"validate",
+				"validated. InAction=[%b] isAllNeededFactoriesAvailable=[%b] CompositionFile=[%s] remainingFactories=[%s]",
+				wMustControlComponent,
+				isAllNeededFactoriesAvailable(),
+				pCompositionFile,
+				CXStringUtils
+				.stringListToString(getRemainingFactoriesList()));
 
 	}
 }
