@@ -3,8 +3,8 @@ package org.cohorte.eclipse.runner.basic;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -27,11 +27,9 @@ import org.apache.felix.ipojo.annotations.Validate;
 import org.apache.felix.ipojo.architecture.PropertyDescription;
 import org.cohorte.composer.api.IIsolateComposer;
 import org.cohorte.composer.api.RawComponent;
-import org.cohorte.eclipse.runner.basic.jython.CPythonBridge;
-import org.cohorte.eclipse.runner.basic.jython.IFileFinder;
-import org.cohorte.eclipse.runner.basic.jython.IFileIncluder;
-import org.cohorte.eclipse.runner.basic.jython.IPythonBridge;
-import org.cohorte.eclipse.runner.basic.jython.IPythonFactory;
+import org.cohorte.utilities.json.provider.CJsonProvider;
+import org.cohorte.utilities.json.provider.CJsonRsrcResolver;
+import org.cohorte.utilities.json.provider.rsrc.CXRsrcMergeFileProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceEvent;
@@ -39,14 +37,16 @@ import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.psem2m.isolates.base.IIsolateLoggerSvc;
 import org.psem2m.isolates.services.dirs.IPlatformDirsSvc;
+import org.psem2m.utilities.CXBytesUtils;
 import org.psem2m.utilities.CXStringUtils;
-import org.psem2m.utilities.files.CXFile;
 import org.psem2m.utilities.files.CXFileDir;
 import org.psem2m.utilities.files.CXFileUtf8;
 import org.psem2m.utilities.json.JSONArray;
 import org.psem2m.utilities.json.JSONException;
 import org.psem2m.utilities.json.JSONObject;
 import org.psem2m.utilities.logging.CXLoggerUtils;
+import org.psem2m.utilities.rsrc.CXRsrcProvider;
+import org.psem2m.utilities.rsrc.CXRsrcProviderFile;
 
 /**
  * This components simulates the node contôler, it instanciates all the
@@ -111,6 +111,8 @@ public class CCpntConponentsControler implements ServiceListener {
 	static final String FMT_COMPOSITION_FILENAME = "composition%s.js";
 
 	static final String PROP_FACTORY_NAME = "factory.name";
+	public final String INCLUDE = "$include";
+	public final String MERGE = "$merge";
 
 	/**
 	 * <pre>
@@ -162,9 +164,7 @@ public class CCpntConponentsControler implements ServiceListener {
 	// the map factory name => factory infos
 	private final Map<String, CFactoryInfos> pFactoriesInfos = new TreeMap<>();
 
-	private IFileFinder pFinder;
 
-	private IFileIncluder pIncluder;
 
 	@Requires(filter = "(!(service.imported=*))")
 	// MOD_BD_20150811
@@ -176,7 +176,6 @@ public class CCpntConponentsControler implements ServiceListener {
 	@Requires
 	private IPlatformDirsSvc pPlatformDirsSvc;
 
-	IPythonBridge pPythonBridge;
 
 	@Requires
 	private CShutdownGogoCommand pShutDownCommand;
@@ -187,7 +186,6 @@ public class CCpntConponentsControler implements ServiceListener {
 	public CCpntConponentsControler(final BundleContext aBundleContext) {
 		super();
 		pBundleContext = aBundleContext;
-		pPythonBridge = CPythonBridge.getSingleton(pIsolateLogger, pPlatformDirsSvc);
 	}
 
 	/**
@@ -210,7 +208,6 @@ public class CCpntConponentsControler implements ServiceListener {
 	 * -Dorg.cohorte.eclipse.runner.basic.loglevel=INFO
 	 * -Dorg.cohorte.eclipse.runner.basic.service.filter=*iotpack*
 	 * -Dorg.cohorte.eclipse.runner.basic.composition.suffix=${COMPOSITION_SUFFIX}
-	 * -Djython.stdlib=${project_loc:org.cohorte.eclipse.runner.basic}/lib/Lib
 	 * </pre>
 	 */
 	private void checkBasicRunnerProperties() {
@@ -333,15 +330,19 @@ public class CCpntConponentsControler implements ServiceListener {
 	 * @throws FileNotFoundException
 	 */
 	private String getCompositionContent() {
-		if (pIncluder != null) {
-			final String wFileNameSuffix = pBundleContext
-					.getProperty(PROP_RUNNER_BASIC_COMPOSITION_FILENAME_SUFFIX);
-			final String wCompositionFileName = getCompositionFileName(wFileNameSuffix);
-			final Object wRes = pIncluder.get_content("conf"
-					+ File.separatorChar + wCompositionFileName, false);
+		try {
+			if (pJsonResolver != null) {
+				final String wFileNameSuffix = pBundleContext
+						.getProperty(PROP_RUNNER_BASIC_COMPOSITION_FILENAME_SUFFIX);
+				final String wCompositionFileName = getCompositionFileName(wFileNameSuffix);
 
-			pPythonBridge.remove(PYTHON_FACTORY);
-			return wRes.toString();
+				final JSONObject wRes = pJsonResolver.getJSONObject( wCompositionFileName);
+				pIsolateLogger.logInfo(this, "getCompositionContent", "composition=[%s]",wRes.toString(2));
+				System.out.println(String.format("getCompositionContent composition=[%s]",wRes.toString(2)));
+				return wRes.toString();
+			}
+		} catch (final Exception e) {
+			pIsolateLogger.logSevere(this, "getCompositionContent", "fail to resolve composition %s]",e);
 		}
 		return null;
 	}
@@ -534,61 +535,7 @@ public class CCpntConponentsControler implements ServiceListener {
 		return pCompositionFile != null;
 	}
 
-	/**
-	 * Use IPythonBridge provided by CCpntPythonBridge.
-	 *
-	 * Note : it's the CCpntPythonBridge componenent which deals with the
-	 * JytonLibs
-	 */
-	private void initJythonObject() {
-		try {
-			pIsolateLogger.logInfo(this, "initJythonObject", "Begin");
-			// create finder and includer python object to resolve the
-			// configuration
-			// file
-			// windows separator issue
-			final CXFile wCohorteHome = new CXFile(
-					pPlatformDirsSvc.getPlatformHome(),
-					IPlatformDirsSvc.DIRNAME_REPOSITORY);
 
-			final IPythonFactory wPythonFactory = pPythonBridge
-					.getPythonObjectFactory(PYTHON_FACTORY, Arrays
-							.asList(new String[] { wCohorteHome
-									.getAbsolutePath() }));
-
-			pFinder = (IFileFinder) wPythonFactory
-					.newInstance(IFileFinder.class);
-			pIsolateLogger.logInfo(this, "initJythonObject",
-					"init IFileFinder %s ", pFinder);
-
-			// set cohorte base and data to the finder
-
-			pIncluder = (IFileIncluder) wPythonFactory
-					.newInstance(IFileIncluder.class);
-			pIsolateLogger.logInfo(this, "initJythonObject",
-					"init IFileIncluder : %s", pIncluder);
-			final String wCohorteDev = System
-					.getProperty(PROP_RUNNER_BASIC_COHORTE_DEV);
-			if (wCohorteDev != null) {
-				// set the roots for the finder and add cohorte-dev
-				pFinder._set_roots(Arrays.asList(new String[] { wCohorteDev,
-						pPlatformDirsSvc.getNodeDataDir().getAbsolutePath(),
-						pPlatformDirsSvc.getPlatformBase().getAbsolutePath() }));
-			} else {
-				pFinder._set_roots(Arrays.asList(new String[] {
-						pPlatformDirsSvc.getNodeDataDir().getAbsolutePath(),
-						pPlatformDirsSvc.getPlatformBase().getAbsolutePath() }));
-			}
-
-			pIncluder.set_finder(pFinder);
-
-		} catch (final Exception e) {
-			e.printStackTrace();
-
-			pIsolateLogger.logSevere(this, "initJythonObject",
-					"can't init Jython object %s", e);
-		}
-	}
 
 	/**
 	 * initialize the content of the "pFactoriesInfos" and "pComponentInfos"
@@ -1078,6 +1025,7 @@ public class CCpntConponentsControler implements ServiceListener {
 				"UnRegistered=[%b] FactoryServiceListener=[%s]", true, this);
 	}
 
+	CJsonProvider pJsonResolver = null;
 	/**
 	 * <pre>
 	 * 2017/11/18; 20:11:30:998; INFO   ;          Timer-0; pntConponentsControler_5277;                  validate; Validating...
@@ -1107,9 +1055,57 @@ public class CCpntConponentsControler implements ServiceListener {
 		boolean wMustControlComponent = false;
 
 		try {
-			// init jython object to get composition
-			initJythonObject();
+			final CJsonRsrcResolver wResolver = new CJsonRsrcResolver();
 
+			// cohorte home $include
+			final CXRsrcProvider wCompositionProviderHome = new CXRsrcProviderFile(
+					new CXFileDir(pPlatformDirsSvc.getPlatformHome().getAbsolutePath()+File.separatorChar+"conf"),
+					Charset.forName(CXBytesUtils.ENCODING_UTF_8));
+
+			// cohorte base $include
+			final CXRsrcProvider wCompositionProviderBase = new CXRsrcProviderFile(
+					new CXFileDir(pPlatformDirsSvc.getPlatformBase().getAbsolutePath()+File.separatorChar+"conf"),
+					Charset.forName(CXBytesUtils.ENCODING_UTF_8));
+
+			// cohorte home $merge
+			final CXRsrcProvider wCompositionProviderMergeHome = new CXRsrcMergeFileProvider(
+					new CXFileDir(pPlatformDirsSvc.getPlatformHome().getAbsolutePath()+File.separatorChar+"conf"),
+					Charset.forName(CXBytesUtils.ENCODING_UTF_8));
+
+			// cohorte base $merge
+			final CXRsrcProvider wCompositionProviderMergeBase = new CXRsrcMergeFileProvider(
+					new CXFileDir(pPlatformDirsSvc.getPlatformBase().getAbsolutePath()+File.separatorChar+"conf"),
+					Charset.forName(CXBytesUtils.ENCODING_UTF_8));
+
+
+			final String wCohorteDev = System
+					.getProperty(PROP_RUNNER_BASIC_COHORTE_DEV);
+			if (wCohorteDev != null) {
+				// set the roots for the finder and add cohorte-dev
+				final CXRsrcProvider wCompositionProviderMergeDevBase = new CXRsrcMergeFileProvider(
+						new CXFileDir(wCohorteDev+File.separatorChar+"conf"),
+						Charset.forName(CXBytesUtils.ENCODING_UTF_8));
+				// cohorte base $include
+				final CXRsrcProvider wCompositionProviderDevBase = new CXRsrcProviderFile(
+						new CXFileDir(wCohorteDev+File.separatorChar+"conf"),
+						Charset.forName(CXBytesUtils.ENCODING_UTF_8));
+				wResolver.addRsrcProvider(INCLUDE, wCompositionProviderDevBase);
+
+				wResolver.addRsrcProvider(MERGE, wCompositionProviderMergeDevBase);
+
+			}
+			// add model dev in order to be resolved
+
+			wResolver.addRsrcProvider(INCLUDE, wCompositionProviderBase);
+			// add model dev in order to be resolved
+			wResolver.addRsrcProvider(INCLUDE, wCompositionProviderHome);
+
+
+			wResolver.addRsrcProvider(MERGE, wCompositionProviderMergeBase);
+			// add model dev in order to be resolved
+			wResolver.addRsrcProvider(MERGE, wCompositionProviderMergeHome);
+			pJsonResolver = new CJsonProvider(wResolver, pIsolateLogger,
+					true);
 			// itialize the component info map
 			initMaps();
 

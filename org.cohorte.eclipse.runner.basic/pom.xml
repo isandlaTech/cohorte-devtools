@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.cohorte.eclipse</groupId>
 	<artifactId>org.cohorte.eclipse.runner.basic</artifactId>
-	<version>1.1.1</version>   <!-- ATTENSION : doit être le même que celui du MANIFEST -->
+	<version>1.1.2</version>   <!-- ATTENSION : doit être le même que celui du MANIFEST -->
 
 	<packaging>eclipse-plugin</packaging>
 	
