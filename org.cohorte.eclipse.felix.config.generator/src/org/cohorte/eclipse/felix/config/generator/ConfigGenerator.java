@@ -352,7 +352,7 @@ public class ConfigGenerator extends AbstractMojo {
 
 	private void createJvmShell(Document aLauncherEclipseDom)
 			throws MojoExecutionException, IOException, SAXException, ParserConfigurationException {
-		final String wShellFormat = "java %s -Dfelix.config.properties=file:/%s -Dfile.encoding=UTF-8 -jar %s bundle-cache -consoleLog -console";
+		final String wShellFormat = "#!/bin/sh\njava %s -Dfelix.config.properties=file:/%s -Dfile.encoding=UTF-8 -jar %s bundle-cache -consoleLog -console";
 		final String wVmArgument = getVMParameter(aLauncherEclipseDom);
 		final String wShell = String.format(wShellFormat, wVmArgument, shellFelixConfigFilePath, shellFelixJarFilePath);
 		getLog().info(String.format("shell launch jvm =[%s]", wShell));
