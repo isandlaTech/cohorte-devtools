@@ -48,32 +48,33 @@ public class ConfigGenerator extends AbstractMojo {
 	@Parameter(defaultValue = "${project}", required = true, readonly = true)
 	MavenProject project;
 
-	@Parameter(property = "scope")
-	String pScope;
 	// base new config file on this config file
 	@Parameter(property = "base.felix.config.file.path")
-	String pSourceConfigFile;
+	String sourceConfigFile;
 
 	@Parameter(property = "launch.eclipse.file.path")
-	String pLaunchEclipseFile;
+	String launchEclipseFile;
 
 	@Parameter(property = "shell.felix.jar.file.path")
-	String pShellFelixJarFilePath;
+	String shellFelixJarFilePath;
 
 	@Parameter(property = "shell.felix.config.file.path")
-	String pShellFelixConfigFilePath;
+	String shellFelixConfigFilePath;
 
 	@Parameter(property = "felix.cache.rootdir")
-	String pFelixCacheRootDir;
+	String felixCacheRootDir;
 
-	@Parameter(property = "shell.vmargument")
-	String pOverrideShellArgument;
+	@Parameter(property = "shell.vmarguments")
+	String overrideShellArgument;
+
+	@Parameter(property = "shell.vmarguments.file.path")
+	String overrideShellArgumentFilePath;
 
 	@Parameter(property = "target.shell.file.path")
-	String pTargetLaunchJvmFile;
+	String targetLaunchJvmFile;
 
 	@Parameter(property = "target.config.file.path")
-	String pPathTargerConfigFile;
+	String pathTargerConfigFile;
 
 	// can express multiple folder with ";" separator. the property express also
 	// pair of path in local disk and path in target disk for config
@@ -178,7 +179,7 @@ public class ConfigGenerator extends AbstractMojo {
 							getLog().info(String.format("add dir target=[%s]!", wPathTargetDir));
 							analyseDir(wDir);
 
-							wDirsBundleLocation.put(wPathLocalDir, wPathTargetDir);
+							wDirsBundleLocation.put(wDir.getAbsolutePath(), wPathTargetDir);
 						}
 					}
 
@@ -193,7 +194,7 @@ public class ConfigGenerator extends AbstractMojo {
 						getLog().info(String.format("add dir target=[%s]!", wPathTargetDir));
 						analyseDir(wDir);
 
-						wDirsBundleLocation.put(wPathLocalDir, wPathTargetDir);
+						wDirsBundleLocation.put(wDir.getAbsolutePath(), wPathTargetDir);
 					}
 				}
 			}
@@ -240,19 +241,45 @@ public class ConfigGenerator extends AbstractMojo {
 		}
 		String wVmArgUsableInShell = "";
 		final String[] wLines = wVmArgument.split("\n");
-		final List<String> wOverrideShellArgument = Arrays.asList(pOverrideShellArgument.split("\n"));
 		final Map<String, String> wMapOverrideArgument = new HashMap<>();
-		for (final String wOverrideArg : wOverrideShellArgument) {
-			if (wOverrideArg.contains("=")) {
-				String wArgumentKey = wOverrideArg.split("=")[0];
-				if (wArgumentKey.startsWith("-D")) {
-					wArgumentKey = wArgumentKey.substring(2);
-				}
-				wMapOverrideArgument.put(wArgumentKey, wOverrideArg.split("=")[1]);
+		if (overrideShellArgumentFilePath != null) {
+			getLog().debug(String.format("file override argument vm %s", overrideShellArgumentFilePath));
+			final CXFileUtf8 wFileContentOverrideVmArg = new CXFileUtf8(overrideShellArgumentFilePath);
+			if (wFileContentOverrideVmArg.exists()) {
+
+				overrideShellArgument = wFileContentOverrideVmArg.readAll();
+				getLog().debug(String.format("content file override argument vm %s", overrideShellArgument));
+
 			}
+		} else {
+			getLog().debug(String.format("no file override argument vm %s", overrideShellArgumentFilePath));
 
 		}
+		if (overrideShellArgument != null) {
+			final List<String> wOverrideShellArgument = Arrays.asList(overrideShellArgument.split("\n"));
 
+			for (final String wOverrideArg : wOverrideShellArgument) {
+				if (wOverrideArg.contains("=")) {
+					final String[] wSplit = wOverrideArg.split("=");
+					String wArgumentKey = wSplit[0];
+					getLog().debug(String.format("argument override  key %s", wArgumentKey));
+					wArgumentKey = wArgumentKey.replaceAll(" ", "").replaceAll("\t", "");
+					if (wArgumentKey.startsWith("-D")) {
+						wArgumentKey = wArgumentKey.substring(2);
+					}
+					if (wSplit.length > 1) {
+						wMapOverrideArgument.put(wArgumentKey, wSplit[1]);
+					} else {
+						wMapOverrideArgument.put(wArgumentKey, "");
+
+					}
+				}
+
+			}
+		} else {
+			getLog().debug(String.format("no override argumet"));
+
+		}
 		for (final String wLine : wLines) {
 			if (wLine.trim().length() > 0) {
 				String wArgumentKey = null;
@@ -264,8 +291,12 @@ public class ConfigGenerator extends AbstractMojo {
 					}
 				}
 				if (wArgumentKey != null) {
+					getLog().debug(String.format("argument key %s", wArgumentKey));
+
 					if (wMapOverrideArgument.keySet().contains(wArgumentKey)) {
-						wVmArgUsableInShell += "\t -D" + wArgumentKey + "=" + wMapOverrideArgument.get(wArgumentKey)
+						// wVmArgUsableInShell += "# override launch eclipse vm argument by maven
+						// task\n";
+						wVmArgUsableInShell += "\t-D" + wArgumentKey + "=" + wMapOverrideArgument.get(wArgumentKey)
 								+ " \\\n";
 					} else {
 						wVmArgUsableInShell += "\t" + wLine + " \\\n";
@@ -321,13 +352,13 @@ public class ConfigGenerator extends AbstractMojo {
 
 	private void createJvmShell(Document aLauncherEclipseDom)
 			throws MojoExecutionException, IOException, SAXException, ParserConfigurationException {
-		final String wShellFormat = "java %s -Dfelix.config.properties=%s -Dfile.encoding=UTF-8 -jar %s bundle-cache -consoleLog -console";
+		final String wShellFormat = "java %s -Dfelix.config.properties=file:/%s -Dfile.encoding=UTF-8 -jar %s bundle-cache -consoleLog -console";
 		final String wVmArgument = getVMParameter(aLauncherEclipseDom);
-		final String wShell = String.format(wShellFormat, wVmArgument, pShellFelixConfigFilePath,
-				pShellFelixJarFilePath);
+		final String wShell = String.format(wShellFormat, wVmArgument, shellFelixConfigFilePath, shellFelixJarFilePath);
 		getLog().info(String.format("shell launch jvm =[%s]", wShell));
-		if (pTargetLaunchJvmFile != null) {
-			final CXFileUtf8 wShellFile = new CXFileUtf8(pTargetLaunchJvmFile);
+		if (targetLaunchJvmFile != null) {
+			final CXFileUtf8 wShellFile = new CXFileUtf8(targetLaunchJvmFile);
+			wShellFile.getParentDirectory().mkdirs();
 			wShellFile.writeAll(wShell);
 		}
 	}
@@ -342,7 +373,7 @@ public class ConfigGenerator extends AbstractMojo {
 		pProperties.put("org.osgi.framework.storage", "bundle-cache");
 		pProperties.put("org.osgi.framework.startlevel.beginning", 4);
 		pProperties.put("felix.cache.rootdir",
-				pFelixCacheRootDir != null ? pFelixCacheRootDir : "/opt/node/felix/rootdir");
+				felixCacheRootDir != null ? felixCacheRootDir : "/opt/node/felix/rootdir");
 
 		if (aFileBaseConfigTest != null && aFileBaseConfigTest.exists()) {
 			//
@@ -358,6 +389,8 @@ public class ConfigGenerator extends AbstractMojo {
 		if (wListBundles == null) {
 			wListBundles = "";
 		}
+		// wListBundles += "# add bundle from launch configuration \n";
+
 		for (final String wSymbolicBundleToAdd : wListSymbolicBundleName) {
 
 			if (pMapSymbolicNameToJarPath.containsKey(wSymbolicBundleToAdd)) {
@@ -378,10 +411,12 @@ public class ConfigGenerator extends AbstractMojo {
 		pProperties.put("felix.auto.start.4", wListBundles);
 
 		getLog().debug(String.format("properties file content=[%s]", pProperties.toString()));
-		if (pPathTargerConfigFile != null) {
-			final CXFileUtf8 pFileTargerConfigFile = new CXFileUtf8(pPathTargerConfigFile);
+		if (pathTargerConfigFile != null) {
+			final CXFileUtf8 pFileTargerConfigFile = new CXFileUtf8(pathTargerConfigFile);
+			pFileTargerConfigFile.getParentDirectory().mkdirs();
+			pFileTargerConfigFile.openWrite();
 			for (final Object wKey : pProperties.keySet()) {
-				pFileTargerConfigFile.write(wKey.toString() + "=" + pProperties.getProperty(wKey.toString()));
+				pFileTargerConfigFile.write(wKey.toString() + "=" + pProperties.getProperty(wKey.toString()) + "\n");
 
 			}
 			pFileTargerConfigFile.close();
@@ -393,9 +428,9 @@ public class ConfigGenerator extends AbstractMojo {
 		// TODO Auto-generated method stub
 		getLog().info("execute ");
 
-		if (pLaunchEclipseFile != null) {
-			final File wFileLaunchConfig = new File(pLaunchEclipseFile);
-			final File wFileBaseConfig = pSourceConfigFile != null ? new File(pSourceConfigFile) : null;
+		if (launchEclipseFile != null) {
+			final File wFileLaunchConfig = new File(launchEclipseFile);
+			final File wFileBaseConfig = sourceConfigFile != null ? new File(sourceConfigFile) : null;
 			if (pPathBundleTarget != null) {
 
 				if (!wFileLaunchConfig.exists()) {
@@ -407,7 +442,7 @@ public class ConfigGenerator extends AbstractMojo {
 
 						getLog().info(String.format("launch file=[%s]!", wFileLaunchConfig.getAbsolutePath()));
 						getLog().info(String.format("path directories jar=[%s]!", pPathBundleTarget));
-						final Document wLauncherEclipseDom = getDocumentFromLauncherFile(pLaunchEclipseFile);
+						final Document wLauncherEclipseDom = getDocumentFromLauncherFile(launchEclipseFile);
 						createConfigFelixFile(wFileBaseConfig, wLauncherEclipseDom);
 						createJvmShell(wLauncherEclipseDom);
 					} catch (final Exception e) {
@@ -422,7 +457,7 @@ public class ConfigGenerator extends AbstractMojo {
 
 			}
 		} else {
-			getLog().info(String.format("no launch file !"));
+			getLog().info(String.format("no launch file %s!", launchEclipseFile));
 
 		}
 	}
