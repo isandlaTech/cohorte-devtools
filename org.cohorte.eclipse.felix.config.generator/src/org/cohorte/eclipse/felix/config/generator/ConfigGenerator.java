@@ -20,6 +20,10 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -28,6 +32,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.psem2m.utilities.CXException;
+import org.psem2m.utilities.files.CXFile;
 import org.psem2m.utilities.files.CXFileDir;
 import org.psem2m.utilities.files.CXFileUtf8;
 import org.w3c.dom.Document;
@@ -366,26 +371,36 @@ public class ConfigGenerator extends AbstractMojo {
 		}
 	}
 
-	private void createConfigFelixFile(File aFileBaseConfigTest, Document aLauncherEclipseDom)
+	private void createConfigFelixFile(String aFileBaseConfifPath, Document aLauncherEclipseDom)
 			throws MojoExecutionException, IOException, SAXException, ParserConfigurationException {
 
 		final Map<String, String> wDirsBundleLocation = analyseDirectory(pPathBundleTarget);
 
-		// set default value for properties if no base
-		pProperties.put("org.osgi.framework.storage.clean", "none");
-		pProperties.put("org.osgi.framework.storage", "bundle-cache");
-		pProperties.put("org.osgi.framework.startlevel.beginning", "4");
-		pProperties.put("felix.cache.rootdir",
-				felixCacheRootDir != null ? felixCacheRootDir : "/opt/node/felix/rootdir");
+		if (aFileBaseConfifPath != null) {
+			// load property from file
+			if (aFileBaseConfifPath.startsWith("http://") || aFileBaseConfifPath.startsWith("https://")) {
+				// get content by using http
+				final HttpGet wGet = new HttpGet(aFileBaseConfifPath);
+				final CloseableHttpClient wClient = HttpClientBuilder.create().build();
+				final HttpResponse wResponse = wClient.execute(wGet);
+				pProperties.load(wResponse.getEntity().getContent());
+			} else {
+				final CXFile wFileBaseProperty = new CXFile(aFileBaseConfifPath);
+				if (wFileBaseProperty.exists()) {
+					pProperties.load(wFileBaseProperty.getInputStream());
+				}
 
-		if (aFileBaseConfigTest != null && aFileBaseConfigTest.exists()) {
-			//
+			}
 
-			final CXFileUtf8 wFileBaseConfig = new CXFileUtf8(aFileBaseConfigTest);
-			getLog().info(String.format("base config=[%s]!", wFileBaseConfig.getAbsolutePath()));
-
-			pProperties.load(wFileBaseConfig.getInputStream());
+		} else {
+			// set default value for properties if no base
+			pProperties.put("org.osgi.framework.storage.clean", "none");
+			pProperties.put("org.osgi.framework.storage", "bundle-cache");
+			pProperties.put("org.osgi.framework.startlevel.beginning", "4");
+			pProperties.put("felix.cache.rootdir",
+					felixCacheRootDir != null ? felixCacheRootDir : "/opt/node/felix/rootdir");
 		}
+
 		final List<String> wListSymbolicBundleName = getListSymbolicBundleNameToAdd(aLauncherEclipseDom);
 		final List<String> wTreatedSymbolicNames = new ArrayList<>();
 		wTreatedSymbolicNames.addAll(wListSymbolicBundleName);
