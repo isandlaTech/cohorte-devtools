@@ -145,10 +145,13 @@ public class ConfigGenerator extends AbstractMojo {
 			if (wFile.endsWith(".jar")) {
 				// check if it's a bundle
 				final String wFullFilePath = aDir.getAbsolutePath() + File.separatorChar + wFile;
-				final String wSymbolicBundleName = getBundleSymbolicNameFromJar(wFullFilePath);
+				String wSymbolicBundleName = getBundleSymbolicNameFromJar(wFullFilePath);
 				if (wSymbolicBundleName != null) {
-					getLog().debug(
-							String.format("symbolicName=[%s], path jar=[%s]", wSymbolicBundleName, wFullFilePath));
+					if (wSymbolicBundleName.contains(";")) {
+						wSymbolicBundleName = wSymbolicBundleName.split(";")[0];
+					}
+					getLog().debug(String.format("===>symbolicName=[%s] \n, path jar=[%s]", wSymbolicBundleName,
+							wFullFilePath));
 
 					pMapSymbolicNameToJarPath.put(wSymbolicBundleName, wFullFilePath);
 				}
@@ -371,7 +374,7 @@ public class ConfigGenerator extends AbstractMojo {
 		// set default value for properties if no base
 		pProperties.put("org.osgi.framework.storage.clean", "none");
 		pProperties.put("org.osgi.framework.storage", "bundle-cache");
-		pProperties.put("org.osgi.framework.startlevel.beginning", 4);
+		pProperties.put("org.osgi.framework.startlevel.beginning", "4");
 		pProperties.put("felix.cache.rootdir",
 				felixCacheRootDir != null ? felixCacheRootDir : "/opt/node/felix/rootdir");
 
@@ -384,6 +387,10 @@ public class ConfigGenerator extends AbstractMojo {
 			pProperties.load(wFileBaseConfig.getInputStream());
 		}
 		final List<String> wListSymbolicBundleName = getListSymbolicBundleNameToAdd(aLauncherEclipseDom);
+		final List<String> wTreatedSymbolicNames = new ArrayList<>();
+		wTreatedSymbolicNames.addAll(wListSymbolicBundleName);
+
+		// add felix framework that is not checked in eclipse configuration
 		// get bundle property to add the new one
 		String wListBundles = pProperties.getProperty("felix.auto.start.4");
 		if (wListBundles == null) {
@@ -401,7 +408,13 @@ public class ConfigGenerator extends AbstractMojo {
 				getLog().info(String.format("add bundle=[%s]!", wAddBundle));
 				// todo replace path by new location
 				wListBundles += wAddBundle;
+				wTreatedSymbolicNames.remove(wSymbolicBundleToAdd);
 			}
+		}
+		if (wTreatedSymbolicNames.size() > 0) {
+			getLog().error("symbolicName no treated " + wTreatedSymbolicNames);
+			throw new MojoExecutionException("symbolicName no treated " + wTreatedSymbolicNames);
+
 		}
 		// reploace all localDir by target dir
 		for (final String wLocalDir : wDirsBundleLocation.keySet()) {
