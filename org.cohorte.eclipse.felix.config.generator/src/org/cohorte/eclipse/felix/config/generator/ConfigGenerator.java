@@ -458,7 +458,6 @@ public class ConfigGenerator extends AbstractMojo {
 
 		if (launchEclipseFile != null) {
 			final File wFileLaunchConfig = new File(launchEclipseFile);
-			final File wFileBaseConfig = sourceConfigFile != null ? new File(sourceConfigFile) : null;
 			if (pPathBundleTarget != null) {
 
 				if (!wFileLaunchConfig.exists()) {
@@ -471,7 +470,7 @@ public class ConfigGenerator extends AbstractMojo {
 						getLog().info(String.format("launch file=[%s]!", wFileLaunchConfig.getAbsolutePath()));
 						getLog().info(String.format("path directories jar=[%s]!", pPathBundleTarget));
 						final Document wLauncherEclipseDom = getDocumentFromLauncherFile(launchEclipseFile);
-						createConfigFelixFile(wFileBaseConfig, wLauncherEclipseDom);
+						createConfigFelixFile(sourceConfigFile, wLauncherEclipseDom);
 						createJvmShell(wLauncherEclipseDom);
 					} catch (final Exception e) {
 						getLog().error(String.format("fail to parse xml file %s error=[%s]!",
