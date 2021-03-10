@@ -174,7 +174,10 @@ public class ConfigGenerator extends AbstractMojo {
 		final Map<String, String> wDirsBundleLocation = new HashMap<>();
 
 		try {
+
 			final String wPathBundle = aPathBundleTarget.replaceAll("\n", "").replaceAll("\t", "").replaceAll(" ", "");
+			getLog().info(String.format("analyseDirectory dir=[%s]!", wPathBundle));
+
 			if (wPathBundle.contains(";")) {
 				for (final String wPathPair : wPathBundle.split(";")) {
 					if (wPathPair.contains(":")) {
