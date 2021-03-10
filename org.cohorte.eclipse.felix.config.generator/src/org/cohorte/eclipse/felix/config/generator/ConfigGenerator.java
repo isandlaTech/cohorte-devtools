@@ -180,9 +180,9 @@ public class ConfigGenerator extends AbstractMojo {
 
 			if (wPathBundle.contains(";")) {
 				for (final String wPathPair : wPathBundle.split(";")) {
-					if (wPathPair.contains("=")) {
-						final String wPathLocalDir = wPathPair.split("=")[0];
-						final String wPathTargetDir = wPathPair.split("=")[1];
+					if (wPathPair.contains(",")) {
+						final String wPathLocalDir = wPathPair.split(",")[0];
+						final String wPathTargetDir = wPathPair.split(",")[1];
 
 						final CXFileDir wDir = new CXFileDir(wPathLocalDir);
 						if (wDir.isDirectory() && wDir.exists()) {
@@ -196,9 +196,9 @@ public class ConfigGenerator extends AbstractMojo {
 
 				}
 			} else {
-				if (wPathBundle.contains("=")) {
-					final String wPathLocalDir = wPathBundle.split("=")[0];
-					final String wPathTargetDir = wPathBundle.split("=")[1];
+				if (wPathBundle.contains(",")) {
+					final String wPathLocalDir = wPathBundle.split(",")[0];
+					final String wPathTargetDir = wPathBundle.split(",")[1];
 					final CXFileDir wDir = new CXFileDir(wPathLocalDir);
 					if (wDir.isDirectory() && wDir.exists()) {
 						getLog().info(String.format("add dir local=[%s]!", wPathLocalDir));
