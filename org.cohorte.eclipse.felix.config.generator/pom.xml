@@ -7,8 +7,6 @@
 	<groupId>org.cohorte.eclipse</groupId>
 	<artifactId>org.cohorte.eclipse.felix.config.generator</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-
-
 	<packaging>maven-plugin</packaging>
 
 	<name>counter-maven-plugin Maven Mojo</name>
@@ -19,6 +17,12 @@
 		<maven.compiler.source>1.8</maven.compiler.source>
 	</properties>
 	<dependencies>
+		<!-- https://mvnrepository.com/artifact/org.apache.httpcomponents/httpclient -->
+		<dependency>
+		    <groupId>org.apache.httpcomponents</groupId>
+		    <artifactId>httpclient</artifactId>
+		    <version>4.5.13</version>
+		</dependency>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
 			<artifactId>maven-plugin-api</artifactId>
