@@ -383,10 +383,13 @@ public class ConfigGenerator extends AbstractMojo {
 			// load property from file
 			if (aFileBaseConfifPath.startsWith("http://") || aFileBaseConfifPath.startsWith("https://")) {
 				// get content by using http
+
 				final HttpGet wGet = new HttpGet(aFileBaseConfifPath);
 				final CloseableHttpClient wClient = HttpClientBuilder.create().build();
 				final HttpResponse wResponse = wClient.execute(wGet);
 				pProperties.load(wResponse.getEntity().getContent());
+				getLog().info(String.format("base config=[%s]!", pProperties));
+
 			} else {
 				final CXFile wFileBaseProperty = new CXFile(aFileBaseConfifPath);
 				if (wFileBaseProperty.exists()) {
@@ -422,7 +425,9 @@ public class ConfigGenerator extends AbstractMojo {
 				if (wListBundles.length() > 0) {
 					wListBundles += " \\\n";
 				}
-				final String wAddBundle = "file:\\" + pMapSymbolicNameToJarPath.get(wSymbolicBundleToAdd);
+				final String wAddBundle = "file:\\"
+						+ pMapSymbolicNameToJarPath.get(wSymbolicBundleToAdd).replace("\\", "/");
+				;
 				getLog().info(String.format("add bundle=[%s]!", wAddBundle));
 				// todo replace path by new location
 				wListBundles += wAddBundle;
@@ -443,6 +448,8 @@ public class ConfigGenerator extends AbstractMojo {
 
 		getLog().debug(String.format("properties file content=[%s]", pProperties.toString()));
 		if (pathTargerConfigFile != null) {
+			getLog().debug(String.format("save property file =[%s]", pathTargerConfigFile));
+
 			final CXFileUtf8 pFileTargerConfigFile = new CXFileUtf8(pathTargerConfigFile);
 			pFileTargerConfigFile.getParentDirectory().mkdirs();
 			pFileTargerConfigFile.openWrite();
