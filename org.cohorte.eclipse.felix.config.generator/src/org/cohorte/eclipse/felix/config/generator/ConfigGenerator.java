@@ -436,7 +436,7 @@ public class ConfigGenerator extends AbstractMojo {
 		}
 		// reploace all localDir by target dir
 		for (final String wLocalDir : wDirsBundleLocation.keySet()) {
-			wListBundles = wListBundles.replaceAll(wLocalDir, wDirsBundleLocation.get(wLocalDir));
+			wListBundles = wListBundles.replace(wLocalDir, wDirsBundleLocation.get(wLocalDir));
 		}
 		getLog().info(String.format("felix.auto.start.4=[%s]!", wListBundles));
 		pProperties.put("felix.auto.start.4", wListBundles);
