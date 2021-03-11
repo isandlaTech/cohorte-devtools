@@ -190,7 +190,8 @@ public class ConfigGenerator extends AbstractMojo {
 							getLog().info(String.format("add dir target=[%s]!", wPathTargetDir));
 							analyseDir(wDir);
 
-							wDirsBundleLocation.put(wDir.getAbsolutePath(), wPathTargetDir);
+							wDirsBundleLocation.put(wDir.getAbsolutePath().replace("\\", "/"),
+									wPathTargetDir.replace("\\", "/"));
 						}
 					}
 
@@ -205,7 +206,7 @@ public class ConfigGenerator extends AbstractMojo {
 						getLog().info(String.format("add dir target=[%s]!", wPathTargetDir));
 						analyseDir(wDir);
 
-						wDirsBundleLocation.put(wDir.getAbsolutePath(), wPathTargetDir);
+						wDirsBundleLocation.put(wDir.getAbsolutePath().replace("\\", "/"), wPathTargetDir);
 					}
 				}
 			}
@@ -425,8 +426,7 @@ public class ConfigGenerator extends AbstractMojo {
 				if (wListBundles.length() > 0) {
 					wListBundles += " \\\n";
 				}
-				final String wAddBundle = "file:\\"
-						+ pMapSymbolicNameToJarPath.get(wSymbolicBundleToAdd).replace("\\", "/");
+				final String wAddBundle = "file:\\" + pMapSymbolicNameToJarPath.get(wSymbolicBundleToAdd);
 				;
 				getLog().info(String.format("add bundle=[%s]!", wAddBundle));
 				// todo replace path by new location
