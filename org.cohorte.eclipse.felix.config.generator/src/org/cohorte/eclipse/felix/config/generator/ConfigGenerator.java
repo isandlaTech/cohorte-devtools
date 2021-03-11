@@ -158,7 +158,7 @@ public class ConfigGenerator extends AbstractMojo {
 					getLog().debug(String.format("===>symbolicName=[%s] \n, path jar=[%s]", wSymbolicBundleName,
 							wFullFilePath));
 
-					pMapSymbolicNameToJarPath.put(wSymbolicBundleName, wFullFilePath);
+					pMapSymbolicNameToJarPath.put(wSymbolicBundleName, wFullFilePath.replace("\\", "/"));
 				}
 			} else {
 				final CXFileDir wSubDir = new CXFileDir(aDir, wFile);
