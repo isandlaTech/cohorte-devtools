@@ -1055,27 +1055,27 @@ public class CCpntConponentsControler implements ServiceListener {
 		boolean wMustControlComponent = false;
 
 		try {
-			final CJsonRsrcResolver wResolver = new CJsonRsrcResolver();
+			final CJsonRsrcResolver wResolver = new CJsonRsrcResolver(pIsolateLogger);
 
 			// cohorte home $include
 			final CXRsrcProvider wCompositionProviderHome = new CXRsrcProviderFile(
 					new CXFileDir(pPlatformDirsSvc.getPlatformHome().getAbsolutePath()+File.separatorChar+"conf"),
-					Charset.forName(CXBytesUtils.ENCODING_UTF_8));
+					Charset.forName(CXBytesUtils.ENCODING_UTF_8),pIsolateLogger);
 
 			// cohorte base $include
 			final CXRsrcProvider wCompositionProviderBase = new CXRsrcProviderFile(
 					new CXFileDir(pPlatformDirsSvc.getPlatformBase().getAbsolutePath()+File.separatorChar+"conf"),
-					Charset.forName(CXBytesUtils.ENCODING_UTF_8));
+					Charset.forName(CXBytesUtils.ENCODING_UTF_8),pIsolateLogger);
 
 			// cohorte home $merge
 			final CXRsrcProvider wCompositionProviderMergeHome = new CXRsrcMergeFileProvider(
 					new CXFileDir(pPlatformDirsSvc.getPlatformHome().getAbsolutePath()+File.separatorChar+"conf"),
-					Charset.forName(CXBytesUtils.ENCODING_UTF_8));
+					Charset.forName(CXBytesUtils.ENCODING_UTF_8),pIsolateLogger);
 
 			// cohorte base $merge
 			final CXRsrcProvider wCompositionProviderMergeBase = new CXRsrcMergeFileProvider(
 					new CXFileDir(pPlatformDirsSvc.getPlatformBase().getAbsolutePath()+File.separatorChar+"conf"),
-					Charset.forName(CXBytesUtils.ENCODING_UTF_8));
+					Charset.forName(CXBytesUtils.ENCODING_UTF_8),pIsolateLogger);
 
 
 			final String wCohorteDev = System
@@ -1104,6 +1104,7 @@ public class CCpntConponentsControler implements ServiceListener {
 			wResolver.addRsrcProvider(MERGE, wCompositionProviderMergeBase);
 			// add model dev in order to be resolved
 			wResolver.addRsrcProvider(MERGE, wCompositionProviderMergeHome);
+
 			pJsonResolver = new CJsonProvider(wResolver, pIsolateLogger,
 					true);
 			// itialize the component info map
