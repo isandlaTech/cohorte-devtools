@@ -19,9 +19,9 @@
 	<dependencies>
 		<!-- https://mvnrepository.com/artifact/org.apache.httpcomponents/httpclient -->
 		<dependency>
-		    <groupId>org.apache.httpcomponents</groupId>
-		    <artifactId>httpclient</artifactId>
-		    <version>4.5.13</version>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.5.13</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
@@ -63,7 +63,62 @@
 			</plugin>
 		</plugins>
 	</build>
-		
+	<repositories>
+		<repository>
+			<id>cohorte_p2</id>
+			<url>https://nrm.cohorte.tech/repository/cohorte-p2-${cohorte-version}/</url>
+			<layout>p2</layout>
+		</repository>
+		<repository>
+			<id>utilities_extra_p2</id>
+			<url>https://nrm.cohorte.tech/repository/utilities-extra-p2-1.0.0/</url>
+			<layout>p2</layout>
+		</repository>
+		<repository>
+			<id>cohorte.snapshots</id>
+			<name>Cohorte Snapshot Repository</name>
+			<url>https://nrm.cohorte.tech/repository/cohorte-snapshots</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>cohorte.releases</id>
+			<name>Cohorte Releases Repository</name>
+			<url>https://nrm.cohorte.tech/repository/cohorte-releases</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>utilities.extra.snapshots</id>
+			<name>utilities.extra. Snapshot Repository</name>
+			<url>https://nrm.cohorte.tech/repository/utilities-extra-snapshots</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>utilities.extra.releases</id>
+			<name>utilities.extra. Releases Repository</name>
+			<url>https://nrm.cohorte.tech/repository/utilities-extra-releases</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
 
 	<distributionManagement>
 		<repository>
