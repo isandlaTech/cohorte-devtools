@@ -111,16 +111,12 @@ public class CCpntConponentsControler implements ServiceListener {
 	static final String FMT_COMPOSITION_FILENAME = "composition%s.js";
 
 	static final String PROP_FACTORY_NAME = "factory.name";
-	public final String INCLUDE = "$include";
-	public final String MERGE = "$merge";
-
 	/**
 	 * <pre>
 	 * -Dorg.cohorte.eclipse.runner.basic.cohorte.dev=${project_loc:cohorte-dev}
 	 * </pre>
 	 */
 	static final String PROP_RUNNER_BASIC_COHORTE_DEV = "cohorte.dev.base";
-
 	static final String PROP_RUNNER_BASIC_COHORTE_HOME = "cohorte.home";
 
 	/**
@@ -154,6 +150,10 @@ public class CCpntConponentsControler implements ServiceListener {
 
 	private static String PYTHON_FACTORY = "controller";
 
+	public final String INCLUDE = "$include";
+
+	public final String MERGE = "$merge";
+
 	private final BundleContext pBundleContext;
 
 	// the map compnonent name => component infos
@@ -164,8 +164,6 @@ public class CCpntConponentsControler implements ServiceListener {
 	// the map factory name => factory infos
 	private final Map<String, CFactoryInfos> pFactoriesInfos = new TreeMap<>();
 
-
-
 	@Requires(filter = "(!(service.imported=*))")
 	// MOD_BD_20150811
 	private IIsolateComposer pIsolateComposer;
@@ -173,9 +171,10 @@ public class CCpntConponentsControler implements ServiceListener {
 	@Requires
 	private IIsolateLoggerSvc pIsolateLogger;
 
+	CJsonProvider pJsonResolver = null;
+
 	@Requires
 	private IPlatformDirsSvc pPlatformDirsSvc;
-
 
 	@Requires
 	private CShutdownGogoCommand pShutDownCommand;
@@ -226,12 +225,12 @@ public class CCpntConponentsControler implements ServiceListener {
 					final String wMessageBeginning = buildBasicRunnerPropMessage(
 							PROP_RUNNER_BASIC_LOG_LEVEL, "isn't defined.");
 					pIsolateLogger
-					.logWarn(
-							this,
-							"checkRunnerProperties",
-							"%s => the log level still set to FINE during the validation of that component [%s].",
-							wMessageBeginning, getClass()
-							.getSimpleName());
+							.logWarn(
+									this,
+									"checkRunnerProperties",
+									"%s => the log level still set to FINE during the validation of that component [%s].",
+									wMessageBeginning, getClass()
+											.getSimpleName());
 
 				}
 			}
@@ -278,15 +277,35 @@ public class CCpntConponentsControler implements ServiceListener {
 	 * @return the log level ti use during the validation of that component
 	 */
 	private Level getBasicRunnerLogLevel() {
-		final String wLevel = System.getProperty(PROP_RUNNER_BASIC_LOG_LEVEL, "FINE");
+
+		// returns the string value of the system property, or null if there is
+		// no property with that key.
+		final String wLevel = System.getProperty(PROP_RUNNER_BASIC_LOG_LEVEL);
+
+		if (wLevel == null) {
+
+			pIsolateLogger.logWarn(this, "getBasicRunnerLogLevel",
+					"No system property [%s] defined. default [%s]",
+					PROP_RUNNER_BASIC_LOG_LEVEL, Level.FINE.getName());
+			return Level.FINE;
+		}
+
 		try {
-			return Level.parse(wLevel);
-		} catch (final IllegalArgumentException e) {
+			Level wGivenLevel = Level.parse(wLevel);
+
+			pIsolateLogger.logWarn(this, "getBasicRunnerLogLevel",
+					"The system property [%s] contains the level [%s]",
+					PROP_RUNNER_BASIC_LOG_LEVEL, wGivenLevel.getName());
+
+			return wGivenLevel;
+		}
+		// if the system property contains a wrong value
+		catch (final IllegalArgumentException e) {
 
 			final String wMessageBeginning = buildBasicRunnerPropMessage(
 					PROP_RUNNER_BASIC_LOG_LEVEL, "contains a unparsable Level.");
 
-			pIsolateLogger.logSevere(this, "checkRunnerProperties",
+			pIsolateLogger.logSevere(this, "getBasicRunnerLogLevel",
 					"%s => wrong value=[%s] => use FINE", wMessageBeginning,
 					wLevel);
 			return Level.FINE;
@@ -336,13 +355,18 @@ public class CCpntConponentsControler implements ServiceListener {
 						.getProperty(PROP_RUNNER_BASIC_COMPOSITION_FILENAME_SUFFIX);
 				final String wCompositionFileName = getCompositionFileName(wFileNameSuffix);
 
-				final JSONObject wRes = pJsonResolver.getJSONObject( wCompositionFileName);
-				pIsolateLogger.logInfo(this, "getCompositionContent", "composition=[%s]",wRes.toString(2));
-				System.out.println(String.format("getCompositionContent composition=[%s]",wRes.toString(2)));
+				final JSONObject wRes = pJsonResolver
+						.getJSONObject(wCompositionFileName);
+				pIsolateLogger.logInfo(this, "getCompositionContent",
+						"composition=[%s]", wRes.toString(2));
+				System.out.println(String.format(
+						"getCompositionContent composition=[%s]",
+						wRes.toString(2)));
 				return wRes.toString();
 			}
 		} catch (final Exception e) {
-			pIsolateLogger.logSevere(this, "getCompositionContent", "fail to resolve composition %s]",e);
+			pIsolateLogger.logSevere(this, "getCompositionContent",
+					"fail to resolve composition %s]", e);
 		}
 		return null;
 	}
@@ -378,7 +402,7 @@ public class CCpntConponentsControler implements ServiceListener {
 
 		for (int i = 0; i < wParentsComponents.length(); i++) {
 			wComposition.getJSONObject("root").getJSONArray("components")
-			.put(wParentsComponents.get(i));
+					.put(wParentsComponents.get(i));
 		}
 		return wComposition;
 	}
@@ -535,8 +559,6 @@ public class CCpntConponentsControler implements ServiceListener {
 		return pCompositionFile != null;
 	}
 
-
-
 	/**
 	 * initialize the content of the "pFactoriesInfos" and "pComponentInfos"
 	 * maps.
@@ -595,7 +617,7 @@ public class CCpntConponentsControler implements ServiceListener {
 	 *
 	 */
 	private void instancaiateComponents() throws UnacceptableConfiguration,
-	MissingHandlerException, ConfigurationException {
+			MissingHandlerException, ConfigurationException {
 
 		final String wCurrentIsolateName = pPlatformDirsSvc.getIsolateName();
 
@@ -641,15 +663,15 @@ public class CCpntConponentsControler implements ServiceListener {
 					wComponentInfos.setCreated();
 
 					pIsolateLogger
-					.logInfo(
-							this,
-							"instancaiateComponents",
-							"RawComponent(%3d): name=[%-80s] factory=[%-80s] bundle=[%s][%s]",
-							wRawCpnts.size(),
-							wComponentInfos.getName(),
-							wRawCpt.getFactory(),
-							wRawCpt.getBundle_name(),
-							wRawCpt.getBundle_version());
+							.logInfo(
+									this,
+									"instancaiateComponents",
+									"RawComponent(%3d): name=[%-80s] factory=[%-80s] bundle=[%s][%s]",
+									wRawCpnts.size(),
+									wComponentInfos.getName(),
+									wRawCpt.getFactory(),
+									wRawCpt.getBundle_name(),
+									wRawCpt.getBundle_version());
 				} else {
 					pIsolateLogger.logWarn(this, "instancaiateComponents",
 							"--- Component [%s] is already created!",
@@ -658,12 +680,12 @@ public class CCpntConponentsControler implements ServiceListener {
 			} else {
 
 				pIsolateLogger
-				.logDebug(
-						this,
-						"instancaiateComponents",
-						"--- Component [%s] explicitly in another Isolate => [%s]",
-						wComponentInfos.getName(),
-						wComponentInfos.getIsolateName());
+						.logDebug(
+								this,
+								"instancaiateComponents",
+								"--- Component [%s] explicitly in another Isolate => [%s]",
+								wComponentInfos.getName(),
+								wComponentInfos.getIsolateName());
 			}
 			// }
 		}
@@ -747,9 +769,9 @@ public class CCpntConponentsControler implements ServiceListener {
 	 *  logControlerState; #    - Factory=[IotPack-Aggregator-RestApi-CCpntSensors-Factory                                 ] available=[ true]  instance=[IotPack-Aggregator-RestApi-CCpntSensors-Factory_1092639615                      ]
 	 *  logControlerState; # ## Component=[IotPack-Aggregator-Core-Internal-CCpntSubSystemsRealm                           ]   created:[ true] timeStamp=[2017-11-18T18:07:15.0000275+0100] isInCurrentIsolate=[ true]
 	 *  logControlerState; #    - Factory=[IotPack-Aggregator-Core-Internal-CCpntSubSystemsRealm-Factory                   ] available=[ true]  instance=[IotPack-Aggregator-Core-Internal-CCpntSubSystemsRealm-Factory_99111414          ]
-	 *
+	 * 
 	 *  ...
-	 *
+	 * 
 	 *  logControlerState; # ## Component=[IotPack-Aggregator-RestApi-CCpntModules                                         ]   created:[ true] timeStamp=[2017-11-18T18:07:15.0000278+0100] isInCurrentIsolate=[ true]
 	 *  logControlerState; #    - Factory=[IotPack-Aggregator-RestApi-CCpntModules-Factory                                 ] available=[ true]  instance=[IotPack-Aggregator-RestApi-CCpntModules-Factory_393947289                       ]
 	 *  logControlerState; # ## Component=[IotPack-RawData-CCpntLoraUdpListenerLoggerFile                                  ]   created:[ true] timeStamp=[2017-11-18T18:07:15.0000278+0100] isInCurrentIsolate=[ true]
@@ -863,25 +885,25 @@ public class CCpntConponentsControler implements ServiceListener {
 				if (wObj instanceof String) {
 					wStrValue = (String) wObj;
 				} else
-					//
-					if (wObj instanceof String[]) {
-						wStrValue = CXStringUtils
-								.stringTableToString((String[]) wObj);
-					} else
-						//
-						if (wObj instanceof PropertyDescription[]) {
-							final StringBuilder wSB = new StringBuilder();
-							for (final PropertyDescription wPropertyDescription : ((PropertyDescription[]) wObj)) {
-								wSB.append(String.format("%s=\"%s\" ",
-										wPropertyDescription.getName(),
-										wPropertyDescription.getCurrentValue()));
-							}
-							wStrValue = wSB.toString();
-						} else
-							//
-						{
-							wStrValue = String.valueOf(wObj);
-						}
+				//
+				if (wObj instanceof String[]) {
+					wStrValue = CXStringUtils
+							.stringTableToString((String[]) wObj);
+				} else
+				//
+				if (wObj instanceof PropertyDescription[]) {
+					final StringBuilder wSB = new StringBuilder();
+					for (final PropertyDescription wPropertyDescription : ((PropertyDescription[]) wObj)) {
+						wSB.append(String.format("%s=\"%s\" ",
+								wPropertyDescription.getName(),
+								wPropertyDescription.getCurrentValue()));
+					}
+					wStrValue = wSB.toString();
+				} else
+				//
+				{
+					wStrValue = String.valueOf(wObj);
+				}
 				if (wStrValue.indexOf('\n') > 0) {
 					wStrValue = wStrValue.replace('\n', '§');
 				}
@@ -922,7 +944,7 @@ public class CCpntConponentsControler implements ServiceListener {
 
 	/*
 	 * (non-Javadoc)
-	 *
+	 * 
 	 * @see
 	 * org.osgi.framework.ServiceListener#serviceChanged(org.osgi.framework.
 	 * ServiceEvent)
@@ -933,7 +955,7 @@ public class CCpntConponentsControler implements ServiceListener {
 		try {
 			@SuppressWarnings("unchecked")
 			final ServiceReference<Factory> wFactoryServiceRef = (ServiceReference<Factory>) aServiceEvent
-			.getServiceReference();
+					.getServiceReference();
 
 			switch (aServiceEvent.getType()) {
 			case ServiceEvent.REGISTERED: {
@@ -981,17 +1003,17 @@ public class CCpntConponentsControler implements ServiceListener {
 					: null);
 
 			pIsolateLogger
-			.logInfo(
-					this,
-					"setFactoryServiceRefAvaibility",
-					"FactoryName=[%-80s] Registered=[%5s] FactoryServiceRef=[%s]",
-					wFactoryName,
-					wRegistered,
-					wRegistered ? wFactoryServiceRef.toString()
-							+ '_'
-							+ CXStringUtils.strAdjustRight(
-									wFactoryServiceRef.hashCode(), 5)
-							: null);
+					.logInfo(
+							this,
+							"setFactoryServiceRefAvaibility",
+							"FactoryName=[%-80s] Registered=[%5s] FactoryServiceRef=[%s]",
+							wFactoryName,
+							wRegistered,
+							wRegistered ? wFactoryServiceRef.toString()
+									+ '_'
+									+ CXStringUtils.strAdjustRight(
+											wFactoryServiceRef.hashCode(), 5)
+									: null);
 		}
 	}
 
@@ -1025,12 +1047,11 @@ public class CCpntConponentsControler implements ServiceListener {
 				"UnRegistered=[%b] FactoryServiceListener=[%s]", true, this);
 	}
 
-	CJsonProvider pJsonResolver = null;
 	/**
 	 * <pre>
 	 * 2017/11/18; 20:11:30:998; INFO   ;          Timer-0; pntConponentsControler_5277;                  validate; Validating...
 	 * 2017/11/18; 20:11:30:998; INFO   ;          Timer-0; pntConponentsControler_5277;                  validate;
-	 *
+	 * 
 	 * --------------------------------------------------------------------------------------------------------------------------------------------
 	 * COHORTE Basic Runner for Eclipse :  Component Controler starting...
 	 * --------------------------------------------------------------------------------------------------------------------------------------------
@@ -1043,55 +1064,69 @@ public class CCpntConponentsControler implements ServiceListener {
 		pIsolateLogger.logInfo(this, "validate", "Validating...");
 
 		CXLoggerUtils
-		.logBanner(pIsolateLogger, Level.INFO, this, "validate", '-',
-				false,
-				"COHORTE Basic Runner for Eclipse : Component Controler starting...");
+				.logBanner(pIsolateLogger, Level.INFO, this, "validate", '-',
+						false,
+						"COHORTE Basic Runner for Eclipse : Component Controler starting...");
 
 		checkBasicRunnerProperties();
 
-		final Level wCurrentLogLevel = pIsolateLogger.getLevel();
-		pIsolateLogger.setLevel(getBasicRunnerLogLevel());
+		// memorize the log level of the isolate logger
+		final Level wPreviousLogLevel = pIsolateLogger.getLevel();
+
+		// set the log level of the isolate logger using the Level found in the
+		// system property 'org.cohorte.eclipse.runner.basic.loglevel'
+		final Level wBasicRunnerLogLevel = getBasicRunnerLogLevel();
+		pIsolateLogger.setLevel(wBasicRunnerLogLevel);
 
 		boolean wMustControlComponent = false;
 
 		try {
-			final CJsonRsrcResolver wResolver = new CJsonRsrcResolver(pIsolateLogger);
+			final CJsonRsrcResolver wResolver = new CJsonRsrcResolver(
+					pIsolateLogger);
 
 			// cohorte home $include
 			final CXRsrcProvider wCompositionProviderHome = new CXRsrcProviderFile(
-					new CXFileDir(pPlatformDirsSvc.getPlatformHome().getAbsolutePath()+File.separatorChar+"conf"),
-					Charset.forName(CXBytesUtils.ENCODING_UTF_8),pIsolateLogger);
+					new CXFileDir(pPlatformDirsSvc.getPlatformHome()
+							.getAbsolutePath() + File.separatorChar + "conf"),
+					Charset.forName(CXBytesUtils.ENCODING_UTF_8),
+					pIsolateLogger);
 
 			// cohorte base $include
 			final CXRsrcProvider wCompositionProviderBase = new CXRsrcProviderFile(
-					new CXFileDir(pPlatformDirsSvc.getPlatformBase().getAbsolutePath()+File.separatorChar+"conf"),
-					Charset.forName(CXBytesUtils.ENCODING_UTF_8),pIsolateLogger);
+					new CXFileDir(pPlatformDirsSvc.getPlatformBase()
+							.getAbsolutePath() + File.separatorChar + "conf"),
+					Charset.forName(CXBytesUtils.ENCODING_UTF_8),
+					pIsolateLogger);
 
 			// cohorte home $merge
 			final CXRsrcProvider wCompositionProviderMergeHome = new CXRsrcMergeFileProvider(
-					new CXFileDir(pPlatformDirsSvc.getPlatformHome().getAbsolutePath()+File.separatorChar+"conf"),
-					Charset.forName(CXBytesUtils.ENCODING_UTF_8),pIsolateLogger);
+					new CXFileDir(pPlatformDirsSvc.getPlatformHome()
+							.getAbsolutePath() + File.separatorChar + "conf"),
+					Charset.forName(CXBytesUtils.ENCODING_UTF_8),
+					pIsolateLogger);
 
 			// cohorte base $merge
 			final CXRsrcProvider wCompositionProviderMergeBase = new CXRsrcMergeFileProvider(
-					new CXFileDir(pPlatformDirsSvc.getPlatformBase().getAbsolutePath()+File.separatorChar+"conf"),
-					Charset.forName(CXBytesUtils.ENCODING_UTF_8),pIsolateLogger);
-
+					new CXFileDir(pPlatformDirsSvc.getPlatformBase()
+							.getAbsolutePath() + File.separatorChar + "conf"),
+					Charset.forName(CXBytesUtils.ENCODING_UTF_8),
+					pIsolateLogger);
 
 			final String wCohorteDev = System
 					.getProperty(PROP_RUNNER_BASIC_COHORTE_DEV);
 			if (wCohorteDev != null) {
 				// set the roots for the finder and add cohorte-dev
 				final CXRsrcProvider wCompositionProviderMergeDevBase = new CXRsrcMergeFileProvider(
-						new CXFileDir(wCohorteDev+File.separatorChar+"conf"),
+						new CXFileDir(wCohorteDev + File.separatorChar + "conf"),
 						Charset.forName(CXBytesUtils.ENCODING_UTF_8));
 				// cohorte base $include
 				final CXRsrcProvider wCompositionProviderDevBase = new CXRsrcProviderFile(
-						new CXFileDir(wCohorteDev+File.separatorChar+"conf"),
+						new CXFileDir(wCohorteDev + File.separatorChar + "conf"),
 						Charset.forName(CXBytesUtils.ENCODING_UTF_8));
 				wResolver.addRsrcProvider(INCLUDE, wCompositionProviderDevBase);
 
-				wResolver.addRsrcProvider(MERGE, wCompositionProviderMergeDevBase);
+				wResolver.addRsrcProvider(MERGE,
+						wCompositionProviderMergeDevBase);
 
 			}
 			// add model dev in order to be resolved
@@ -1100,13 +1135,11 @@ public class CCpntConponentsControler implements ServiceListener {
 			// add model dev in order to be resolved
 			wResolver.addRsrcProvider(INCLUDE, wCompositionProviderHome);
 
-
 			wResolver.addRsrcProvider(MERGE, wCompositionProviderMergeBase);
 			// add model dev in order to be resolved
 			wResolver.addRsrcProvider(MERGE, wCompositionProviderMergeHome);
 
-			pJsonResolver = new CJsonProvider(wResolver, pIsolateLogger,
-					true);
+			pJsonResolver = new CJsonProvider(wResolver, pIsolateLogger, true);
 			// itialize the component info map
 			initMaps();
 
@@ -1118,7 +1151,7 @@ public class CCpntConponentsControler implements ServiceListener {
 						"There is no component to control in this isolate!");
 				logControlerState(wMustControlComponent);
 			} else
-				// else, if there is at least one component to control
+			// else, if there is at least one component to control
 			{
 				// instal 'Factory' service listener
 				registerFactoryServiceListener();
@@ -1135,14 +1168,14 @@ public class CCpntConponentsControler implements ServiceListener {
 				if (isAllNeededFactoriesAvailable()) {
 
 					CXLoggerUtils
-					.logBanner(
-							pIsolateLogger,
-							Level.INFO,
-							this,
-							"validate",
-							'-',
-							false,
-							"COHORTE Basic Runner for Eclipse : All the needed factories are Available => proceed to the instantiation of the components.");
+							.logBanner(
+									pIsolateLogger,
+									Level.INFO,
+									this,
+									"validate",
+									'-',
+									false,
+									"COHORTE Basic Runner for Eclipse : All the needed factories are Available => proceed to the instantiation of the components.");
 
 					instancaiateComponents();
 				}
@@ -1176,20 +1209,38 @@ public class CCpntConponentsControler implements ServiceListener {
 
 		} finally {
 
-			// reset
+			// re set the level find before the
+			Level wCurrentLogLevel = pIsolateLogger.getLevel();
+
+			// if no component instanciated by the 'runner basic' changed the
+			// log level of the isolate logger => keep it
+			if (wBasicRunnerLogLevel.equals(wCurrentLogLevel)) {
+				// uses the previous log level but limit the level to FINE
+				if (wPreviousLogLevel.intValue() > Level.FINE.intValue()) {
+					wCurrentLogLevel = wPreviousLogLevel;
+				}
+
+			}
+
 			pIsolateLogger.setLevel(wCurrentLogLevel);
 
+			pIsolateLogger
+					.logInfo(
+							this,
+							"validate",
+							"set the log level to [%s]. The Level set before the exection of the 'runner basic' was [%s]",
+							wCurrentLogLevel, wPreviousLogLevel);
 		}
 		pIsolateLogger
-		.logInfo(
-				this,
-				"validate",
-				"validated. InAction=[%b] isAllNeededFactoriesAvailable=[%b] CompositionFile=[%s] remainingFactories=[%s]",
-				wMustControlComponent,
-				isAllNeededFactoriesAvailable(),
-				pCompositionFile,
-				CXStringUtils
-				.stringListToString(getRemainingFactoriesList()));
+				.logInfo(
+						this,
+						"validate",
+						"validated. InAction=[%b] isAllNeededFactoriesAvailable=[%b] CompositionFile=[%s] remainingFactories=[%s]",
+						wMustControlComponent,
+						isAllNeededFactoriesAvailable(),
+						pCompositionFile,
+						CXStringUtils
+								.stringListToString(getRemainingFactoriesList()));
 
 	}
 }
