@@ -92,48 +92,6 @@ public class ConfigGenerator extends AbstractMojo {
 	private final Map<String, String> pMapSymbolicNameToJarPath = new HashMap<>();
 
 	/**
-	 * return the symolic bundle name in jar file if t's a bundle else null
-	 *
-	 * @return
-	 * @throws IOException
-	 */
-	private String getBundleSymbolicNameFromJar(String aFilePath) throws IOException {
-		getLog().debug(String.format("getBundleSymbolicNameFromJar file =[%s]", aFilePath));
-
-		String wSymbolicName = null;
-		final ZipFile wZipFile = new ZipFile(aFilePath);
-
-		try {
-
-			final Enumeration<? extends ZipEntry> wEntries = wZipFile.entries();
-
-			while (wEntries.hasMoreElements()) {
-				final ZipEntry wEntry = wEntries.nextElement();
-				if (wEntry.getName().contains("MANIFEST.MF")) {
-					final InputStream wStream = wZipFile.getInputStream(wEntry);
-					final String wContent = new BufferedReader(new InputStreamReader(wStream)).lines()
-							.collect(Collectors.joining("\n"));
-					wStream.close();
-					final String[] wLines = wContent.split("\n");
-					for (int i = 0; i < wLines.length && wSymbolicName == null; i++) {
-						final String wLine = wLines[i];
-						if (wLine.contains("Bundle-SymbolicName: ")) {
-
-							wSymbolicName = wLine.replace("Bundle-SymbolicName: ", "");
-							getLog().debug(String.format("symbolic name=[%s] file =[%s]", wSymbolicName, aFilePath));
-
-						}
-					}
-				}
-			}
-
-			return wSymbolicName;
-		} finally {
-			wZipFile.close();
-		}
-	}
-
-	/**
 	 * list bundle jar file in this directory with symbolic name
 	 *
 	 * @param aDir
@@ -141,7 +99,7 @@ public class ConfigGenerator extends AbstractMojo {
 	 * @return
 	 * @throws IOException
 	 */
-	private void analyseDir(CXFileDir aDir) throws IOException {
+	private void analyseDir(final CXFileDir aDir) throws IOException {
 		getLog().debug(String.format("analyseDir =[%s]", aDir.getAbsolutePath()));
 
 		for (final String wFile : aDir.list()) {
@@ -170,7 +128,7 @@ public class ConfigGenerator extends AbstractMojo {
 
 	}
 
-	private Map<String, String> analyseDirectory(String aPathBundleTarget) throws MojoExecutionException {
+	private Map<String, String> analyseDirectory(final String aPathBundleTarget) throws MojoExecutionException {
 		final Map<String, String> wDirsBundleLocation = new HashMap<>();
 
 		try {
@@ -221,161 +179,7 @@ public class ConfigGenerator extends AbstractMojo {
 
 	}
 
-	private Document getDocumentFromLauncherFile(String aLaunchConfigFile)
-			throws ParserConfigurationException, SAXException, IOException {
-		final DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-		DocumentBuilder dBuilder;
-		dBuilder = dbFactory.newDocumentBuilder();
-
-		return dBuilder.parse(aLaunchConfigFile);
-	}
-
-	private String getVMParameter(Document wDocLauncherEclipse)
-			throws SAXException, IOException, ParserConfigurationException {
-
-		String wVmArgument = null;
-
-		final NodeList wNodeList = wDocLauncherEclipse.getElementsByTagName("stringAttribute");
-		// checkk which string property describe list of bundle
-		for (int x = 0; x < wNodeList.getLength() && wVmArgument == null; x++) {
-			final Node wNode = wNodeList.item(x);
-			if (wNode instanceof Element) {
-				final Element wElement = (Element) wNode;
-				final String wValue = null;
-				if (wElement.getAttribute("key") != null) {
-					if (wElement.getAttribute("key").equals("org.eclipse.jdt.launching.VM_ARGUMENTS")) {
-						wVmArgument = wElement.getAttribute("value");
-
-					}
-				}
-
-			}
-		}
-		String wVmArgUsableInShell = "";
-		final String[] wLines = wVmArgument.split("\n");
-		final Map<String, String> wMapOverrideArgument = new HashMap<>();
-		if (overrideShellArgumentFilePath != null) {
-			getLog().debug(String.format("file override argument vm %s", overrideShellArgumentFilePath));
-			final CXFileUtf8 wFileContentOverrideVmArg = new CXFileUtf8(overrideShellArgumentFilePath);
-			if (wFileContentOverrideVmArg.exists()) {
-
-				overrideShellArgument = wFileContentOverrideVmArg.readAll();
-				getLog().debug(String.format("content file override argument vm %s", overrideShellArgument));
-
-			}
-		} else {
-			getLog().debug(String.format("no file override argument vm %s", overrideShellArgumentFilePath));
-
-		}
-		if (overrideShellArgument != null) {
-			final List<String> wOverrideShellArgument = Arrays.asList(overrideShellArgument.split("\n"));
-
-			for (final String wOverrideArg : wOverrideShellArgument) {
-				if (wOverrideArg.contains("=")) {
-					final String[] wSplit = wOverrideArg.split("=");
-					String wArgumentKey = wSplit[0];
-					getLog().debug(String.format("argument override  key %s", wArgumentKey));
-					wArgumentKey = wArgumentKey.replaceAll(" ", "").replaceAll("\t", "");
-					if (wArgumentKey.startsWith("-D")) {
-						wArgumentKey = wArgumentKey.substring(2);
-					}
-					if (wSplit.length > 1) {
-						wMapOverrideArgument.put(wArgumentKey, wSplit[1]);
-					} else {
-						wMapOverrideArgument.put(wArgumentKey, "");
-
-					}
-				}
-
-			}
-		} else {
-			getLog().debug(String.format("no override argumet"));
-
-		}
-		for (final String wLine : wLines) {
-			if (wLine.trim().length() > 0) {
-				String wArgumentKey = null;
-
-				if (wLine.contains("=")) {
-					wArgumentKey = wLine.split("=")[0];
-					if (wArgumentKey.startsWith("-D")) {
-						wArgumentKey = wArgumentKey.substring(2);
-					}
-				}
-				if (wArgumentKey != null) {
-					getLog().debug(String.format("argument key %s", wArgumentKey));
-
-					if (wMapOverrideArgument.keySet().contains(wArgumentKey)) {
-						// wVmArgUsableInShell += "# override launch eclipse vm argument by maven
-						// task\n";
-						wVmArgUsableInShell += "\t-D" + wArgumentKey + "=" + wMapOverrideArgument.get(wArgumentKey)
-								+ " \\\n";
-					} else {
-						wVmArgUsableInShell += "\t" + wLine + " \\\n";
-					}
-				} else {
-					wVmArgUsableInShell += "\t" + wLine + " \\\n";
-
-				}
-
-			}
-		}
-		getLog().debug(String.format("vm arguments [%s]", wVmArgUsableInShell));
-
-		return wVmArgUsableInShell;
-	}
-
-	private List<String> getListSymbolicBundleNameToAdd(Document wDocLauncherEclipse)
-			throws SAXException, IOException, ParserConfigurationException {
-
-		final List<String> wLisSymbolicBundleName = new ArrayList<>();
-
-		final NodeList wNodeList = wDocLauncherEclipse.getElementsByTagName("stringAttribute");
-		// checkk which string property describe list of bundle
-		for (int x = 0; x < wNodeList.getLength(); x++) {
-			final Node wNode = wNodeList.item(x);
-			if (wNode instanceof Element) {
-				final Element wElement = (Element) wNode;
-				String wValue = null;
-				if (wElement.getAttribute("key") != null) {
-					if (wElement.getAttribute("key").equals("workspace_bundles")) {
-						// bundle of the current project
-						wValue = wElement.getAttribute("value");
-					} else if (wElement.getAttribute("key").equals("target_bundles")) {
-						// bundle of the current project
-						wValue = wElement.getAttribute("value");
-					}
-				}
-				if (wValue != null) {
-					for (final String wBundleName : wValue.split(",")) {
-						if (wBundleName.contains("@")) {
-							wLisSymbolicBundleName.add(wBundleName.split("@")[0]);
-						}
-					}
-				}
-				// search bundle path in repo
-
-			}
-		}
-		getLog().debug(String.format("symbolic name bundle to add [%s]", wLisSymbolicBundleName));
-
-		return wLisSymbolicBundleName;
-	}
-
-	private void createJvmShell(Document aLauncherEclipseDom)
-			throws MojoExecutionException, IOException, SAXException, ParserConfigurationException {
-		final String wShellFormat = "#!/bin/sh\njava %s -Dfelix.config.properties=file:/%s -Dfile.encoding=UTF-8 -jar %s bundle-cache -consoleLog -console";
-		final String wVmArgument = getVMParameter(aLauncherEclipseDom);
-		final String wShell = String.format(wShellFormat, wVmArgument, shellFelixConfigFilePath, shellFelixJarFilePath);
-		getLog().info(String.format("shell launch jvm =[%s]", wShell));
-		if (targetLaunchJvmFile != null) {
-			final CXFileUtf8 wShellFile = new CXFileUtf8(targetLaunchJvmFile);
-			wShellFile.getParentDirectory().mkdirs();
-			wShellFile.writeAll(wShell);
-		}
-	}
-
-	private void createConfigFelixFile(String aFileBaseConfifPath, Document aLauncherEclipseDom)
+	private void createConfigFelixFile(final String aFileBaseConfifPath, final Document aLauncherEclipseDom)
 			throws MojoExecutionException, IOException, SAXException, ParserConfigurationException {
 
 		final Map<String, String> wDirsBundleLocation = analyseDirectory(pPathBundleTarget);
@@ -461,6 +265,19 @@ public class ConfigGenerator extends AbstractMojo {
 		}
 	}
 
+	private void createJvmShell(final Document aLauncherEclipseDom)
+			throws MojoExecutionException, IOException, SAXException, ParserConfigurationException {
+		final String wShellFormat = "#!/bin/sh\njava %s -Dfelix.config.properties=file:/%s -Dfile.encoding=UTF-8 -jar %s bundle-cache -consoleLog -console";
+		final String wVmArgument = getVMParameter(aLauncherEclipseDom);
+		final String wShell = String.format(wShellFormat, wVmArgument, shellFelixConfigFilePath, shellFelixJarFilePath);
+		getLog().info(String.format("shell launch jvm =[%s]", wShell));
+		if (targetLaunchJvmFile != null) {
+			final CXFileUtf8 wShellFile = new CXFileUtf8(targetLaunchJvmFile);
+			wShellFile.getParentDirectory().mkdirs();
+			wShellFile.writeAll(wShell);
+		}
+	}
+
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		// TODO Auto-generated method stub
@@ -497,5 +314,195 @@ public class ConfigGenerator extends AbstractMojo {
 			getLog().info(String.format("no launch file %s!", launchEclipseFile));
 
 		}
+	}
+
+	/**
+	 * return the symolic bundle name in jar file if t's a bundle else null
+	 *
+	 * @return
+	 * @throws IOException
+	 */
+	private String getBundleSymbolicNameFromJar(final String aFilePath) throws IOException {
+		getLog().debug(String.format("getBundleSymbolicNameFromJar file =[%s]", aFilePath));
+
+		String wSymbolicName = null;
+		final ZipFile wZipFile = new ZipFile(aFilePath);
+
+		try {
+
+			final Enumeration<? extends ZipEntry> wEntries = wZipFile.entries();
+
+			while (wEntries.hasMoreElements()) {
+				final ZipEntry wEntry = wEntries.nextElement();
+				if (wEntry.getName().contains("MANIFEST.MF")) {
+					final InputStream wStream = wZipFile.getInputStream(wEntry);
+					final String wContent = new BufferedReader(new InputStreamReader(wStream)).lines()
+							.collect(Collectors.joining("\n"));
+					wStream.close();
+					final String[] wLines = wContent.split("\n");
+					for (int i = 0; i < wLines.length && wSymbolicName == null; i++) {
+						final String wLine = wLines[i];
+						if (wLine.contains("Bundle-SymbolicName: ")) {
+
+							wSymbolicName = wLine.replace("Bundle-SymbolicName: ", "");
+							getLog().debug(String.format("symbolic name=[%s] file =[%s]", wSymbolicName, aFilePath));
+
+						}
+					}
+				}
+			}
+
+			return wSymbolicName;
+		} finally {
+			wZipFile.close();
+		}
+	}
+
+	private Document getDocumentFromLauncherFile(final String aLaunchConfigFile)
+			throws ParserConfigurationException, SAXException, IOException {
+		final DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+		DocumentBuilder dBuilder;
+		dBuilder = dbFactory.newDocumentBuilder();
+
+		return dBuilder.parse(aLaunchConfigFile);
+	}
+
+	private List<String> getListSymbolicBundleNameToAdd(final Document wDocLauncherEclipse)
+			throws SAXException, IOException, ParserConfigurationException {
+
+		final List<String> wLisSymbolicBundleName = new ArrayList<>();
+
+		final NodeList wNodeList = wDocLauncherEclipse.getElementsByTagName("stringAttribute");
+		// checkk which string property describe list of bundle
+		for (int x = 0; x < wNodeList.getLength(); x++) {
+			final Node wNode = wNodeList.item(x);
+			if (wNode instanceof Element) {
+				final Element wElement = (Element) wNode;
+				String wValue = null;
+				if (wElement.getAttribute("key") != null) {
+					if (wElement.getAttribute("key").equals("workspace_bundles")) {
+						// bundle of the current project
+						wValue = wElement.getAttribute("value");
+					} else if (wElement.getAttribute("key").equals("target_bundles")) {
+						// bundle of the current project
+						wValue = wElement.getAttribute("value");
+					}
+				}
+				if (wValue != null) {
+					for (final String wBundleName : wValue.split(",")) {
+						if (wBundleName.contains("@")) {
+							wLisSymbolicBundleName.add(wBundleName.split("@")[0]);
+						}
+					}
+				}
+				// search bundle path in repo
+
+			}
+		}
+		getLog().debug(String.format("symbolic name bundle to add [%s]", wLisSymbolicBundleName));
+
+		return wLisSymbolicBundleName;
+	}
+
+	private String getVMParameter(final Document wDocLauncherEclipse)
+			throws SAXException, IOException, ParserConfigurationException {
+
+		String wVmArgument = null;
+
+		final NodeList wNodeList = wDocLauncherEclipse.getElementsByTagName("stringAttribute");
+		// checkk which string property describe list of bundle
+		for (int x = 0; x < wNodeList.getLength() && wVmArgument == null; x++) {
+			final Node wNode = wNodeList.item(x);
+			if (wNode instanceof Element) {
+				final Element wElement = (Element) wNode;
+				final String wValue = null;
+				if (wElement.getAttribute("key") != null) {
+					if (wElement.getAttribute("key").equals("org.eclipse.jdt.launching.VM_ARGUMENTS")) {
+						wVmArgument = wElement.getAttribute("value");
+
+					}
+				}
+
+			}
+		}
+		String wVmArgUsableInShell = "";
+		final String[] wLines = wVmArgument.split("\n");
+		final Map<String, String> wMapOverrideArgument = new HashMap<>();
+		if (overrideShellArgumentFilePath != null) {
+			getLog().debug(String.format("file override argument vm %s", overrideShellArgumentFilePath));
+			final CXFileUtf8 wFileContentOverrideVmArg = new CXFileUtf8(overrideShellArgumentFilePath);
+			if (wFileContentOverrideVmArg.exists()) {
+
+				overrideShellArgument = wFileContentOverrideVmArg.readAll();
+				getLog().debug(String.format("content file override argument vm %s", overrideShellArgument));
+
+			}
+		} else {
+			getLog().debug(String.format("no file override argument vm %s", overrideShellArgumentFilePath));
+
+		}
+		if (overrideShellArgument != null) {
+			final List<String> wOverrideShellArgument = Arrays.asList(overrideShellArgument.split("\n"));
+
+			for (final String wOverrideArg : wOverrideShellArgument) {
+				if (wOverrideArg.startsWith("-javaagent:")) {
+					final String wKey = "-javaagent:";
+					wMapOverrideArgument.put(wKey, wOverrideArg.substring(wKey.length()));
+
+				}else if (wOverrideArg.contains("=")) {
+					final String[] wSplit = wOverrideArg.split("=");
+					String wArgumentKey = wSplit[0];
+					getLog().info(String.format("argument override  key %s", wArgumentKey));
+					wArgumentKey = wArgumentKey.replaceAll(" ", "").replaceAll("\t", "");
+					if (wArgumentKey.startsWith("-D")) {
+						wArgumentKey = wArgumentKey.substring(2);
+					}
+					if (wSplit.length > 1) {
+						wMapOverrideArgument.put(wArgumentKey, wSplit[1]);
+					} else {
+						wMapOverrideArgument.put(wArgumentKey, "");
+
+					}
+				}
+
+			}
+		} else {
+			getLog().debug(String.format("no override argumet"));
+
+		}
+		for (final String wLine : wLines) {
+			if (wLine.trim().length() > 0) {
+				String wArgumentKey = null;
+				if( wLine.contains("-javaagent:") ) {
+					wVmArgUsableInShell += "\t" + wMapOverrideArgument.get("-javaagent:") + " \\\n";
+				}else {
+					if (wLine.contains("=")) {
+
+						wArgumentKey = wLine.split("=")[0];
+						if (wArgumentKey.startsWith("-D")) {
+							wArgumentKey = wArgumentKey.substring(2);
+						}
+					}
+					if (wArgumentKey != null) {
+						getLog().debug(String.format("argument key %s", wArgumentKey));
+
+						if (wMapOverrideArgument.keySet().contains(wArgumentKey)) {
+							// wVmArgUsableInShell += "# override launch eclipse vm argument by maven
+							// task\n";
+							wVmArgUsableInShell += "\t-D" + wArgumentKey + "=" + wMapOverrideArgument.get(wArgumentKey)
+							+ " \\\n";
+						} else {
+							wVmArgUsableInShell += "\t" + wLine + " \\\n";
+						}
+					} else {
+						wVmArgUsableInShell += "\t" + wLine + " \\\n";
+
+					}
+				}
+			}
+		}
+		getLog().debug(String.format("vm arguments [%s]", wVmArgUsableInShell));
+
+		return wVmArgUsableInShell;
 	}
 }
