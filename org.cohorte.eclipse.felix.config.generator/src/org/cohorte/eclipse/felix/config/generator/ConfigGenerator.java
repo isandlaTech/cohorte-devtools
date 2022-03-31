@@ -474,7 +474,7 @@ public class ConfigGenerator extends AbstractMojo {
 			if (wLine.trim().length() > 0) {
 				String wArgumentKey = null;
 				if( wLine.contains("-javaagent:") ) {
-					wVmArgUsableInShell += "\t" + wMapOverrideArgument.get("-javaagent:") + " \\\n";
+					wVmArgUsableInShell += "\t" +"-javaagent:"+ wMapOverrideArgument.get("-javaagent:") + " \\\n";
 				}else {
 					if (wLine.contains("=")) {
 
