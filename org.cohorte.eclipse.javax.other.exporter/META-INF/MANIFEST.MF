@@ -9,6 +9,7 @@ Bundle-ActivationPolicy: lazy
 Export-Package: javax.crypto,
  javax.crypto.interfaces,
  javax.crypto.spec,
+ javax.management,
  javax.naming,
  javax.naming.directory,
  javax.net,
